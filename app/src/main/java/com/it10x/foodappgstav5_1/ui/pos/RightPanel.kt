@@ -34,7 +34,9 @@ fun RightPanel(
     tableNo: String?,
     paymentType: String,
     onPaymentChange: (String) -> Unit,
-    onOrderPlaced: () -> Unit
+    onOrderPlaced: () -> Unit,
+    onOpenKitchen: (String) -> Unit,
+    onOpenBill: (String) -> Unit   // ✅ ADD THIS
 ){
     val context = LocalContext.current
 
@@ -153,23 +155,60 @@ fun RightPanel(
         }
 
         // ---------- CLOSE TABLE ----------
+        // ---------- OPEN BILL ----------
         if (isDineIn && isBillRequested) {
             Button(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 8.dp),
                 onClick = {
-                    tableViewModel.closeTable(tableNo!!) // closes orders + marks AVAILABLE
-                    onOrderPlaced()
+                    tableNo?.let { onOpenBill(it) }
                 },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFDC2626),
+                    containerColor = Color(0xFF2563EB), // 🔵 blue
                     contentColor = Color.White
                 )
             ) {
-                Text("Close Table")
+                Text("Open Bill")
             }
         }
+
+
+//        if (isDineIn && isBillRequested) {
+//            Button(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(top = 8.dp),
+//                onClick = {
+//                    tableViewModel.closeTable(tableNo!!) // closes orders + marks AVAILABLE
+//                    onOrderPlaced()
+//                },
+//                colors = ButtonDefaults.buttonColors(
+//                    containerColor = Color(0xFFDC2626),
+//                    contentColor = Color.White
+//                )
+//            ) {
+//                Text("Close Table")
+//            }
+//
+//        }
+
+
+        Button(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp),
+            onClick = {
+                tableNo?.let { onOpenKitchen(it) }
+            },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF16A34A),
+                contentColor = Color.White
+            )
+        ) {
+            Text("Open Kitchen")
+        }
+
     }
 }
 

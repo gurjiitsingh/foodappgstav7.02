@@ -13,14 +13,12 @@ import androidx.room.PrimaryKey
     ]
 )
 data class PosKotItemEntity(
-
     @PrimaryKey
-    val id: String,                // UUID
+    val id: String,
 
-    val kotBatchId: String,        // FK → pos_kot_batch.id
+    val kotBatchId: String,
     val tableNo: String?,
 
-    // ---- Product snapshot ----
     val productId: String,
     val name: String,
     val categoryId: String,
@@ -28,13 +26,13 @@ data class PosKotItemEntity(
     val parentId: String?,
     val isVariant: Boolean,
 
-    // ---- Pricing snapshot ----
     val basePrice: Double,
     val quantity: Int,
 
     val taxRate: Double,
     val taxType: String,
 
-    // ---- Audit ----
+    val status: String, // ✅ NEW
+
     val createdAt: Long
 )

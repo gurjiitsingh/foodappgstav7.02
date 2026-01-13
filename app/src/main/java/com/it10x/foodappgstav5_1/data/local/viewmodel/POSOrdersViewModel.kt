@@ -518,6 +518,7 @@ class POSOrdersViewModel(
                         quantity = cart.quantity,
                         taxRate = cart.taxRate,
                         taxType = cart.taxType,
+                        status = "PENDING",   // ✅ REQUIRED
                         createdAt = now
                     )
                 }

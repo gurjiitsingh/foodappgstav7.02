@@ -1,9 +1,11 @@
 package com.it10x.foodappgstav5_1.navigation
 
+import android.app.Application
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -41,7 +43,16 @@ import com.it10x.foodappgstav5_1.data.local.repository.POSOrdersRepository
 import com.it10x.foodappgstav5_1.ui.bill.BillScreen
 import com.it10x.foodappgstav5_1.ui.bill.BillViewModel
 import com.it10x.foodappgstav5_1.ui.bill.BillViewModelFactory
+import com.it10x.foodappgstav5_1.ui.kitchen.KitchenScreen
 import com.it10x.foodappgstav5_1.ui.payment.PaymentType
+import com.it10x.foodappgstav5_1.ui.kitchen.KitchenViewModel
+
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.it10x.foodappgstav5_1.ui.kitchen.KitchenViewModelFactory
+
 @Composable
 fun NavigationHost(
     navController: NavHostController,
@@ -66,6 +77,9 @@ fun NavigationHost(
         )
     )
 
+
+    val application = context.applicationContext as Application
+
     val ordersViewModel: OrdersViewModel = viewModel(
         factory = OrdersViewModelFactory(printerManager)
     )
@@ -86,15 +100,7 @@ fun NavigationHost(
         modifier = Modifier.padding(paddingValues)
     ) {
 
-        // ---------------- POS ----------------
-        composable("pos") {
-            PosScreen(
-                onOpenSettings = {
-                    navController.navigate("printer_role_selection")
-                },
-                ordersViewModel = posOrdersViewModel   // ✅ CORRECT
-            )
-        }
+
 
         // ---------------- LOCAL PRODUCTS ----------------
         composable("local_products") {
@@ -179,6 +185,42 @@ fun NavigationHost(
 
         composable("products") { Text("Products Screen") }
         composable("categories") { Text("Categories Screen") }
+
+//        composable("kitchen") {
+//            KitchenScreen(
+//                viewModel = kitchenViewModel
+//            )
+//        }
+
+        // ---------------- POS ----------------
+        composable("pos") {
+            PosScreen(
+                navController = navController,   // ✅ REQUIRED
+                onOpenSettings = {
+                    navController.navigate("printer_role_selection")
+                },
+                ordersViewModel = posOrdersViewModel
+            )
+        }
+        composable(
+            route = "kitchen/{tableNo}",
+            arguments = listOf(navArgument("tableNo") { type = NavType.StringType })
+        ) { backStackEntry ->
+
+            val tableNo = backStackEntry.arguments!!.getString("tableNo")!!
+
+            val context = LocalContext.current
+            val kitchenViewModel: KitchenViewModel = viewModel(
+                factory = KitchenViewModelFactory(
+                    app = context.applicationContext as Application
+                )
+            )
+
+            KitchenScreen(
+                tableNo = tableNo,
+                viewModel = kitchenViewModel
+            )
+        }
 
         // ---------------- PRINTER SETTINGS ----------------
         composable("printer_role_selection") {
@@ -265,9 +307,10 @@ fun NavigationHost(
                 )
             }
 
+
             val billViewModel: BillViewModel = viewModel(
                 factory = BillViewModelFactory(
-                    repository = posOrdersRepository,
+                    application = application,
                     tableId = tableId
                 )
             )
@@ -286,41 +329,63 @@ fun NavigationHost(
             )
         }
 // ---------------- FINAL BILL ----------------
-        composable(
-            route = "bill/{tableId}",
-            arguments = listOf(navArgument("tableId") { type = NavType.StringType })
-        ) { backStackEntry ->
+//        composable(
+//            route = "bill/{tableId}",
+//            arguments = listOf(navArgument("tableId") { type = NavType.StringType })
+//        ) { backStackEntry ->
+//
+//            val tableId = backStackEntry.arguments!!.getString("tableId")!!
+//
+//            val posOrdersRepository = remember {
+//                POSOrdersRepository(
+//                    orderMasterDao = db.orderMasterDao(),
+//                    orderProductDao = db.orderProductDao(),
+//                    cartDao = db.cartDao(),
+//                    tableDao = db.tableDao()
+//                )
+//            }
+//
+//            val billViewModel: BillViewModel = viewModel(
+//                factory = BillViewModelFactory(
+//                    application = application,
+//                    tableId = tableId
+//                )
+//            )
+//
+//            BillScreen(
+//                viewModel = billViewModel,
+//                onPayClick = { paymentType ->
+//
+//                    // 👉 STEP 4 will handle this
+//                    navController.navigate(
+//                        "payment_confirm/$tableId/${paymentType.name}"
+//                    )
+//                }
+//            )
+//        }
 
-            val tableId = backStackEntry.arguments!!.getString("tableId")!!
+        composable("bill/{tableId}") { backStackEntry ->
+            val tableId = backStackEntry.arguments?.getString("tableId")!!
 
-            val posOrdersRepository = remember {
-                POSOrdersRepository(
-                    orderMasterDao = db.orderMasterDao(),
-                    orderProductDao = db.orderProductDao(),
-                    cartDao = db.cartDao(),
-                    tableDao = db.tableDao()
-                )
-            }
+            val context = LocalContext.current
+            val application = context.applicationContext as Application
 
             val billViewModel: BillViewModel = viewModel(
                 factory = BillViewModelFactory(
-                    repository = posOrdersRepository,
+                    application = application,
                     tableId = tableId
                 )
             )
 
+            LaunchedEffect(Unit) {
+                billViewModel.loadBill()
+            }
+
             BillScreen(
                 viewModel = billViewModel,
-                onPayClick = { paymentType ->
-
-                    // 👉 STEP 4 will handle this
-                    navController.navigate(
-                        "payment_confirm/$tableId/${paymentType.name}"
-                    )
-                }
+                onPayClick = { /* later */ }
             )
         }
-
 
 
 

@@ -1,18 +1,22 @@
 package com.it10x.foodappgstav5_1.ui.bill
 
+import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.it10x.foodappgstav5_1.data.local.repository.POSOrdersRepository
+import com.it10x.foodappgstav5_1.data.local.AppDatabaseProvider
 
 class BillViewModelFactory(
-    private val repository: POSOrdersRepository,
+    private val application: Application,
     private val tableId: String
 ) : ViewModelProvider.Factory {
 
-    @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(BillViewModel::class.java)) {
-            return BillViewModel(repository, tableId) as T
+            val db = AppDatabaseProvider.get(application)
+            return BillViewModel(
+                kotItemDao = db.kotItemDao(),
+                tableId = tableId
+            ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

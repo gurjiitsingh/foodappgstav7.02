@@ -1,24 +1,24 @@
 package com.it10x.foodappgstav5_1.ui.bill
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.it10x.foodappgstav5_1.data.local.entities.PosOrderItemEntity
-import com.it10x.foodappgstav5_1.data.local.repository.POSOrdersRepository
+import com.it10x.foodappgstav5_1.data.local.dao.KotItemDao
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-data class BillUiState(
-    val loading: Boolean = true,
-    val items: List<PosOrderItemEntity> = emptyList(),
-    val subtotal: Double = 0.0,
-    val tax: Double = 0.0,
-    val total: Double = 0.0,
-    val tableUpdated: Boolean = false
-)
 
+// 🔹 Billing grouping key (file-level)
+private data class BillGroupKey(
+    val productId: String,
+    val parentId: String?,
+    val basePrice: Double,
+    val taxRate: Double,
+    val taxType: String
+)
 class BillViewModel(
-    private val repository: POSOrdersRepository,
+    private val kotItemDao: KotItemDao,
     private val tableId: String
 ) : ViewModel() {
 
@@ -27,29 +27,65 @@ class BillViewModel(
 
     fun loadBill() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(loading = true)  // mark loading
-            val orderItems = repository.getAllItemsForTable(tableId)
-            repository.markTableBillRequested(tableId)
+            _uiState.value = BillUiState(loading = true)
 
-            val subtotal = orderItems.sumOf { it.itemSubtotal }
-            val tax = orderItems.sumOf { it.taxTotal }
-            val total = subtotal + tax
+            val kotItems = kotItemDao
+                .getItemsForTableSync(tableId)
+                .filter { it.status == "DONE" }
+
+            val grouped = kotItems.groupBy { item ->
+                BillGroupKey(
+                    productId = item.productId,
+                    parentId = item.parentId,
+                    basePrice = item.basePrice,
+                    taxRate = item.taxRate,
+                    taxType = item.taxType
+                )
+            }
+
+            val billingItems = grouped.map { (_, items) ->
+
+                val name = items.first().name
+                val quantity = items.sumOf { it.quantity }
+
+                val subtotal = items.sumOf {
+                    it.basePrice * it.quantity
+                }
+
+                val taxTotal = items.sumOf {
+                    if (it.taxType == "exclusive")
+                        it.basePrice * (it.taxRate / 100) * it.quantity
+                    else 0.0
+                }
+
+                BillingItemUi(
+                    id = items.first().productId, // stable for UI
+                    name = name,
+                    quantity = quantity,
+                    subtotal = subtotal,
+                    taxTotal = taxTotal,
+                    finalTotal = subtotal + taxTotal
+                )
+            }
+
+            val subtotal = billingItems.sumOf { it.subtotal }
+            val tax = billingItems.sumOf { it.taxTotal }
 
             _uiState.value = BillUiState(
-                loading = false,                 // done loading
-                items = orderItems,
+                loading = false,
+                items = billingItems,
                 subtotal = subtotal,
                 tax = tax,
-                total = total,
-                tableUpdated = true
+                total = subtotal + tax
             )
         }
     }
 
+
+    // 🔒 Payment logic stays separate (future-safe)
     fun payBill(paymentType: String) {
-        viewModelScope.launch {
-            repository.markOrdersPaid(tableId, paymentType)
-            _uiState.value = _uiState.value.copy(tableUpdated = true)
-        }
+        // Will be implemented later:
+        // - copy DONE KOT → order tables
+        // - mark KOT as BILLED
     }
 }

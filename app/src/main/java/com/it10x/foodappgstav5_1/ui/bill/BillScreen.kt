@@ -1,5 +1,6 @@
 package com.it10x.foodappgstav5_1.ui.bill
 
+import android.app.Application
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,8 +18,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
 
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun BillScreen(
@@ -98,4 +101,25 @@ private fun PaymentButton(text: String, onClick: () -> Unit) {
     Button(onClick = onClick) {
         Text(text)
     }
+}
+
+
+@Composable
+fun BillScreen(
+    tableId: String,
+    onPayClick: (PaymentType) -> Unit
+) {
+    val context = LocalContext.current.applicationContext as Application
+
+    val viewModel: BillViewModel = viewModel(
+        factory = BillViewModelFactory(context, tableId)
+    )
+
+    LaunchedEffect(Unit) {
+        viewModel.loadBill()
+    }
+
+    val state by viewModel.uiState.collectAsState()
+
+    // 👇 rest of your UI stays EXACTLY the same
 }

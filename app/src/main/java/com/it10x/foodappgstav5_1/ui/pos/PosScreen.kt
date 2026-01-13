@@ -29,6 +29,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.it10x.foodappgstav5_1.data.local.entities.TableEntity
 import com.it10x.foodappgstav5_1.ui.cart.CartViewModelFactory
 import com.it10x.foodappgstav5_1.viewmodel.TableViewModel
@@ -37,8 +38,9 @@ import com.it10x.foodappgstav5_1.viewmodel.TableViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PosScreen(
+    navController: NavController,
     onOpenSettings: () -> Unit,
-    ordersViewModel: POSOrdersViewModel
+    ordersViewModel: POSOrdersViewModel,
 ) {
     val context = LocalContext.current
     val db = AppDatabaseProvider.get(context)
@@ -255,6 +257,12 @@ fun PosScreen(
                     onPaymentChange = { paymentType = it },
                     onOrderPlaced = {
                         cartViewModel.clear()
+                    },
+                    onOpenKitchen = { table ->
+                        navController.navigate("kitchen/$table")
+                    },
+                    onOpenBill = { table ->
+                        navController.navigate("bill/$table")   // ✅ THIS
                     }
                 )
 
@@ -289,6 +297,12 @@ fun PosScreen(
                 onPaymentChange = { paymentType = it },
                 onOrderPlaced = {
                     cartViewModel.clear()
+                },
+                onOpenKitchen = {
+                    navController.navigate("kitchen/$tableNo")
+                },
+                onOpenBill = { table ->
+                    navController.navigate("bill/$table")   // ✅ THIS
                 }
             )
 

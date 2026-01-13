@@ -18,7 +18,7 @@ import com.it10x.foodappgstav5_1.data.local.entities.config.*
         PosKotItemEntity::class,
         PosKotBatchEntity::class
     ],
-    version = 33,              // ⬆️ increment version since schema changed
+    version = 34,              // ⬆️ increment version since schema changed
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {

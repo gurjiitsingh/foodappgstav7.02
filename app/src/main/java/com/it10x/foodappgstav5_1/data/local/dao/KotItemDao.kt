@@ -44,4 +44,27 @@ interface KotItemDao {
         WHERE tableNo = :tableNo
     """)
     suspend fun clearForTable(tableNo: String)
+
+
+    @Query("""
+    UPDATE pos_kot_items
+    SET status = :status
+    WHERE id = :itemId
+""")
+    suspend fun updateStatus(
+        itemId: String,
+        status: String
+    )
+
+    @Query("""
+    SELECT * FROM pos_kot_items
+    WHERE tableNo = :tableNo
+      AND status = 'PENDING'
+    ORDER BY createdAt ASC
+""")
+    fun getPendingItemsForTable(tableNo: String): Flow<List<PosKotItemEntity>>
+
+
+    @Query("SELECT * FROM pos_kot_items ORDER BY createdAt ASC")
+    fun getAllKotItems(): Flow<List<PosKotItemEntity>>
 }
