@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.it10x.foodappgstav5_1.data.local.entities.TableEntity
 
+
 @Dao
 interface TableDao {
 
@@ -38,5 +39,13 @@ interface TableDao {
         WHERE id = :tableId
     """)
     suspend fun clearActiveOrder(tableId: String)
+
+
+
+    @Query("SELECT * FROM tables WHERE tableName = :tableName LIMIT 1")
+    suspend fun getTable(tableName: String): TableEntity?
+
+    @Query("UPDATE tables SET status = 'AVAILABLE' WHERE tableName = :tableName")
+    suspend fun closeTable(tableName: String)
 }
 

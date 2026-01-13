@@ -489,7 +489,7 @@ class POSOrdersViewModel(
                 kotItemDao.clearForTable(tableNo)
 
                 // 7️⃣ Close table
-              //  tableDao.closeTable(tableNo)
+                tableDao.closeTable(tableNo)
 
                 Log.d("BILL", "✅ Payment completed table=$tableNo")
 
