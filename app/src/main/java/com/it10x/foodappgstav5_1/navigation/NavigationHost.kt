@@ -297,95 +297,36 @@ fun NavigationHost(
         ) { backStackEntry ->
 
             val tableId = backStackEntry.arguments!!.getString("tableId")!!
-
-            val posOrdersRepository = remember {
-                POSOrdersRepository(
-                    orderMasterDao = db.orderMasterDao(),
-                    orderProductDao = db.orderProductDao(),
-                    cartDao = db.cartDao(),
-                    tableDao = db.tableDao()
-                )
-            }
-
+            val context = LocalContext.current.applicationContext as Application
 
             val billViewModel: BillViewModel = viewModel(
                 factory = BillViewModelFactory(
-                    application = application,
+                    application = context,
                     tableId = tableId
                 )
             )
 
-
-
-            BillScreen(
-                viewModel = billViewModel,
-                onPayClick = { paymentType ->
-
-                    // 👉 STEP 4 will handle this
-                    navController.navigate(
-                        "payment_confirm/$tableId/${paymentType.name}"
-                    )
-                }
-            )
-        }
-// ---------------- FINAL BILL ----------------
-//        composable(
-//            route = "bill/{tableId}",
-//            arguments = listOf(navArgument("tableId") { type = NavType.StringType })
-//        ) { backStackEntry ->
-//
-//            val tableId = backStackEntry.arguments!!.getString("tableId")!!
-//
-//            val posOrdersRepository = remember {
-//                POSOrdersRepository(
-//                    orderMasterDao = db.orderMasterDao(),
-//                    orderProductDao = db.orderProductDao(),
-//                    cartDao = db.cartDao(),
-//                    tableDao = db.tableDao()
-//                )
-//            }
-//
-//            val billViewModel: BillViewModel = viewModel(
-//                factory = BillViewModelFactory(
-//                    application = application,
-//                    tableId = tableId
-//                )
-//            )
-//
-//            BillScreen(
-//                viewModel = billViewModel,
-//                onPayClick = { paymentType ->
-//
-//                    // 👉 STEP 4 will handle this
-//                    navController.navigate(
-//                        "payment_confirm/$tableId/${paymentType.name}"
-//                    )
-//                }
-//            )
-//        }
-
-        composable("bill/{tableId}") { backStackEntry ->
-            val tableId = backStackEntry.arguments?.getString("tableId")!!
-
-            val context = LocalContext.current
-            val application = context.applicationContext as Application
-
-            val billViewModel: BillViewModel = viewModel(
-                factory = BillViewModelFactory(
-                    application = application,
-                    tableId = tableId
-                )
-            )
-
+            // 👈 THIS IS MISSING
             LaunchedEffect(Unit) {
                 billViewModel.loadBill()
             }
 
             BillScreen(
                 viewModel = billViewModel,
-                onPayClick = { /* later */ }
+                onPayClick = { paymentType ->
+                    posOrdersViewModel.payAndCloseTable(
+                        tableNo = tableId,
+                        paymentType = paymentType.name
+                    )
+                    navController.popBackStack("pos", inclusive = false)
+                }
             )
         }
+
+
+
+
+
 
 
 

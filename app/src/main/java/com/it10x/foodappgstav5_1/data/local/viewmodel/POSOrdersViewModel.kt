@@ -404,55 +404,104 @@ class POSOrdersViewModel(
         viewModelScope.launch {
             _loading.value = true
             try {
-                // 1️⃣ Fetch all OPEN orders for this table
-                val orders = repository.getOpenOrdersForTable(tableNo)
+                val db = AppDatabaseProvider.get(printerManager.appContext())
+                val kotItemDao = db.kotItemDao()
+                val orderMasterDao = db.orderMasterDao()
+                val orderProductDao = db.orderProductDao() // ✅ correct DAO
+                val tableDao = db.tableDao()
 
-                if (orders.isEmpty()) {
-                    Log.e("POS", "No open orders for table=$tableNo")
+                // 1️⃣ Read DONE KOT items
+                val kotItems = kotItemDao.getItemsForTableSync(tableNo)
+                    .filter { it.status == "DONE" }
+
+                if (kotItems.isEmpty()) {
+                    Log.e("BILL", "No DONE KOT items for table=$tableNo")
                     return@launch
                 }
 
-                // 2️⃣ Mark all orders as PAID
-                repository.markOrdersPaid(
+                // 2️⃣ Calculate totals (tax set default 0.0)
+                val itemTotal = kotItems.sumOf { it.basePrice * it.quantity }
+                val taxTotal = kotItems.sumOf { 0.0 } // default
+                val grandTotal = itemTotal + taxTotal
+
+                // 3️⃣ Create OrderMaster
+                val orderId = UUID.randomUUID().toString()
+                val now = System.currentTimeMillis()
+
+                val master = PosOrderMasterEntity(
+                    id = orderId,
+                    srno = srNoCounter.getAndIncrement(),
+                    orderType = "DINE_IN",
                     tableNo = tableNo,
-                    paymentType = paymentType
+                    itemTotal = itemTotal,
+                    taxTotal = taxTotal,
+                    discountTotal = 0.0,
+                    grandTotal = grandTotal,
+                    paymentType = paymentType,
+                    paymentStatus = "PAID",
+                    orderStatus = "COMPLETED",
+                    source = "POS",
+                    deviceId = "UNKNOWN",
+                    deviceName = "UNKNOWN",
+                    appVersion = "UNKNOWN",
+                    createdAt = now,
+                    updatedAt = now,
+                    syncStatus = "PENDING",
+                    lastSyncedAt = null,
+                    notes = null
                 )
 
-                // 3️⃣ Print FINAL BILL (single combined receipt)
-                val items = repository.getAllItemsForTable(tableNo)
-                val finalOrder = PrintOrderBuilder.mergeOrders(orders)
+                orderMasterDao.insert(master)
 
-                // 1️⃣ Merge multiple orders
-                val mergedMaster = PrintOrderBuilder.mergeOrders(orders)
+                // 4️⃣ Copy KOT → OrderItems
+                val orderItems = kotItems.map { kot ->
+                    PosOrderItemEntity(
+                        id = UUID.randomUUID().toString(),
+                        orderMasterId = orderId,
+                        productId = kot.productId,
+                        name = kot.name,
+                        categoryId = kot.categoryId,
+                        parentId = kot.parentId,
+                        isVariant = kot.isVariant,
+                        basePrice = kot.basePrice,
+                        quantity = kot.quantity,
+                        itemSubtotal = kot.basePrice * kot.quantity,
+                        taxRate = kot.taxRate,
+                        taxType = kot.taxType,
+                        taxAmountPerItem = 0.0,
+                        taxTotal = 0.0,
+                        finalPricePerItem = kot.basePrice,
+                        finalTotal = kot.basePrice * kot.quantity,
+                        createdAt = now
+                    )
+                }
 
-// 2️⃣ Fetch all items for table
-                val allItems = repository.getAllItemsForTable(tableNo)
+                orderProductDao.insertAll(orderItems)
 
-// 3️⃣ Build printable order
-                val printOrder = PrintOrderBuilder.build(
-                    master = mergedMaster,
-                    items = allItems
-                )
-
-// 4️⃣ Print FINAL BILL
+                // 5️⃣ Print FINAL BILL (optional - keep same)
+                val printOrder = PrintOrderBuilder.build(master, orderItems)
                 printerManager.printText(
                     PrinterRole.BILLING,
                     ReceiptFormatter.billing(printOrder)
                 )
 
+                // 6️⃣ Clear KOT
+                kotItemDao.clearForTable(tableNo)
 
-                // 4️⃣ Close table
-                repository.closeTable(tableNo)
+                // 7️⃣ Close table
+              //  tableDao.closeTable(tableNo)
 
-                Log.d("POS", "Table closed: $tableNo")
+                Log.d("BILL", "✅ Payment completed table=$tableNo")
 
             } catch (e: Exception) {
-                Log.e("POS", "Failed to close table", e)
+                Log.e("BILL", "❌ Payment failed", e)
             } finally {
                 _loading.value = false
             }
         }
     }
+
+
 
     // -------------------------
 // CLOSE TABLE (NO BILLING)

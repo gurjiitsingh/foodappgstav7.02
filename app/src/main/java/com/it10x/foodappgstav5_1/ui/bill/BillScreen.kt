@@ -104,22 +104,4 @@ private fun PaymentButton(text: String, onClick: () -> Unit) {
 }
 
 
-@Composable
-fun BillScreen(
-    tableId: String,
-    onPayClick: (PaymentType) -> Unit
-) {
-    val context = LocalContext.current.applicationContext as Application
 
-    val viewModel: BillViewModel = viewModel(
-        factory = BillViewModelFactory(context, tableId)
-    )
-
-    LaunchedEffect(Unit) {
-        viewModel.loadBill()
-    }
-
-    val state by viewModel.uiState.collectAsState()
-
-    // 👇 rest of your UI stays EXACTLY the same
-}
