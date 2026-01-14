@@ -39,15 +39,26 @@ import com.it10x.foodappgstav5_1.viewmodel.TableViewModel
 @Composable
 fun PosScreen(
     navController: NavController,
+    cartViewModel: CartViewModel,
     onOpenSettings: () -> Unit,
     ordersViewModel: POSOrdersViewModel,
+    posSessionViewModel: PosSessionViewModel
 ) {
+
+
     val context = LocalContext.current
     val db = AppDatabaseProvider.get(context)
 
     val configuration = LocalConfiguration.current
     val isPhone = configuration.screenWidthDp < 600
+    val tableId by posSessionViewModel.tableId.collectAsState()
 
+    LaunchedEffect(tableId) {
+        tableId?.let {
+            cartViewModel.setTableId(it)
+        }
+    }
+    val tableName by posSessionViewModel.tableName.collectAsState()
 
     val categories by db.categoryDao().getAll().collectAsState(initial = emptyList())
 
@@ -57,6 +68,8 @@ fun PosScreen(
     }
 
    var selectedCatId by remember { mutableStateOf<String?>(null) }
+
+
 
     val tableVm: TableViewModel = viewModel()
     val tables by tableVm.tables.collectAsState()
@@ -83,11 +96,10 @@ fun PosScreen(
             .groupBy { it.parentId }
     }
 
-    val cartViewModel: CartViewModel = viewModel(
-        factory = CartViewModelFactory(
-            CartRepository(db.cartDao())
-        )
-    )
+
+
+
+
 
     val cartItems by cartViewModel.cart.collectAsState(initial = emptyList())
     val cartCount = cartItems.sumOf { it.quantity }
@@ -95,17 +107,12 @@ fun PosScreen(
     var showCartSheet by remember { mutableStateOf(false) }
 
     var orderType by remember { mutableStateOf("DINE_IN") }
-    var tableNo by remember { mutableStateOf<String?>(null) }
+
     var showTableSelector by remember { mutableStateOf(false) }
       // ✅ PAYMENT TYPE STATE (DEFAULT CASH)
     var paymentType by remember { mutableStateOf("CASH") }
-    val currentTableStatus = remember(tables, tableNo) {
-        tables
-            .firstOrNull { it.table.id == tableNo }
-            ?.table
-            ?.status
-            ?: "AVAILABLE"
-    }
+
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -181,7 +188,7 @@ fun PosScreen(
                             selected = orderType == "TAKEAWAY",
                             onClick = {
                                 orderType = "TAKEAWAY"
-                                tableNo = null
+                                posSessionViewModel.clearTable()      // ✅
                                 cartViewModel.setTableId("TAKEAWAY")
                                 showTableSelector = false
                             }
@@ -192,16 +199,16 @@ fun PosScreen(
                             selected = orderType == "DELIVERY",
                             onClick = {
                                 orderType = "DELIVERY"
-                                tableNo = null
+                                posSessionViewModel.clearTable()      // ✅
                                 cartViewModel.setTableId("DELIVERY")
                                 showTableSelector = false
                             }
                         )
 
                         // Optional: show selected table
-                        if (orderType == "DINE_IN" && tableNo != null) {
+                        if (orderType == "DINE_IN" && tableName != null) {
                             OrderChip(
-                                label = "Table $tableNo",
+                                label = tableName!!,
                                 selected = true,
                                 onClick = { showTableSelector = true }
                             )
@@ -215,13 +222,20 @@ fun PosScreen(
                     if (showTableSelector && orderType == "DINE_IN") {
                         TableSelectorGrid(
                             tables = tables, // ✅ use dynamic list
-                            selectedTable = tableNo,
+                            selectedTable = tableId,
 
 
-                            onTableSelected = {
-                                tableNo = it
-                                cartViewModel.setTableId(it)
-                                tableVm.updateStatus(it, "OCCUPIED")
+                            onTableSelected = { tableId ->
+
+                                val table = tables.first { it.table.id == tableId }.table
+
+                                posSessionViewModel.setTable(
+                                    tableId = table.id,
+                                    tableName = table.tableName
+                                )
+
+                                cartViewModel.setTableId(table.id)
+                                tableVm.updateStatus(table.id, "OCCUPIED")
                                 showTableSelector = false
                             },
 
@@ -240,7 +254,7 @@ fun PosScreen(
                     filteredProducts = filteredProducts,
                     variants = variants,
                     cartViewModel = cartViewModel,
-                    tableNo = tableNo ?: ""  // fallback if null
+                    tableNo = tableId ?: ""  // fallback if null
                 )
             }
 
@@ -251,7 +265,7 @@ fun PosScreen(
                     ordersViewModel = ordersViewModel,
                     tableViewModel = tableVm,          // ✅ PASS IT
                     orderType = orderType,
-                    tableNo = tableNo ?: orderType,
+                    tableNo = tableId ?: orderType,
                     //tableStatus = currentTableStatus,
                     paymentType = paymentType,
                     onPaymentChange = { paymentType = it },
@@ -291,7 +305,7 @@ fun PosScreen(
                 ordersViewModel = ordersViewModel,
                 tableViewModel = tableVm,          // ✅ PASS IT
                 orderType = orderType,
-                tableNo = tableNo ?: orderType,
+                tableNo = tableId ?: orderType,
                // tableStatus = currentTableStatus,
                 paymentType = paymentType,
                 onPaymentChange = { paymentType = it },
@@ -299,7 +313,7 @@ fun PosScreen(
                     cartViewModel.clear()
                 },
                 onOpenKitchen = {
-                    navController.navigate("kitchen/$tableNo")
+                    navController.navigate("kitchen/$tableId")
                 },
                 onOpenBill = { table ->
                     navController.navigate("bill/$table")   // ✅ THIS

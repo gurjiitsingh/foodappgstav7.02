@@ -51,7 +51,11 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.it10x.foodappgstav5_1.data.local.repository.CartRepository
+import com.it10x.foodappgstav5_1.ui.cart.CartViewModel
+import com.it10x.foodappgstav5_1.ui.cart.CartViewModelFactory
 import com.it10x.foodappgstav5_1.ui.kitchen.KitchenViewModelFactory
+import com.it10x.foodappgstav5_1.ui.pos.PosSessionViewModel
 
 @Composable
 fun NavigationHost(
@@ -89,6 +93,7 @@ fun NavigationHost(
             printerManager = printerManager
         )
     )
+    val posSessionViewModel: PosSessionViewModel = viewModel()
 
     // -----------------------------
     // NAV HOST
@@ -193,15 +198,29 @@ fun NavigationHost(
 //        }
 
         // ---------------- POS ----------------
+
         composable("pos") {
+
+            val context = LocalContext.current
+            val db = AppDatabaseProvider.get(context)
+
+            val cartViewModel: CartViewModel = viewModel(
+                factory = CartViewModelFactory(
+                    repository = CartRepository(db.cartDao())
+                )
+            )
+
             PosScreen(
-                navController = navController,   // ✅ REQUIRED
+                navController = navController,
                 onOpenSettings = {
                     navController.navigate("printer_role_selection")
                 },
-                ordersViewModel = posOrdersViewModel
+                ordersViewModel = posOrdersViewModel,
+                posSessionViewModel = posSessionViewModel,
+                cartViewModel = cartViewModel
             )
         }
+
         composable(
             route = "kitchen/{tableNo}",
             arguments = listOf(navArgument("tableNo") { type = NavType.StringType })
@@ -299,6 +318,11 @@ fun NavigationHost(
             val tableId = backStackEntry.arguments!!.getString("tableId")!!
             val context = LocalContext.current.applicationContext as Application
 
+            // ✅ sync into session
+            LaunchedEffect(tableId) {
+                posSessionViewModel.setTableId(tableId)
+            }
+
             val billViewModel: BillViewModel = viewModel(
                 factory = BillViewModelFactory(
                     application = context,
@@ -306,7 +330,6 @@ fun NavigationHost(
                 )
             )
 
-            // 👈 THIS IS MISSING
             LaunchedEffect(Unit) {
                 billViewModel.loadBill()
             }
@@ -318,10 +341,15 @@ fun NavigationHost(
                         tableNo = tableId,
                         paymentType = paymentType.name
                     )
+
+                    // ✅ CLEAR SESSION AFTER PAYMENT
+                    posSessionViewModel.clearTable()
+
                     navController.popBackStack("pos", inclusive = false)
                 }
             )
         }
+
 
 
 

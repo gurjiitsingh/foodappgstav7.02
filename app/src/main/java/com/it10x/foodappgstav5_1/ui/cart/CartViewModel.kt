@@ -1,5 +1,6 @@
 package com.it10x.foodappgstav5_1.ui.cart
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.it10x.foodappgstav5_1.data.local.entities.PosCartEntity
@@ -8,13 +9,13 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class CartViewModel(
-    private val repository: CartRepository
+    private val repository: CartRepository,
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    // Active table ID
-    private val currentTableId = MutableStateFlow("T0")
+    private val currentTableId =
+        savedStateHandle.getStateFlow("tableId", "T0")
 
-    // Reactive cart per table (auto updates when table changes)
     val cart: StateFlow<List<PosCartEntity>> = currentTableId
         .flatMapLatest { tableId ->
             repository.observeCart(tableId)
@@ -22,18 +23,18 @@ class CartViewModel(
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     fun setTableId(id: String) {
-        currentTableId.value = id
+        savedStateHandle["tableId"] = id
     }
 
-    fun addToCart(product: PosCartEntity) {
-        viewModelScope.launch {
-            repository.addToCart(product.copy(tableId = currentTableId.value))
-        }
-    }
 
     fun increase(item: PosCartEntity) {
         viewModelScope.launch {
             repository.addToCart(item.copy(tableId = currentTableId.value))
+        }
+    }
+    fun addToCart(product: PosCartEntity) {
+        viewModelScope.launch {
+            repository.addToCart(product.copy(tableId = currentTableId.value))
         }
     }
 
@@ -49,3 +50,4 @@ class CartViewModel(
         }
     }
 }
+
