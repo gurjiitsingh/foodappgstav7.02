@@ -37,7 +37,9 @@ import com.it10x.foodappgstav7_02.ui.kitchen.KitchenScreen
 import com.it10x.foodappgstav7_02.ui.bill.BillScreenDialog
 
 import com.it10x.foodappgstav7_02.ui.kitchen.KitchenViewModel
-
+import android.widget.Toast
+import androidx.compose.runtime.saveable.rememberSaveable
+import com.it10x.foodappgstav7_02.ui.cart.CartUiEvent
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,7 +50,9 @@ fun PosScreen(
     ordersViewModel: POSOrdersViewModel,
     posSessionViewModel: PosSessionViewModel
 ) {
-
+    var showTableSelector by rememberSaveable() {
+        mutableStateOf(false)
+    }
 
     val context = LocalContext.current
     val db = AppDatabaseProvider.get(context)
@@ -62,6 +66,25 @@ fun PosScreen(
             cartViewModel.setTableId(it)
         }
     }
+
+    LaunchedEffect(Unit) {
+        cartViewModel.uiEvent.collect { event ->
+            when (event) {
+                CartUiEvent.TableRequired -> {
+                    // 1️⃣ Auto-open table selector
+                    showTableSelector = true
+
+                    // 2️⃣ Optional user feedback (recommended)
+                    Toast.makeText(
+                        context,
+                        "Select table to continue Dine-In order",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+    }
+
     val tableName by posSessionViewModel.tableName.collectAsState()
 
     val categories by db.categoryDao().getAll().collectAsState(initial = emptyList())
@@ -112,7 +135,7 @@ fun PosScreen(
 
     var orderType by remember { mutableStateOf("DINE_IN") }
 
-    var showTableSelector by remember { mutableStateOf(false) }
+    //var showTableSelector by remember { mutableStateOf(false) }
       // ✅ PAYMENT TYPE STATE (DEFAULT CASH)
     var paymentType by remember { mutableStateOf("CASH") }
 
