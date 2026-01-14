@@ -36,8 +36,8 @@ fun RightPanel(
     onPaymentChange: (String) -> Unit,
     onOrderPlaced: () -> Unit,
     onOpenKitchen: (String) -> Unit,
-    onOpenBill: (String) -> Unit   // ✅ ADD THIS
-){
+    onOpenBill: (String) -> Unit
+) {
     val context = LocalContext.current
 
     val cartItems: List<PosCartEntity> by
@@ -51,12 +51,23 @@ fun RightPanel(
     val isDineIn = orderType == "DINE_IN"
     val isRunning = tableStatus == "OCCUPIED"
     val isBillRequested = tableStatus == "BILL_REQUESTED"
-    LaunchedEffect(cartItems, tableStatus) {
-        Log.d(
-            "UI_STATE",
-            "RightPanel recomposed | tableNo=$tableNo orderType=$orderType tableStatus=$tableStatus cartCount=${cartItems.size}"
-        )
-    }
+
+    // ---------------- POS DERIVED STATE ----------------
+    val hasItems = cartItems.isNotEmpty()
+    val hasTable = isDineIn && tableNo != null
+
+    val canSendToKitchen =
+        hasItems && (!isDineIn || hasTable)
+
+    val canRequestBill =
+        isDineIn && isRunning && cartItems.isEmpty()
+
+    val canOpenBill =
+        isDineIn && isBillRequested
+
+    val canOpenKitchen =
+        isDineIn && hasTable && (isRunning || isBillRequested)
+
     Column(
         modifier = Modifier
             .widthIn(max = 320.dp)
@@ -74,81 +85,78 @@ fun RightPanel(
             else -> orderType
         }
 
-        val showTable = isDineIn && tableNo != null
-
         Column(modifier = Modifier.padding(bottom = 12.dp)) {
             Text(
                 text = "Order Type: $prettyOrderType",
                 style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF374151)
+                fontWeight = FontWeight.SemiBold
             )
             Text(
-                text = if (showTable) "Table: $tableNo" else "Table: —",
+                text = if (hasTable) "Table: $tableNo" else "Table: —",
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF6B7280)
+                color = Color.Gray
             )
         }
 
-        Divider(Modifier.padding(vertical = 8.dp))
+        Divider()
 
-        // ---------- CART ITEMS ----------
+        // ---------- CART ----------
         LazyColumn(modifier = Modifier.weight(1f)) {
             items(cartItems, key = { it.productId }) { item ->
                 CartRow(item, cartViewModel)
             }
         }
 
-        Divider(Modifier.padding(vertical = 8.dp))
-
-        Text(
-            text = "Payment",
-            style = MaterialTheme.typography.labelLarge,
-            modifier = Modifier.padding(bottom = 6.dp)
-        )
+        Divider()
 
         OrderSummaryScreen(cartViewModel)
 
+        // =========================================================
+        // =================== POS ACTION BUTTONS ==================
+        // =========================================================
+
         // ---------- SEND TO KITCHEN ----------
-        Button(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 12.dp),
-            onClick = {
-                val deviceId = Settings.Secure.getString(
-                    context.contentResolver,
-                    Settings.Secure.ANDROID_ID
-                )
-                ordersViewModel.placeOrder(
-                    orderType = orderType,
-                    tableNo = tableNo,
-                    paymentType = "UNPAID",
-                    deviceId = deviceId,
-                    deviceName = Build.MODEL ?: "Unknown Device",
-                    appVersion = BuildConfig.VERSION_NAME
-                )
+        if (canSendToKitchen) {
+            Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp),
+                onClick = {
+                    val deviceId = Settings.Secure.getString(
+                        context.contentResolver,
+                        Settings.Secure.ANDROID_ID
+                    )
 
+                    ordersViewModel.placeOrder(
+                        orderType = orderType,
+                        tableNo = tableNo,
+                        paymentType = "UNPAID",
+                        deviceId = deviceId,
+                        deviceName = Build.MODEL ?: "Unknown Device",
+                        appVersion = BuildConfig.VERSION_NAME
+                    )
 
-                tableViewModel.loadTables() // refresh table UI
-                onOrderPlaced()
-            },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF16A34A),
-                contentColor = Color.White
-            )
-        ) {
-            Text("Send to Kitchen")
+                    tableViewModel.loadTables()
+                    onOrderPlaced()
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF16A34A),
+                    contentColor = Color.White
+                )
+            ) {
+                Text("Send to Kitchen")
+            }
         }
 
         // ---------- REQUEST BILL ----------
-        if (isDineIn && isRunning && cartItems.isEmpty()) {
+        if (canRequestBill) {
             Button(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 8.dp),
                 onClick = {
-                    tableViewModel.requestBill(tableNo!!) // reactive update
-                    onOrderPlaced() // refresh UI if needed
+                    tableViewModel.requestBill(tableNo!!)
+                    onOrderPlaced()
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFFFACC15),
@@ -159,9 +167,8 @@ fun RightPanel(
             }
         }
 
-        // ---------- CLOSE TABLE ----------
         // ---------- OPEN BILL ----------
-        if (isDineIn && isBillRequested) {
+        if (canOpenBill) {
             Button(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -170,7 +177,7 @@ fun RightPanel(
                     tableNo?.let { onOpenBill(it) }
                 },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF2563EB), // 🔵 blue
+                    containerColor = Color(0xFF2563EB),
                     contentColor = Color.White
                 )
             ) {
@@ -178,44 +185,26 @@ fun RightPanel(
             }
         }
 
-
-//        if (isDineIn && isBillRequested) {
-//            Button(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(top = 8.dp),
-//                onClick = {
-//                    tableViewModel.closeTable(tableNo!!) // closes orders + marks AVAILABLE
-//                    onOrderPlaced()
-//                },
-//                colors = ButtonDefaults.buttonColors(
-//                    containerColor = Color(0xFFDC2626),
-//                    contentColor = Color.White
-//                )
-//            ) {
-//                Text("Close Table")
-//            }
-//
-//        }
-
-
-        Button(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp),
-            onClick = {
-                tableNo?.let { onOpenKitchen(it) }
-            },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF16A34A),
-                contentColor = Color.White
-            )
-        ) {
-            Text("Open Kitchen")
+        // ---------- OPEN KITCHEN ----------
+        if (canOpenKitchen) {
+            Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                onClick = {
+                    tableNo?.let { onOpenKitchen(it) }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF16A34A),
+                    contentColor = Color.White
+                )
+            ) {
+                Text("Open Kitchen")
+            }
         }
-
     }
 }
+
 
 
 
