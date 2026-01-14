@@ -36,31 +36,30 @@ class BillViewModel(
             val grouped = kotItems.groupBy { item ->
                 BillGroupKey(
                     productId = item.productId,
-                    parentId = item.parentId,
-                    basePrice = item.basePrice,
+                   basePrice = item.basePrice,
                     taxRate = item.taxRate,
-                    taxType = item.taxType
+                    taxType = item.taxType,
+                   parentId = item.parentId
                 )
             }
 
             val billingItems = grouped.map { (_, items) ->
 
-                val name = items.first().name
                 val quantity = items.sumOf { it.quantity }
+                val basePrice = items.first().basePrice
+                val taxRate = items.first().taxRate
+                val taxType = items.first().taxType
 
-                val subtotal = items.sumOf {
-                    it.basePrice * it.quantity
-                }
+                val subtotal = basePrice * quantity
 
-                val taxTotal = items.sumOf {
-                    if (it.taxType == "exclusive")
-                        it.basePrice * (it.taxRate / 100) * it.quantity
+                val taxTotal =
+                    if (taxType == "exclusive")
+                        basePrice * (taxRate / 100) * quantity
                     else 0.0
-                }
 
                 BillingItemUi(
-                    id = items.first().productId, // stable for UI
-                    name = name,
+                    id = items.first().productId, // stable UI id
+                    name = items.first().name,
                     quantity = quantity,
                     subtotal = subtotal,
                     taxTotal = taxTotal,
@@ -82,10 +81,7 @@ class BillViewModel(
     }
 
 
-    // 🔒 Payment logic stays separate (future-safe)
-    fun payBill(paymentType: String) {
-        // Will be implemented later:
-        // - copy DONE KOT → order tables
-        // - mark KOT as BILLED
-    }
+
+
+
 }

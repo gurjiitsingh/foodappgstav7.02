@@ -454,27 +454,53 @@ class POSOrdersViewModel(
                 orderMasterDao.insert(master)
 
                 // 4️⃣ Copy KOT → OrderItems
-                val orderItems = kotItems.map { kot ->
+                // 4️⃣ Group DONE KOT items → OrderItems (FINAL SNAPSHOT)
+                val grouped = kotItems.groupBy {
+                    Triple(
+                        it.productId,
+                        it.basePrice,
+                        it.taxRate
+                    )
+                }
+
+                val orderItems = grouped.map { (_, items) ->
+
+                    val first = items.first()
+                    val quantity = items.sumOf { it.quantity }
+
+                    val subtotal = first.basePrice * quantity
+                    val taxTotal =
+                        if (first.taxType == "exclusive")
+                            first.basePrice * (first.taxRate / 100) * quantity
+                        else 0.0
+
                     PosOrderItemEntity(
                         id = UUID.randomUUID().toString(),
                         orderMasterId = orderId,
-                        productId = kot.productId,
-                        name = kot.name,
-                        categoryId = kot.categoryId,
-                        parentId = kot.parentId,
-                        isVariant = kot.isVariant,
-                        basePrice = kot.basePrice,
-                        quantity = kot.quantity,
-                        itemSubtotal = kot.basePrice * kot.quantity,
-                        taxRate = kot.taxRate,
-                        taxType = kot.taxType,
-                        taxAmountPerItem = 0.0,
-                        taxTotal = 0.0,
-                        finalPricePerItem = kot.basePrice,
-                        finalTotal = kot.basePrice * kot.quantity,
+
+                        productId = first.productId,
+                        name = first.name,
+                        categoryId = first.categoryId,
+
+                        parentId = first.parentId,
+                        isVariant = first.isVariant,
+
+                        basePrice = first.basePrice,
+                        quantity = quantity,
+                        itemSubtotal = subtotal,
+
+                        taxRate = first.taxRate,
+                        taxType = first.taxType,
+                        taxAmountPerItem = taxTotal / quantity,
+                        taxTotal = taxTotal,
+
+                        finalPricePerItem = first.basePrice + (taxTotal / quantity),
+                        finalTotal = subtotal + taxTotal,
+
                         createdAt = now
                     )
                 }
+
 
                 orderProductDao.insertAll(orderItems)
 
