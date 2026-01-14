@@ -191,11 +191,7 @@ fun NavigationHost(
         composable("products") { Text("Products Screen") }
         composable("categories") { Text("Categories Screen") }
 
-//        composable("kitchen") {
-//            KitchenScreen(
-//                viewModel = kitchenViewModel
-//            )
-//        }
+
 
         // ---------------- POS ----------------
 
@@ -221,25 +217,7 @@ fun NavigationHost(
             )
         }
 
-        composable(
-            route = "kitchen/{tableNo}",
-            arguments = listOf(navArgument("tableNo") { type = NavType.StringType })
-        ) { backStackEntry ->
 
-            val tableNo = backStackEntry.arguments!!.getString("tableNo")!!
-
-            val context = LocalContext.current
-            val kitchenViewModel: KitchenViewModel = viewModel(
-                factory = KitchenViewModelFactory(
-                    app = context.applicationContext as Application
-                )
-            )
-
-            KitchenScreen(
-                tableNo = tableNo,
-                viewModel = kitchenViewModel
-            )
-        }
 
         // ---------------- PRINTER SETTINGS ----------------
         composable("printer_role_selection") {
@@ -310,45 +288,7 @@ fun NavigationHost(
         }
 
         // ---------------- FINAL BILL ----------------
-        composable(
-            route = "bill/{tableId}",
-            arguments = listOf(navArgument("tableId") { type = NavType.StringType })
-        ) { backStackEntry ->
 
-            val tableId = backStackEntry.arguments!!.getString("tableId")!!
-            val context = LocalContext.current.applicationContext as Application
-
-            // ✅ sync into session
-            LaunchedEffect(tableId) {
-                posSessionViewModel.setTableId(tableId)
-            }
-
-            val billViewModel: BillViewModel = viewModel(
-                factory = BillViewModelFactory(
-                    application = context,
-                    tableId = tableId
-                )
-            )
-
-            LaunchedEffect(Unit) {
-                billViewModel.loadBill()
-            }
-
-            BillScreen(
-                viewModel = billViewModel,
-                onPayClick = { paymentType ->
-                    posOrdersViewModel.payAndCloseTable(
-                        tableNo = tableId,
-                        paymentType = paymentType.name
-                    )
-
-                    // ✅ CLEAR SESSION AFTER PAYMENT
-                    posSessionViewModel.clearTable()
-
-                    navController.popBackStack("pos", inclusive = false)
-                }
-            )
-        }
 
 
 

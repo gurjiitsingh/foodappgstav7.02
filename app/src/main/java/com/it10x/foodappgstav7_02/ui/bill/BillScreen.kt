@@ -6,52 +6,37 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import com.it10x.foodappgstav7_02.ui.payment.PaymentType
-
-
-
-
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
-
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.it10x.foodappgstav7_02.ui.payment.PaymentType
 
 @Composable
 fun BillScreen(
     viewModel: BillViewModel,
     onPayClick: (PaymentType) -> Unit
 ) {
-    val state by viewModel.uiState.collectAsState(
-        initial = BillUiState()  // 🔹 provide initial value
-    )
-
-
+    val state by viewModel.uiState.collectAsState()
 
     if (state.loading) {
         Box(
             modifier = Modifier.fillMaxSize(),
-            contentAlignment = androidx.compose.ui.Alignment.Center
+            contentAlignment = Alignment.Center
         ) {
             CircularProgressIndicator()
         }
         return
     }
 
+    // 🔹 YOUR EXISTING UI (UNCHANGED)
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Text("Final Bill", style = MaterialTheme.typography.headlineSmall)
 
         Spacer(Modifier.height(12.dp))
 
-        LazyColumn(
-            modifier = Modifier.weight(1f)
-        ) {
+        LazyColumn(modifier = Modifier.weight(1f)) {
             items(state.items) { item ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -82,6 +67,7 @@ fun BillScreen(
     }
 }
 
+
 @Composable
 private fun BillRow(label: String, value: Double, bold: Boolean = false) {
     Row(
@@ -102,6 +88,3 @@ private fun PaymentButton(text: String, onClick: () -> Unit) {
         Text(text)
     }
 }
-
-
-

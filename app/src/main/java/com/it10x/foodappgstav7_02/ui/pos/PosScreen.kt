@@ -33,6 +33,10 @@ import androidx.navigation.NavController
 import com.it10x.foodappgstav7_02.data.local.entities.TableEntity
 import com.it10x.foodappgstav7_02.ui.cart.CartViewModelFactory
 import com.it10x.foodappgstav7_02.viewmodel.TableViewModel
+import com.it10x.foodappgstav7_02.ui.kitchen.KitchenScreen
+import com.it10x.foodappgstav7_02.ui.bill.BillScreenDialog
+
+import com.it10x.foodappgstav7_02.ui.kitchen.KitchenViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -112,6 +116,9 @@ fun PosScreen(
       // ✅ PAYMENT TYPE STATE (DEFAULT CASH)
     var paymentType by remember { mutableStateOf("CASH") }
 
+    // ✅ NEW: POPUP STATES
+    var showKitchen by remember { mutableStateOf(false) }
+    var showBill by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -272,11 +279,11 @@ fun PosScreen(
                     onOrderPlaced = {
                         cartViewModel.clear()
                     },
-                    onOpenKitchen = { table ->
-                        navController.navigate("kitchen/$table")
+                    onOpenKitchen = {
+                        showKitchen = true
                     },
-                    onOpenBill = { table ->
-                        navController.navigate("bill/$table")   // ✅ THIS
+                    onOpenBill = {
+                        showBill = true
                     }
                 )
 
@@ -313,15 +320,62 @@ fun PosScreen(
                     cartViewModel.clear()
                 },
                 onOpenKitchen = {
-                    navController.navigate("kitchen/$tableId")
+                    showKitchen = true
                 },
-                onOpenBill = { table ->
-                    navController.navigate("bill/$table")   // ✅ THIS
+                onOpenBill = {
+                    showBill = true
                 }
             )
 
         }
     }
+
+    // ================= KITCHEN POPUP =================
+    if (showKitchen && tableId != null) {
+        AlertDialog(
+            onDismissRequest = { showKitchen = false },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showKitchen = false }) {
+                    Text("Close")
+                }
+            },
+            title = {
+                Text("Kitchen – Table ${tableName ?: tableId}")
+            },
+            text = {
+                val kitchenViewModel: KitchenViewModel = viewModel()
+
+                KitchenScreen(
+                    tableNo = tableId!!,
+                    viewModel = kitchenViewModel
+                )
+            }
+        )
+    }
+
+// ================= BILL POPUP =================
+    if (showBill && tableId != null) {
+        AlertDialog(
+            onDismissRequest = { showBill = false },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showBill = false }) {
+                    Text("Cancel")
+                }
+            },
+            title = {
+                Text("Billing – Table ${tableName ?: tableId}")
+            },
+            text = {
+                BillScreenDialog(
+                    tableId = tableId!!,
+                    onClose = { showBill = false }
+                )
+            }
+        )
+    }
+
 
 }
 
@@ -523,4 +577,12 @@ fun PosOrderTypeButton(
             )
         }
     }
+
+
+
+
+
+
+
+
 }

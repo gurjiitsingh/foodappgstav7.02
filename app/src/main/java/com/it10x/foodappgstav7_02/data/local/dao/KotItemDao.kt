@@ -17,6 +17,7 @@ interface KotItemDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(items: List<PosKotItemEntity>)
 
+
     // -------------------------
     // FETCH (LIVE BILL)
     // -------------------------
