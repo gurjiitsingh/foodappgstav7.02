@@ -1,4 +1,4 @@
-package com.it10x.foodappgstav5_1
+package com.it10x.foodappgstav7_02
 
 import android.Manifest
 import android.os.Build

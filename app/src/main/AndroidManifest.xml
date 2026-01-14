@@ -75,7 +75,7 @@
             android:name=".usb.UsbPermissionReceiver"
             android:exported="false">
             <intent-filter>
-                <action android:name="com.it10x.foodappgstav5_1.USB_PERMISSION" />
+                <action android:name="com.it10x.foodappgstav7_02.USB_PERMISSION" />
             </intent-filter>
         </receiver>
 

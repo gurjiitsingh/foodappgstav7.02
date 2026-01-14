@@ -28,7 +28,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:247663732100:android:b4248457b260ecc815e9d1",
         "android_client_info": {
-          "package_name": "com.it10x.FoodAppGstaV5_1"
+          "package_name": "com.it10x.foodappgstav7_02"
         }
       },
       "oauth_client": [],
@@ -66,7 +66,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:247663732100:android:5000de54e9a2321315e9d1",
         "android_client_info": {
-          "package_name": "com.it10x.foodappgstav5_1"
+          "package_name": "com.it10x.foodappgstav7_02"
         }
       },
       "oauth_client": [],

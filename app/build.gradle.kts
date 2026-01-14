@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.it10x.foodappgstav5_1"
+    namespace = "com.it10x.foodappgstav7_02"
     compileSdk = 34 // Android 14
 
     defaultConfig {
-        applicationId = "com.it10x.foodappgstav5_1"
+        applicationId = "com.it10x.foodappgstav7_02"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
