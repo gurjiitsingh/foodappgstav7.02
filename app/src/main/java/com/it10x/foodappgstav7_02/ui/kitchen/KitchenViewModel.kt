@@ -1,10 +1,12 @@
 package com.it10x.foodappgstav7_02.ui.kitchen
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.it10x.foodappgstav7_02.data.local.AppDatabaseProvider
 import com.it10x.foodappgstav7_02.data.local.entities.PosKotItemEntity
+import com.it10x.foodappgstav7_02.data.local.usecase.KotToBillUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -18,6 +20,8 @@ class KitchenViewModel(
     private val kotItemDao =
         AppDatabaseProvider.get(app).kotItemDao()
 
+    private val kotToBillUseCase =
+        KotToBillUseCase(kotItemDao)
 
     val kotItems: StateFlow<List<PosKotItemEntity>> =
         kotItemDao.getAllKotItems()
@@ -40,11 +44,17 @@ class KitchenViewModel(
         return state
     }
 
+
+
+
     fun markDone(itemId: String) {
         viewModelScope.launch {
-            kotItemDao.updateStatus(itemId, "DONE")
+            kotToBillUseCase.markDoneAndMerge(itemId)
+            Log.d("KOT_STEP", "KOT item $itemId DONE & merged to Bill")
         }
     }
+
+
 
     fun markCancelled(itemId: String) {
         viewModelScope.launch {

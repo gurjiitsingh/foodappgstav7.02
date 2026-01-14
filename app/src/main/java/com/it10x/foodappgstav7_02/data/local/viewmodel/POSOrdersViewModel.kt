@@ -68,17 +68,15 @@ class POSOrdersViewModel(
         deviceName: String?,
         appVersion: String?
     ) {
+        Log.d("KOT_STEP", "Start placeOrder() | tableNo=$tableNo orderType=$orderType")
         viewModelScope.launch {
             _loading.value = true
 
-            val db = AppDatabaseProvider.get(printerManager.appContext())
-            val kotBatchDao = db.kotBatchDao()
-            val kotItemDao = db.kotItemDao()
-
-            val cartList = repository.getUnsentItems(tableNo).first()
-
+            val cartList = repository.getCartItems(tableNo).first()
+           // Log.d("KOT_STEP", "Unsent cart items count=${cartList.size} for table=$tableNo")
+            Log.d("KOT_STEP", "Cart items count=${cartList.size} for table=$tableNo")
             if (cartList.isEmpty()) {
-                Log.d("KOT", "No new items to send to kitchen")
+                Log.d("KOT_STEP", "No new items to send to kitchen for table=$tableNo")
                 _loading.value = false
                 return@launch
             }
@@ -86,93 +84,7 @@ class POSOrdersViewModel(
             try {
                 val now = System.currentTimeMillis()
                 val orderId = UUID.randomUUID().toString()
-                val srno = srNoCounter.getAndIncrement()
-
-                // 2️⃣ Totals
-                val itemTotal = OrderCalculator.subtotal(cartList)
-                val taxTotal = OrderCalculator.tax(cartList)
-                val grandTotal = OrderCalculator.grandTotal(cartList)
-
-//                // 3️⃣ Master
-//                val orderMaster = PosOrderMasterEntity(
-//                    id = orderId,
-//                    srno = srno,
-//                    orderType = orderType,
-//                    tableNo = tableNo,
-//                    itemTotal = itemTotal,
-//                    taxTotal = taxTotal,
-//                    discountTotal = 0.0,
-//                    grandTotal = grandTotal,
-//                    paymentType = paymentType,
-//                    paymentStatus = "PAID",
-//                    orderStatus = "NEW",
-//                    source = "POS",
-//                    deviceId = deviceId,
-//                    deviceName = deviceName,
-//                    appVersion = appVersion,
-//                    createdAt = now,
-//                    updatedAt = now,
-//                    syncStatus = "PENDING",
-//                    lastSyncedAt = null,
-//                    notes = null
-//                )
-//
-//                repository.insertOrder(orderMaster, cartList)
-
-                // 4️⃣ Print KOT → WAIT → THEN mark sent
-//                val printed = autoPrint(orderMaster, cartList)
-
-//                val printed =true;
-//                if (printed) {
-//
-//                    val db = AppDatabaseProvider.get(printerManager.appContext())
-//                    val kotBatchDao = db.kotBatchDao()
-//                    val kotItemDao = db.kotItemDao()
-//
-//                    val kotBatchId = UUID.randomUUID().toString()
-//
-//                    val kotBatch = PosKotBatchEntity(
-//                        id = kotBatchId,
-//                        tableNo = tableNo,
-//                        orderType = orderType,
-//                        deviceId = deviceId,
-//                        deviceName = deviceName,
-//                        appVersion = appVersion,
-//                        createdAt = System.currentTimeMillis(),
-//                        sentBy = null,
-//                        syncStatus = "PENDING",
-//                        lastSyncedAt = null
-//                    )
-//
-//                    withContext(Dispatchers.IO) {
-//                        kotBatchDao.insert(kotBatch)
-//
-//                        val kotItems = cartList.map { cart ->
-//                            PosKotItemEntity(
-//                                id = UUID.randomUUID().toString(),
-//                                kotBatchId = kotBatchId,
-//                                tableNo = tableNo,
-//                                productId = cart.productId,
-//                                name = cart.name,
-//                                categoryId = cart.categoryId,
-//                                parentId = cart.parentId,
-//                                isVariant = cart.isVariant,
-//                                basePrice = cart.basePrice,
-//                                quantity = cart.quantity,
-//                                taxRate = cart.taxRate,
-//                                taxType = cart.taxType,
-//                                createdAt = System.currentTimeMillis()
-//                            )
-//                        }
-//
-//                        kotItemDao.insertAll(kotItems)
-//                    }
-//
-//                    if (tableNo != null) {
-//                        repository.markAllSent(tableNo)
-//                    }
-//                }
-
+                Log.d("KOT_STEP", "New KOT batchId=$orderId")
 
                 val kotSaved = saveKotOnly(
                     orderType = orderType,
@@ -184,18 +96,24 @@ class POSOrdersViewModel(
                 )
 
                 if (!kotSaved) {
-                    Log.e("KOT", "❌ KOT SAVE FAILED")
+                    Log.e("KOT_STEP", "❌ KOT SAVE FAILED for table=$tableNo")
                     return@launch
                 }
-                debugReadKot(tableNo!!)
 
+                Log.d("KOT_STEP", "KOT saved successfully | items=${cartList.size}")
+                debugReadKot(tableNo!!)
+                // ✅ CLEAR CART ONLY AFTER SUCCESSFUL KOT SAVE
+                repository.clearCart(tableNo)
+                Log.d("KOT_STEP", "Cart cleared after KOT save for table=$tableNo")
             } catch (e: Exception) {
-                Log.e("POS", "Error placing order", e)
+                Log.e("KOT_STEP", "Error placing order", e)
             } finally {
                 _loading.value = false
             }
         }
     }
+
+
 
 
     // -------------------------
@@ -562,7 +480,8 @@ class POSOrdersViewModel(
 
             val batchId = UUID.randomUUID().toString()
             val now = System.currentTimeMillis()
-
+            repository.markAllSent(tableNo!!)  // marks only in DB
+          //  Log.d("KOT_STEP", "Marked ${items.size} items as sent to kitchen")
             val batch = PosKotBatchEntity(
                 id = batchId,
                 tableNo = tableNo,

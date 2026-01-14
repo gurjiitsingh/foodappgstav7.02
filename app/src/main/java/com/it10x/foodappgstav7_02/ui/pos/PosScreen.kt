@@ -137,10 +137,7 @@ fun PosScreen(
                     .padding(15.dp)   // ✅ SAME AS PRODUCTS
             ) {
 
-//                CategoryButton(
-//                    label = "All",
-//                    selected = selectedCatId == null
-//                ) { selectedCatId = null }
+
 
                 Spacer(Modifier.height(8.dp))
 
@@ -277,7 +274,7 @@ fun PosScreen(
                     paymentType = paymentType,
                     onPaymentChange = { paymentType = it },
                     onOrderPlaced = {
-                        cartViewModel.clear()
+                     //   cartViewModel.clear()
                     },
                     onOpenKitchen = {
                         showKitchen = true
@@ -317,7 +314,7 @@ fun PosScreen(
                 paymentType = paymentType,
                 onPaymentChange = { paymentType = it },
                 onOrderPlaced = {
-                    cartViewModel.clear()
+                   // cartViewModel.clear()
                 },
                 onOpenKitchen = {
                     showKitchen = true

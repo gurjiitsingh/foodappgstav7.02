@@ -35,7 +35,7 @@ interface KotItemDao {
         SELECT * FROM pos_kot_items
         WHERE tableNo = :tableNo
     """)
-    suspend fun getItemsForTableSync(tableNo: String): List<PosKotItemEntity>
+    suspend fun getItemsForTableSync(tableNo: String?): List<PosKotItemEntity>
 
     // -------------------------
     // CLEANUP AFTER PAYMENT
@@ -57,6 +57,9 @@ interface KotItemDao {
         status: String
     )
 
+
+    @Query("SELECT * FROM pos_kot_items WHERE id = :itemId LIMIT 1")
+    suspend fun getItemByIdSync(itemId: String): PosKotItemEntity?
     @Query("""
     SELECT * FROM pos_kot_items
     WHERE tableNo = :tableNo
@@ -68,4 +71,11 @@ interface KotItemDao {
 
     @Query("SELECT * FROM pos_kot_items ORDER BY createdAt ASC")
     fun getAllKotItems(): Flow<List<PosKotItemEntity>>
+
+    @Query("""
+    UPDATE pos_kot_items
+    SET quantity = :quantity
+    WHERE id = :itemId
+""")
+    suspend fun updateQuantity(itemId: String, quantity: Int)
 }

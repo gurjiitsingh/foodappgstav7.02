@@ -1,5 +1,6 @@
 package com.it10x.foodappgstav7_02.ui.bill
 
+import android.util.Log
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -13,8 +14,9 @@ fun BillScreenDialog(
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
 
-    // ✅ ViewModel CREATED ONCE (STABLE)
+    // ✅ ViewModel per TABLE (stable, correct)
     val viewModel: BillViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+        key = "BillViewModel_$tableId",   // ⭐ IMPORTANT FIX
         factory = BillViewModelFactory(
             application = context.applicationContext as android.app.Application,
             tableId = tableId
@@ -33,10 +35,10 @@ fun BillScreenDialog(
             Text(text = "Final Bill")
         },
         text = {
-            // ✅ PASS VIEWMODEL — DO NOT CREATE INSIDE
             BillScreen(
                 viewModel = viewModel,
                 onPayClick = { paymentType ->
+                    Log.d("PAY_CLICK", "Pay clicked | table=$tableId type=${paymentType.name}")
                     viewModel.payBill(paymentType.name)
                     onClose()
                 }

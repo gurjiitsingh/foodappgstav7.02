@@ -34,6 +34,7 @@ class POSOrdersRepository(
 
     fun getUnsentItems(tableId: String?): Flow<List<PosCartEntity>> =
         cartDao.getUnsentItems(tableId)
+
     suspend fun markAllSent(tableId: String) {
         cartDao.markAllSent(tableId)
     }

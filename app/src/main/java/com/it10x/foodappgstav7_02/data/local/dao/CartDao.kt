@@ -10,6 +10,13 @@ interface CartDao {
     @Query("SELECT * FROM cart WHERE tableId = :tableId ORDER BY createdAt ASC")
     fun getCartForTable(tableId: String?): Flow<List<PosCartEntity>>
 
+    @Query("""
+    SELECT * FROM cart 
+    WHERE tableId = :tableId 
+    AND sentToKitchen = 0
+    ORDER BY createdAt ASC
+""")
+    fun getUnsentItems(tableId: String?): Flow<List<PosCartEntity>>
 
     @Query("SELECT * FROM cart WHERE productId = :id AND tableId = :tableId LIMIT 1")
     suspend fun getByIdForTable(id: String, tableId: String): PosCartEntity?
@@ -26,13 +33,7 @@ interface CartDao {
     suspend fun clearCart(tableId: String)
 
 
-    @Query("""
-    SELECT * FROM cart 
-    WHERE tableId = :tableId 
-    AND sentToKitchen = 0
-    ORDER BY createdAt ASC
-""")
-    fun getUnsentItems(tableId: String?): Flow<List<PosCartEntity>>
+
 
     @Query("""
     UPDATE cart 

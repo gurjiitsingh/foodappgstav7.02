@@ -51,7 +51,12 @@ fun RightPanel(
     val isDineIn = orderType == "DINE_IN"
     val isRunning = tableStatus == "OCCUPIED"
     val isBillRequested = tableStatus == "BILL_REQUESTED"
-
+    LaunchedEffect(cartItems, tableStatus) {
+        Log.d(
+            "UI_STATE",
+            "RightPanel recomposed | tableNo=$tableNo orderType=$orderType tableStatus=$tableStatus cartCount=${cartItems.size}"
+        )
+    }
     Column(
         modifier = Modifier
             .widthIn(max = 320.dp)
@@ -123,7 +128,7 @@ fun RightPanel(
                     appVersion = BuildConfig.VERSION_NAME
                 )
 
-                cartViewModel.clear()
+
                 tableViewModel.loadTables() // refresh table UI
                 onOrderPlaced()
             },

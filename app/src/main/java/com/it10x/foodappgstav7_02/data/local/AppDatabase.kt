@@ -18,7 +18,7 @@ import com.it10x.foodappgstav7_02.data.local.entities.config.*
         PosKotItemEntity::class,
         PosKotBatchEntity::class
     ],
-    version = 34,              // ⬆️ increment version since schema changed
+    version = 36,              // ⬆️ increment version since schema changed
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -32,4 +32,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun tableDao(): TableDao
         abstract fun kotBatchDao(): KotBatchDao
     abstract fun kotItemDao(): KotItemDao
+
+
 }

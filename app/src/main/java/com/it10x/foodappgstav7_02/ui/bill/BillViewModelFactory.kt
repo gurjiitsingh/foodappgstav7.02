@@ -15,6 +15,8 @@ class BillViewModelFactory(
             val db = AppDatabaseProvider.get(application)
             return BillViewModel(
                 kotItemDao = db.kotItemDao(),
+                orderMasterDao = db.orderMasterDao(),
+                orderProductDao = db.orderProductDao(),
                 tableId = tableId
             ) as T
         }

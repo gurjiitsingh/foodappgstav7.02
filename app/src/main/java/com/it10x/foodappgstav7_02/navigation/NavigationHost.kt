@@ -42,7 +42,7 @@ import com.it10x.foodappgstav7_02.data.local.repository.POSOrdersRepository
 
 import com.it10x.foodappgstav7_02.ui.bill.BillScreen
 import com.it10x.foodappgstav7_02.ui.bill.BillViewModel
-import com.it10x.foodappgstav7_02.ui.bill.BillViewModelFactory
+
 import com.it10x.foodappgstav7_02.ui.kitchen.KitchenScreen
 import com.it10x.foodappgstav7_02.ui.payment.PaymentType
 import com.it10x.foodappgstav7_02.ui.kitchen.KitchenViewModel
