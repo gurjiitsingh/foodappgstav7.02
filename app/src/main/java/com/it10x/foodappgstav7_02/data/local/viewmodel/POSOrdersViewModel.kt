@@ -63,20 +63,27 @@ class POSOrdersViewModel(
     fun placeOrder(
         orderType: String,
         tableNo: String?,
+        sessionId: String,   // ✅ ADD THIS
         paymentType: String,
         deviceId: String,
         deviceName: String?,
         appVersion: String?
     ) {
         Log.d("KOT_STEP", "Start placeOrder() | tableNo=$tableNo orderType=$orderType")
+
         viewModelScope.launch {
             _loading.value = true
 
-            val cartList = repository.getCartItems(tableNo).first()
-           // Log.d("KOT_STEP", "Unsent cart items count=${cartList.size} for table=$tableNo")
-            Log.d("KOT_STEP", "Cart items count=${cartList.size} for table=$tableNo")
+            // ✅ Show exactly what identifiers we are using
+            val sessionKey = sessionId
+            Log.d("KITCHEN_DEBUG", "Resolved sessionKey=$sessionKey")
+
+            // ✅ Observe what repository fetches
+            val cartList = repository.getCartItems(tableNo, orderType).first()
+            Log.d("KITCHEN_DEBUG", "Cart fetched for type=$orderType, size=${cartList.size}")
+
             if (cartList.isEmpty()) {
-                Log.d("KOT_STEP", "No new items to send to kitchen for table=$tableNo")
+                Log.w("KITCHEN_DEBUG", "⚠️ No new items found for orderType=$orderType (table=$tableNo)")
                 _loading.value = false
                 return@launch
             }
@@ -84,11 +91,12 @@ class POSOrdersViewModel(
             try {
                 val now = System.currentTimeMillis()
                 val orderId = UUID.randomUUID().toString()
-                Log.d("KOT_STEP", "New KOT batchId=$orderId")
+
+                Log.d("KOT_STEP", "Creating new KOT batchId=$orderId for $orderType")
 
                 val kotSaved = saveKotOnly(
                     orderType = orderType,
-                    tableNo = tableNo,
+                    tableNo = sessionKey,
                     cartItems = cartList,
                     deviceId = deviceId,
                     deviceName = deviceName,
@@ -96,22 +104,26 @@ class POSOrdersViewModel(
                 )
 
                 if (!kotSaved) {
-                    Log.e("KOT_STEP", "❌ KOT SAVE FAILED for table=$tableNo")
+                    Log.e("KITCHEN_DEBUG", "❌ saveKotOnly() failed for session=$sessionKey")
                     return@launch
                 }
 
-                Log.d("KOT_STEP", "KOT saved successfully | items=${cartList.size}")
-                debugReadKot(tableNo!!)
-                // ✅ CLEAR CART ONLY AFTER SUCCESSFUL KOT SAVE
-                repository.clearCart(tableNo)
-                Log.d("KOT_STEP", "Cart cleared after KOT save for table=$tableNo")
+                Log.d("KITCHEN_DEBUG", "✅ KOT saved successfully (${cartList.size} items)")
+
+                // ✅ Verify what we’re about to clear
+                Log.d("KITCHEN_DEBUG", "Clearing cart for sessionKey=$sessionKey")
+                repository.clearCart(orderType, tableNo)
+
+                Log.d("KITCHEN_DEBUG", "✅ Cart cleared for sessionKey=$sessionKey")
+
             } catch (e: Exception) {
-                Log.e("KOT_STEP", "Error placing order", e)
+                Log.e("KITCHEN_DEBUG", "💥 Exception during placeOrder()", e)
             } finally {
                 _loading.value = false
             }
         }
     }
+
 
 
 
@@ -317,7 +329,8 @@ class POSOrdersViewModel(
 // -------------------------
     fun payAndCloseTable(
         tableNo: String,
-        paymentType: String
+        paymentType: String,
+        orderType: String,
     ) {
         viewModelScope.launch {
             _loading.value = true
@@ -350,7 +363,7 @@ class POSOrdersViewModel(
                     id = orderId,
                     srno = srNoCounter.getAndIncrement(),
                     orderType = "DINE_IN",
-                    tableNo = tableNo,
+                    tableNo = tableNo ?: orderType,
                     itemTotal = itemTotal,
                     taxTotal = taxTotal,
                     discountTotal = 0.0,
@@ -480,11 +493,11 @@ class POSOrdersViewModel(
 
             val batchId = UUID.randomUUID().toString()
             val now = System.currentTimeMillis()
-            repository.markAllSent(tableNo!!)  // marks only in DB
+            repository.markAllSent(tableNo ?: orderType)
           //  Log.d("KOT_STEP", "Marked ${items.size} items as sent to kitchen")
             val batch = PosKotBatchEntity(
                 id = batchId,
-                tableNo = tableNo,
+                tableNo = tableNo ?: orderType,
                 orderType = orderType,
                 deviceId = deviceId,
                 deviceName = deviceName,
@@ -497,12 +510,12 @@ class POSOrdersViewModel(
 
             withContext(Dispatchers.IO) {
                 kotBatchDao.insert(batch)
-
+                Log.d("KOT_DEBUG", "Saved ${cartItems.size} KOT items for tableNo=${tableNo ?: orderType}")
                 val items = cartItems.map { cart ->
                     PosKotItemEntity(
                         id = UUID.randomUUID().toString(),
                         kotBatchId = batchId,
-                        tableNo = tableNo,
+                        tableNo = tableNo ?: orderType,
                         productId = cart.productId,
                         name = cart.name,
                         categoryId = cart.categoryId,

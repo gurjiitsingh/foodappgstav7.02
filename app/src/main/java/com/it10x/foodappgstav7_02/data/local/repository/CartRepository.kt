@@ -9,18 +9,24 @@ class CartRepository(
 ) {
 
     // ---------- OBSERVE CART (per table) ----------
-    fun observeCart(tableId: String): Flow<List<PosCartEntity>> =
-        dao.getCartForTable(tableId)
+    fun observeCart(sessionId: String): Flow<List<PosCartEntity>> =
+        dao.getCartForSession(sessionId)
+
+
+
+
 
     // ---------- ADD ----------
     suspend fun addToCart(product: PosCartEntity) {
-        val existing = dao.getByIdForTable(product.productId, product.tableId)
+        val existing = dao.getByIdForSession(product.productId, product.sessionId)
         if (existing == null) {
             dao.insert(product.copy(quantity = 1))
         } else {
             dao.update(existing.copy(quantity = existing.quantity + 1))
         }
     }
+
+
 
     // ---------- REMOVE SINGLE ITEM ----------
     suspend fun remove(item: PosCartEntity) {

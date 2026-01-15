@@ -9,6 +9,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
+object TableStatus {
+    const val AVAILABLE = "AVAILABLE"
+    const val OCCUPIED = "OCCUPIED"
+    const val BILL_REQUESTED = "BILL_REQUESTED"
+}
 class TableViewModel(app: Application) : AndroidViewModel(app) {
 
     private val dao = AppDatabaseProvider.get(app).tableDao()
@@ -40,10 +45,17 @@ class TableViewModel(app: Application) : AndroidViewModel(app) {
                     val total = orderDao.getRunningTotalForTable(table.id)
                     val openOrders = orderDao.getOpenOrdersForTable(table.id)
 
-                    val color = when {
-                        table.status == "AVAILABLE" -> TableColor.GRAY
-                        table.status == "BILL_REQUESTED" -> TableColor.RED
-                        openOrders.isNotEmpty() -> TableColor.GREEN
+//                    val color = when {
+//                        table.status == "AVAILABLE" -> TableColor.GRAY
+//                        table.status == "BILL_REQUESTED" -> TableColor.RED
+//                        openOrders.isNotEmpty() -> TableColor.GREEN
+//                        else -> TableColor.GRAY
+//                    }
+
+                    val color = when (table.status) {
+                        TableStatus.AVAILABLE -> TableColor.GRAY
+                        TableStatus.OCCUPIED -> TableColor.GREEN
+                        TableStatus.BILL_REQUESTED -> TableColor.RED
                         else -> TableColor.GRAY
                     }
 
@@ -84,11 +96,6 @@ class TableViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-//    fun closeTableOnly(tableNo: String) {
-//        viewModelScope.launch {
-//            repository.closeOrdersForTable(tableNo)
-//        }
-//    }
 
     fun closeTable(tableId: String) {
         viewModelScope.launch {
@@ -100,18 +107,21 @@ class TableViewModel(app: Application) : AndroidViewModel(app) {
 
 
 
-//    fun markAvailable(tableId: String?) {
-//        viewModelScope.launch {
-//            dao.insertAll(
-//                _tables.value.map {
-//                    if (it.id == tableId)
-//                        it.copy(status = "AVAILABLE", activeOrderId = null)
-//                    else it
-//                }
-//            )
-//            loadTables()
-//        }
-//    }
+    fun occupyTable(tableId: String) {
+        viewModelScope.launch {
+            dao.updateStatus(tableId, TableStatus.OCCUPIED)
+            loadTables()
+        }
+    }
+
+    fun releaseTable(tableId: String) {
+        viewModelScope.launch {
+            orderDao.closeTableOrders(tableId, System.currentTimeMillis())
+            dao.clearActiveOrder(tableId)
+            dao.updateStatus(tableId, TableStatus.AVAILABLE)
+            loadTables()
+        }
+    }
 
 
 }

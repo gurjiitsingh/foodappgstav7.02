@@ -33,8 +33,11 @@ fun ProductList(
     filteredProducts: List<ProductEntity>,
     variants: List<ProductEntity>,
     cartViewModel: CartViewModel,
-    tableNo: String  // add this
-) {
+    tableNo: String?,  // add this
+    posSessionViewModel: PosSessionViewModel  // 🔑 add this
+    ) {
+    val sessionId by posSessionViewModel.sessionId.collectAsState()
+
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 160.dp),
         modifier = Modifier.fillMaxSize(),
@@ -67,7 +70,8 @@ fun ProductList(
                     product = product,
                     variants = variants,
                     cartViewModel = cartViewModel,
-                    tableNo = tableNo ?: "T0"  // fallback if null
+                    tableNo = tableNo ?: "T0",  // fallback if null
+                    sessionId = sessionId  // 🔑 pass here
                 )
             }
         }
@@ -85,7 +89,8 @@ private fun ProductInnerContent(
     product: ProductEntity,
     variants: List<ProductEntity>,
     cartViewModel: CartViewModel,
-    tableNo : String
+    tableNo : String,
+    sessionId: String   // 🔑 add this
 ) {
     val variants = remember(product.id, variants) {
         variants.filter {
@@ -99,13 +104,13 @@ private fun ProductInnerContent(
 
             if (variants.isNotEmpty()) {
                 items(variants, key = { it.id }) { v ->
-                    VariantCard(v, cartViewModel, tableNo)
+                    VariantCard(v, cartViewModel, tableNo,sessionId)
                 }
             }
 
             if (product.parentId == null && product.hasVariants == false ) {
                 item {
-                    ParentProductCard(product, cartViewModel,tableNo)
+                    ParentProductCard(product, cartViewModel,tableNo,  sessionId)
                 }
             }
         }
@@ -117,7 +122,8 @@ private fun ProductInnerContent(
 private fun ParentProductCard(
     product: ProductEntity,
     cartViewModel: CartViewModel,
-    tableNo: String
+    tableNo: String,
+    sessionId: String   // 🔑 add this
 ) {
 
     Card(
@@ -186,7 +192,8 @@ private fun ParentProductCard(
                                 parentId = null,
                                 isVariant = false,
                                 categoryId = product.categoryId,
-                                tableId = tableNo
+                                sessionId = sessionId ?: "POS_DEFAULT",  // 🔑 pass sessionId
+                                tableId = tableNo  // still optional
                             )
                         )
                     },
@@ -205,7 +212,8 @@ private fun ParentProductCard(
 private fun VariantCard(
     product: ProductEntity,
     cartViewModel: CartViewModel,
-    tableNo: String
+    tableNo: String,
+    sessionId: String   // 🔑 add this
 ) {
 
     Card(
@@ -274,6 +282,7 @@ private fun VariantCard(
                                 isVariant = product.parentId != null,
 
                                 categoryId = product.categoryId,
+                                sessionId = sessionId ?: "POS_DEFAULT",  // 🔑 pass sessionId
                                 tableId = tableNo  // ✅ pass selected table
                             )
                         )

@@ -28,7 +28,11 @@ data class PosCartEntity(
     val taxRate: Double,
     val taxType: String,
 
-    val tableId: String,
+    // 🔑 NEW (PRIMARY POS SESSION)
+    val sessionId: String,
+
+    // 🪑 OPTIONAL (only for DINE_IN)
+    val tableId: String?,
 
     // ⭐ NEW
     val sentToKitchen: Boolean = false,

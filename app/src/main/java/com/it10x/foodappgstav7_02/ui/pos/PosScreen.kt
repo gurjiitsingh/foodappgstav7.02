@@ -60,30 +60,43 @@ fun PosScreen(
     val configuration = LocalConfiguration.current
     val isPhone = configuration.screenWidthDp < 600
     val tableId by posSessionViewModel.tableId.collectAsState()
+    var orderType by remember { mutableStateOf("DINE_IN") }
 
-    LaunchedEffect(tableId) {
-        tableId?.let {
-            cartViewModel.setTableId(it)
-        }
-    }
 
     LaunchedEffect(Unit) {
         cartViewModel.uiEvent.collect { event ->
             when (event) {
-                CartUiEvent.TableRequired -> {
-                    // 1️⃣ Auto-open table selector
-                    showTableSelector = true
 
-                    // 2️⃣ Optional user feedback (recommended)
+                CartUiEvent.SessionRequired -> {
+                    if (orderType == "DINE_IN") {
+                        showTableSelector = true
+                        Toast.makeText(
+                            context,
+                            "Select table to continue Dine-In order",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        Toast.makeText(
+                            context,
+                            "Order session not ready. Please retry.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+
+                CartUiEvent.TableRequired -> {
+                    showTableSelector = true
                     Toast.makeText(
                         context,
-                        "Select table to continue Dine-In order",
+                        "Please select a table first",
                         Toast.LENGTH_SHORT
                     ).show()
                 }
             }
         }
     }
+
+
 
     val tableName by posSessionViewModel.tableName.collectAsState()
 
@@ -133,7 +146,7 @@ fun PosScreen(
 
     var showCartSheet by remember { mutableStateOf(false) }
 
-    var orderType by remember { mutableStateOf("DINE_IN") }
+
 
     //var showTableSelector by remember { mutableStateOf(false) }
       // ✅ PAYMENT TYPE STATE (DEFAULT CASH)
@@ -142,6 +155,16 @@ fun PosScreen(
     // ✅ NEW: POPUP STATES
     var showKitchen by remember { mutableStateOf(false) }
     var showBill by remember { mutableStateOf(false) }
+
+
+
+    LaunchedEffect(orderType, tableId) {
+        if (orderType == "DINE_IN" && !tableId.isNullOrBlank()) {
+            cartViewModel.initSession("DINE_IN", tableId)
+        } else {
+            cartViewModel.initSession(orderType)
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -207,6 +230,8 @@ fun PosScreen(
                             onClick = {
                                 orderType = "DINE_IN"
                                 showTableSelector = true
+                                // 🔹 Init session
+                                cartViewModel.initSession(orderType, tableId)
                             }
                         )
 
@@ -215,9 +240,11 @@ fun PosScreen(
                             selected = orderType == "TAKEAWAY",
                             onClick = {
                                 orderType = "TAKEAWAY"
-                                posSessionViewModel.clearTable()      // ✅
-                                cartViewModel.setTableId("TAKEAWAY")
+                                posSessionViewModel.clearTable()
                                 showTableSelector = false
+
+                                // 🔑 MUST happen immediately
+                                cartViewModel.initSession("TAKEAWAY")
                             }
                         )
 
@@ -226,11 +253,13 @@ fun PosScreen(
                             selected = orderType == "DELIVERY",
                             onClick = {
                                 orderType = "DELIVERY"
-                                posSessionViewModel.clearTable()      // ✅
-                                cartViewModel.setTableId("DELIVERY")
+                                posSessionViewModel.clearTable()
                                 showTableSelector = false
+
+                                cartViewModel.initSession("DELIVERY")
                             }
                         )
+
 
                         // Optional: show selected table
                         if (orderType == "DINE_IN" && tableName != null) {
@@ -253,16 +282,13 @@ fun PosScreen(
 
 
                             onTableSelected = { tableId ->
-
                                 val table = tables.first { it.table.id == tableId }.table
-
                                 posSessionViewModel.setTable(
                                     tableId = table.id,
                                     tableName = table.tableName
                                 )
-
-                                cartViewModel.setTableId(table.id)
-                                tableVm.updateStatus(table.id, "OCCUPIED")
+                                // 🔹 Init DINE_IN session
+                                cartViewModel.initSession("DINE_IN", table.id)
                                 showTableSelector = false
                             },
 
@@ -281,7 +307,8 @@ fun PosScreen(
                     filteredProducts = filteredProducts,
                     variants = variants,
                     cartViewModel = cartViewModel,
-                    tableNo = tableId ?: ""  // fallback if null
+                    tableNo = tableId,  // fallback if null
+                    posSessionViewModel = posSessionViewModel  // 🔑 pass it
                 )
             }
 
@@ -351,34 +378,30 @@ fun PosScreen(
     }
 
     // ================= KITCHEN POPUP =================
-    if (showKitchen && tableId != null) {
+    if (showKitchen) {
+        val kitchenKey by cartViewModel.sessionKey.collectAsState()
         AlertDialog(
             onDismissRequest = { showKitchen = false },
             confirmButton = {},
             dismissButton = {
-                TextButton(onClick = { showKitchen = false }) {
-                    Text("Close")
-                }
+                TextButton(onClick = { showKitchen = false }) { Text("Close") }
             },
-            title = {
-                Text("Kitchen – Table ${tableName ?: tableId}")
-            },
+            title = { Text("Kitchen – $kitchenKey") },
             text = {
                 val kitchenViewModel: KitchenViewModel = viewModel()
-
                 KitchenScreen(
-                    tableNo = tableId!!,
+                    tableNo = kitchenKey !!,
                     viewModel = kitchenViewModel,
-                    onKitchenEmpty = {
-                   //     showKitchen = false   // ✅ auto close popup
-                    }
+                    onKitchenEmpty = { /* optional auto close */ }
                 )
             }
         )
     }
 
+
 // ================= BILL POPUP =================
-    if (showBill && tableId != null) {
+    val billingKey by cartViewModel.sessionKey.collectAsState()
+    if (showBill && billingKey != null) {
         AlertDialog(
             onDismissRequest = { showBill = false },
             confirmButton = {},
@@ -388,16 +411,18 @@ fun PosScreen(
                 }
             },
             title = {
-                Text("Billing – Table ${tableName ?: tableId}")
+                Text("Billing – $billingKey")
             },
             text = {
                 BillScreenDialog(
-                    tableId = tableId!!,
+                    tableId = billingKey!!,   // 🔑 KEY FIX
+                    tableViewModel = tableVm,
                     onClose = { showBill = false }
                 )
             }
         )
     }
+
 
 
 }

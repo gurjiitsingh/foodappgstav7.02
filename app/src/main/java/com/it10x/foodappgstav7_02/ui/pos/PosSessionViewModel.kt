@@ -12,6 +12,9 @@ class PosSessionViewModel : ViewModel() {
     private val _tableName = MutableStateFlow<String?>(null)
     val tableName = _tableName.asStateFlow()
 
+    // 🔑 NEW: POS session
+    private val _sessionId = MutableStateFlow("POS_DEFAULT")
+    val sessionId = _sessionId.asStateFlow()
     fun setTable(tableId: String, tableName: String) {
         _tableId.value = tableId
         _tableName.value = tableName

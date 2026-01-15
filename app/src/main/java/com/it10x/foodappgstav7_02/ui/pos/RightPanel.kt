@@ -63,10 +63,19 @@ fun RightPanel(
         isDineIn && isRunning && cartItems.isEmpty()
 
     val canOpenBill =
-        isDineIn && isBillRequested
+        when (orderType) {
+            "DINE_IN" -> isBillRequested
+            "TAKEAWAY", "DELIVERY" -> true
+            else -> false
+        }
 
     val canOpenKitchen =
-        isDineIn && hasTable && (isRunning || isBillRequested)
+        when (orderType) {
+            "DINE_IN" -> hasTable && (isRunning || isBillRequested)
+            "TAKEAWAY", "DELIVERY" -> true
+            else -> false
+        }
+
 
     Column(
         modifier = Modifier
@@ -130,13 +139,17 @@ fun RightPanel(
                     ordersViewModel.placeOrder(
                         orderType = orderType,
                         tableNo = tableNo,
+                        sessionId = cartViewModel.sessionKey.value!!, // ✅ THIS
                         paymentType = "UNPAID",
                         deviceId = deviceId,
                         deviceName = Build.MODEL ?: "Unknown Device",
                         appVersion = BuildConfig.VERSION_NAME
                     )
 
-                    tableViewModel.loadTables()
+// ✅ OCCUPY TABLE ONLY WHEN FIRST ORDER IS SENT
+                    if (orderType == "DINE_IN" && tableNo != null) {
+                        tableViewModel.occupyTable(tableNo)
+                    }
                     onOrderPlaced()
                 },
                 colors = ButtonDefaults.buttonColors(
@@ -192,7 +205,8 @@ fun RightPanel(
                     .fillMaxWidth()
                     .padding(top = 8.dp),
                 onClick = {
-                    tableNo?.let { onOpenKitchen(it) }
+//                    tableNo?.let { onOpenKitchen(it) }
+                    onOpenKitchen(tableNo ?: orderType)
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF16A34A),

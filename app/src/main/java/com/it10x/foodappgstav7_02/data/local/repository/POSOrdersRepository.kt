@@ -27,20 +27,46 @@ class POSOrdersRepository(
     // -------------------------
     // CART (per table)
     // -------------------------
-    fun getCartItems(tableId: String?): Flow<List<PosCartEntity>> =
-        cartDao.getCartForTable(tableId)
+    fun getCartItems(tableId: String?, orderType: String): Flow<List<PosCartEntity>> {
+        return if (orderType == "DINE_IN" && tableId != null) {
+            cartDao.getCartForTable(tableId)
+        } else {
+            // Takeaway or Delivery uses sessionId pattern
+            val prefix = "${orderType}-"
+            cartDao.getCartForSessionPrefix(prefix)
+        }
+    }
 
 
 
-    fun getUnsentItems(tableId: String?): Flow<List<PosCartEntity>> =
+//    fun getUnsentItems(tableId: String?): Flow<List<PosCartEntity>> =
+//        cartDao.getUnsentItems(tableId)
+
+    fun getUnsentItems(tableId: String): Flow<List<PosCartEntity>> =
         cartDao.getUnsentItems(tableId)
-
     suspend fun markAllSent(tableId: String) {
         cartDao.markAllSent(tableId)
     }
 
-    suspend fun clearCart(tableId: String) {
-        cartDao.clearCart(tableId)
+//    suspend fun clearCart(tableId: String) {
+//        cartDao.clearCart(tableId)
+//    }
+
+    suspend fun clearCart(orderType: String, tableId: String?) {
+        when (orderType) {
+            "DINE_IN" -> {
+                if (!tableId.isNullOrBlank()) {
+                    cartDao.clearCart(tableId)      // tableId used as sessionId
+                }
+            }
+            "TAKEAWAY", "DELIVERY" -> {
+                cartDao.clearCartByPrefix("$orderType-")
+            }
+            else -> {
+                // fallback just in case
+                cartDao.clearCartByPrefix("$orderType-")
+            }
+        }
     }
 
     // -------------------------

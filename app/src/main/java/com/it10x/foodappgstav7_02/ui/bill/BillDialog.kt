@@ -10,6 +10,7 @@ import com.it10x.foodappgstav7_02.ui.payment.PaymentType
 @Composable
 fun BillScreenDialog(
     tableId: String,
+    tableViewModel: com.it10x.foodappgstav7_02.viewmodel.TableViewModel,
     onClose: () -> Unit
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -38,8 +39,13 @@ fun BillScreenDialog(
             BillScreen(
                 viewModel = viewModel,
                 onPayClick = { paymentType ->
-                    Log.d("PAY_CLICK", "Pay clicked | table=$tableId type=${paymentType.name}")
                     viewModel.payBill(paymentType.name)
+
+                    if (!tableId.startsWith("TAKEAWAY") && !tableId.startsWith("DELIVERY")) {
+                        // ✅ ONLY for dine-in
+                        tableViewModel.releaseTable(tableId)
+                    }
+
                     onClose()
                 }
             )

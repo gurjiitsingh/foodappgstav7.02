@@ -9,13 +9,15 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 sealed class CartUiEvent {
-    object TableRequired : CartUiEvent()
+    object SessionRequired : CartUiEvent()
+    object TableRequired : CartUiEvent()   // ✅ ADD THIS
 }
 
 class CartViewModel(
     private val repository: CartRepository,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
 
     // ---------- ORDER CONTEXT ----------
     private val currentTableId =
@@ -26,13 +28,21 @@ class CartViewModel(
 
     private val _uiEvent = MutableSharedFlow<CartUiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
+
+
+    // ---------- SESSION ----------
+    private val sessionId =
+        savedStateHandle.getStateFlow<String?>("sessionId", null)
+
+    val sessionKey: StateFlow<String?> = sessionId
     // ---------- CART ----------
-    val cart: StateFlow<List<PosCartEntity>> = currentTableId
+    val cart: StateFlow<List<PosCartEntity>> = sessionId
         .filterNotNull()
-        .flatMapLatest { tableId ->
-            repository.observeCart(tableId)
+        .flatMapLatest { sid ->
+            repository.observeCart(sid)
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
 
     // ---------- SETTERS ----------
     fun setTableId(id: String?) {
@@ -44,6 +54,11 @@ class CartViewModel(
     }
 
     // ---------- POS ORDER GUARD ----------
+
+
+//    private fun canMutateCart(): Boolean {
+//        return !sessionId.value.isNullOrBlank()
+//    }
     private fun canMutateCart(): Boolean {
         return when (currentOrderType.value) {
             "DINE_IN" -> !currentTableId.value.isNullOrBlank()
@@ -53,24 +68,42 @@ class CartViewModel(
 
     // ---------- MUTATIONS ----------
     fun addToCart(product: PosCartEntity) {
-          viewModelScope.launch {
+
+//        Log.d(
+//            "POS_DEBUG",
+//            "ADD_CLICK orderType=${posSessionViewModel.orderType} tableId=${posSessionViewModel.tableId.value}"
+//        )
+        viewModelScope.launch {
+
+            if (sessionId.value.isNullOrBlank()) {
+                // 🔑 auto-create fallback session
+                initSession(currentOrderType.value, currentTableId.value)
+            }
+
             if (!canMutateCart()) {
                 _uiEvent.emit(CartUiEvent.TableRequired)
                 return@launch
             }
 
             repository.addToCart(
-                product.copy(tableId = currentTableId.value!!)
+                product.copy(
+                    sessionId = sessionId.value!!,
+                    tableId = currentTableId.value
+                )
             )
         }
     }
+
 
     fun increase(item: PosCartEntity) {
         if (!canMutateCart()) return
 
         viewModelScope.launch {
             repository.addToCart(
-                item.copy(tableId = currentTableId.value!!)
+                item.copy(
+                    sessionId = sessionId.value!!,
+                    tableId = currentTableId.value
+                )
             )
         }
     }
@@ -79,15 +112,31 @@ class CartViewModel(
         if (!canMutateCart()) return
 
         viewModelScope.launch {
-            repository.decrease(productId, currentTableId.value!!)
+            repository.decrease(productId, sessionId.value!!)
         }
     }
 
     fun clear() {
-        currentTableId.value?.let {
+        sessionId.value?.let { sid ->
             viewModelScope.launch {
-                repository.clear(it)
+                repository.clear(sid)
             }
         }
     }
+
+    fun initSession(orderType: String, tableId: String? = null) {
+        val sid = when (orderType) {
+            "DINE_IN" -> tableId
+            "TAKEAWAY" -> "TAKEAWAY-${System.currentTimeMillis()}"
+            "DELIVERY" -> "DELIVERY-${System.currentTimeMillis()}"
+            else -> null
+        }
+
+        savedStateHandle["orderType"] = orderType
+        savedStateHandle["tableId"] = tableId
+        savedStateHandle["sessionId"] = sid
+    }
+
+
+
 }
