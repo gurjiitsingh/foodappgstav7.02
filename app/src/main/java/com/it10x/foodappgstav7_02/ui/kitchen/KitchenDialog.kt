@@ -15,7 +15,7 @@ fun KitchenDialog(
         onDismissRequest = onDismiss,
         confirmButton = {},
         dismissButton = {
-            TextButton (onClick = onDismiss) {
+            TextButton(onClick = onDismiss) {
                 Text("Close")
             }
         },
@@ -23,7 +23,8 @@ fun KitchenDialog(
         text = {
             KitchenScreen(
                 tableNo = tableNo,
-                viewModel = viewModel
+                viewModel = viewModel,
+                onKitchenEmpty = onDismiss   // ✅ IMPORTANT
             )
         }
     )

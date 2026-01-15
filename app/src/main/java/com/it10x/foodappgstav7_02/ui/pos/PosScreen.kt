@@ -368,7 +368,10 @@ fun PosScreen(
 
                 KitchenScreen(
                     tableNo = tableId!!,
-                    viewModel = kitchenViewModel
+                    viewModel = kitchenViewModel,
+                    onKitchenEmpty = {
+                   //     showKitchen = false   // ✅ auto close popup
+                    }
                 )
             }
         )

@@ -65,4 +65,26 @@ class KitchenViewModel(
     fun getPendingItems(tableNo: String) =
         kotItemDao.getPendingItemsForTable(tableNo)
 
+
+    // ✅ POS signal: kitchen completed for table
+    fun isKitchenEmptyForTable(tableNo: String): StateFlow<Boolean> {
+        return kotItemDao.getItemsForTable(tableNo)
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = emptyList()
+            )
+            .let { flow ->
+                MutableStateFlow(false).also { state ->
+                    viewModelScope.launch {
+                        flow.collect { items ->
+                            state.value = items.isEmpty()
+                        }
+                    }
+                }
+            }
+    }
+
+
+
 }

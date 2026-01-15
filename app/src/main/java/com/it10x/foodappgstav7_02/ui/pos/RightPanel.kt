@@ -85,20 +85,20 @@ fun RightPanel(
             else -> orderType
         }
 
-        Column(modifier = Modifier.padding(bottom = 12.dp)) {
-            Text(
-                text = "Order Type: $prettyOrderType",
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-            Text(
-                text = if (hasTable) "Table: $tableNo" else "Table: —",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
-            )
-        }
+//        Column(modifier = Modifier.padding(bottom = 12.dp)) {
+//            Text(
+//                text = "Order Type: $prettyOrderType",
+//                style = MaterialTheme.typography.bodyMedium,
+//                fontWeight = FontWeight.SemiBold
+//            )
+//            Text(
+//                text = if (hasTable) "Table: $tableNo" else "Table: —",
+//                style = MaterialTheme.typography.bodySmall,
+//                color = Color.Gray
+//            )
+//        }
 
-        Divider()
+//        Divider()
 
         // ---------- CART ----------
         LazyColumn(modifier = Modifier.weight(1f)) {
@@ -249,7 +249,7 @@ fun CartRow(
                 )
             }
 
-            // ---------- QUANTITY CONTROLS ----------
+
 // ---------- QUANTITY CONTROLS ----------
             Row(
                 verticalAlignment = Alignment.CenterVertically

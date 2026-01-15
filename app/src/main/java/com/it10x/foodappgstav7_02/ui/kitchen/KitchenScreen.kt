@@ -21,11 +21,17 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun KitchenScreen(
     tableNo: String,
-    viewModel: KitchenViewModel
+    viewModel: KitchenViewModel,
+    onKitchenEmpty: () -> Unit   // 👈 ADD THIS
 ) {
     val items by viewModel
         .getPendingItems(tableNo)
         .collectAsState(initial = emptyList())
+
+// ✅ POS rule: notify parent when kitchen is empty
+    if (items.isEmpty()) {
+        onKitchenEmpty()
+    }
 
     LazyColumn {
         items(items, key = { it.id }) { item ->
