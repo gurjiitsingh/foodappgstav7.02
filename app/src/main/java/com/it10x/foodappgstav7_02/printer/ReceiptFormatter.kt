@@ -1,5 +1,7 @@
 package com.it10x.foodappgstav7_02.printer
 
+import com.it10x.foodappgstav7_02.data.local.entities.PosKotItemEntity
+
 // -----------------------------
 // PRINT MODELS (ONE TRUTH)
 // -----------------------------
@@ -146,4 +148,43 @@ $itemsBlock
     }
 
     private fun format(value: Double): String = "%.2f".format(value)
+
+
+    fun posKitchen(
+        sessionKey: String,
+        orderType: String,
+        items: List<PosKotItemEntity>,
+        title: String = "KITCHEN"
+    ): String {
+
+        val time = java.text.SimpleDateFormat(
+            "HH:mm",
+            java.util.Locale.getDefault()
+        ).format(java.util.Date())
+
+        val header = buildString {
+            append("******** $title ********\n")
+            append("Type  : $orderType\n")
+            append("Ref   : $sessionKey\n")
+            append("Time  : $time\n")
+            append("------------------------\n")
+        }
+
+        val itemsBlock =
+            if (items.isEmpty()) {
+                "No items\n"
+            } else {
+                items.joinToString("\n") {
+                    "${it.quantity.toString().padEnd(3)} ${it.name}"
+                } + "\n"
+            }
+
+        return buildString {
+            append(ALIGN_LEFT)
+            append(header)
+            append(itemsBlock)
+            append("------------------------\n\n")
+        }
+    }
+
 }

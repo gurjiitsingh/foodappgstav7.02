@@ -234,7 +234,7 @@ class POSOrdersViewModel(
                 "FOOD APP"
             }
 
-
+//oldprintingremoved
           //  Log.d("OUTLET_PRINT", "🖨 FINAL TITLE:\n$outletTitle")
 
             // ---------------- BILLING PRINT ----------------
@@ -244,7 +244,7 @@ class POSOrdersViewModel(
             )
 
             // SMALL DELAY
-            kotlinx.coroutines.delay(150)
+     //       kotlinx.coroutines.delay(150)
 
             // ---------------- KITCHEN PRINT ----------------
             printerManager.printText(
@@ -525,6 +525,7 @@ class POSOrdersViewModel(
                         quantity = cart.quantity,
                         taxRate = cart.taxRate,
                         taxType = cart.taxType,
+                        isPrinted = false,
                         status = "PENDING",   // ✅ REQUIRED
                         createdAt = now
                     )

@@ -32,7 +32,9 @@ data class PosKotItemEntity(
     val taxRate: Double,
     val taxType: String,
 
-    val status: String, // ✅ NEW
+    val status: String,
+
+    val isPrinted: Boolean,   // ✅ ADD ONLY THIS
 
     val createdAt: Long
 )

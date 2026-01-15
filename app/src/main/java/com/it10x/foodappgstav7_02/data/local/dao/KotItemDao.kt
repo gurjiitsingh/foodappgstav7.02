@@ -78,4 +78,69 @@ interface KotItemDao {
     WHERE id = :itemId
 """)
     suspend fun updateQuantity(itemId: String, quantity: Int)
+
+    // -------------------------
+// PRINT FLAG
+// -------------------------
+//    @Query("""
+//    UPDATE pos_kot_items
+//    SET isPrinted = 1
+//    WHERE id = :itemId
+//""")
+//    suspend fun markPrinted(itemId: String)
+
+    @Query("""
+    UPDATE pos_kot_items
+    SET isPrinted = 1
+    WHERE tableNo = :tableNo
+      AND isPrinted = 0
+""")
+    suspend fun markAllPrintedForTable(tableNo: String)
+
+
+    // -------------------------
+// FETCH UNPRINTED ITEMS
+// -------------------------
+    @Query("""
+    SELECT * FROM pos_kot_items
+    WHERE tableNo = :tableNo
+      AND status = 'PENDING'
+      AND isPrinted = 0
+    ORDER BY createdAt ASC
+""")
+    suspend fun getUnprintedPendingItems(tableNo: String): List<PosKotItemEntity>
+
+
+    @Query("""
+    UPDATE pos_kot_items
+    SET isPrinted = 1
+    WHERE id = :itemId
+""")
+    suspend fun markPrinted(itemId: String)
+
+    @Query("""
+    UPDATE pos_kot_items
+    SET status = 'DONE'
+    WHERE tableNo = :tableNo
+      AND status = 'PENDING'
+""")
+    suspend fun markAllDone(tableNo: String)
+
+    @Query("""
+    UPDATE pos_kot_items
+    SET isPrinted = 1
+    WHERE tableNo = :tableNo
+      AND isPrinted = 0
+""")
+    suspend fun markAllPrinted(tableNo: String)
+
+    @Query("""
+    SELECT * FROM pos_kot_items
+    WHERE tableNo = :tableNo
+      AND isPrinted = 0
+    ORDER BY createdAt ASC
+""")
+    suspend fun getUnprintedItems(tableNo: String): List<PosKotItemEntity>
+
+
 }

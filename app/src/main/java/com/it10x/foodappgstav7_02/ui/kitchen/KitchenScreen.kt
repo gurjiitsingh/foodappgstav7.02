@@ -1,9 +1,11 @@
 package com.it10x.foodappgstav7_02.ui.kitchen
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -22,55 +24,72 @@ import androidx.compose.ui.unit.dp
 fun KitchenScreen(
     tableNo: String,
     viewModel: KitchenViewModel,
-    onKitchenEmpty: () -> Unit   // 👈 ADD THIS
+    onKitchenEmpty: () -> Unit
 ) {
     val items by viewModel
         .getPendingItems(tableNo)
         .collectAsState(initial = emptyList())
 
-// ✅ POS rule: notify parent when kitchen is empty
     if (items.isEmpty()) {
         onKitchenEmpty()
     }
 
-    LazyColumn {
-        items(items, key = { it.id }) { item ->
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
+        // 🔥 FIXED TOP BUTTON (NOT SCROLLING)
+        Button(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
+            onClick = { viewModel.markDoneAll(tableNo) }
+        ) {
+            Text("Done All", color = Color.White)
+        }
 
-                Text("${item.name} x${item.quantity}")
+        // 🔹 LIST TAKES REMAINING SPACE ONLY
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)   // ⭐ THIS IS THE KEY FIX
+        ) {
+            items(items, key = { it.id }) { item ->
 
-                Row {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
 
-                    // ❌ CANCEL
-                    Button (
-                        onClick = { viewModel.markCancelled(item.id) },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFDC2626)
-                        )
-                    ) {
-                        Text("Cancel")
-                    }
+                    Text("${item.name} x${item.quantity}")
 
-                    Spacer(Modifier.width(8.dp))
+                    Row {
 
-                    // ✅ DONE
-                    Button(
-                        onClick = { viewModel.markDone(item.id) },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF16A34A)
-                        )
-                    ) {
-                        Text("Done")
+                        Button(
+                            onClick = { viewModel.markCancelled(item.id) },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFDC2626)
+                            )
+                        ) {
+                            Text("Cancel")
+                        }
+
+                        Spacer(Modifier.width(8.dp))
+
+                        Button(
+                            onClick = { viewModel.markDone(item.id) },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF16A34A)
+                            )
+                        ) {
+                            Text("Done")
+                        }
                     }
                 }
             }
         }
     }
 }
-
