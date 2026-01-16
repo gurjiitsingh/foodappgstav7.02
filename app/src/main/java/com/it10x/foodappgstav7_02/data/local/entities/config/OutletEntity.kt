@@ -10,7 +10,7 @@ data class OutletEntity(
     val outletId: String,
 
     val outletName: String,
-
+    val ownerId: String, // ✅ ADD THIS (REQUIRED FOR SYNC)
     // ---------- ADDRESS ----------
     val addressLine1: String,
     val addressLine2: String?,

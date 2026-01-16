@@ -87,6 +87,22 @@ LIMIT :limit OFFSET :offset
 """)
     suspend fun getPagedOrders(limit: Int, offset: Int): List<PosOrderMasterEntity>
 
+
+
+    @Query("""
+SELECT * FROM pos_order_master
+WHERE syncStatus = 'PENDING'
+""")
+    suspend fun getPendingSyncOrders(): List<PosOrderMasterEntity>
+
+    @Query("""
+UPDATE pos_order_master
+SET syncStatus = 'SYNCED',
+    lastSyncedAt = :time
+WHERE id IN (:ids)
+""")
+    suspend fun markOrdersSynced(ids: List<String>, time: Long)
+
 }
 
 

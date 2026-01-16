@@ -115,6 +115,8 @@ class KitchenViewModel(
         }
     }
 
+
+
     fun markDoneAll(tableNo: String) {
         viewModelScope.launch {
 

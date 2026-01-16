@@ -40,7 +40,7 @@ class OutletSyncRepository(
             outletId = doc.id,
 
             outletName = data["outletName"] as? String ?: "",
-
+            ownerId = data["ownerId"] as? String ?: "",
             // ---------- ADDRESS ----------
             addressLine1 = data["addressLine1"] as? String ?: "",
             addressLine2 = data["addressLine2"] as? String,

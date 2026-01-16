@@ -27,7 +27,8 @@ data class PosOrderMasterEntity(
 
     // =====================================================
     // CUSTOMER (SNAPSHOT FOR PRINTING)
-    // =====================================================
+    // =====================================================cd  ..
+
     val customerName: String? = null,
     val customerPhone: String? = null,
 
