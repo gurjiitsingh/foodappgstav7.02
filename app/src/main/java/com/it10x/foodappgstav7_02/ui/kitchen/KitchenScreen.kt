@@ -12,8 +12,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -26,19 +28,47 @@ fun KitchenScreen(
     viewModel: KitchenViewModel,
     onKitchenEmpty: () -> Unit
 ) {
-    val items by viewModel
-        .getPendingItems(tableNo)
-        .collectAsState(initial = emptyList())
+    val items by viewModel.getPendingItems(tableNo).collectAsState(initial = null)
 
-    if (items.isEmpty()) {
-        onKitchenEmpty()
+    // ✅ Only run close check AFTER we actually received a list from DB
+    LaunchedEffect (items) {
+        if (items != null && items!!.isEmpty()) {
+            onKitchenEmpty()
+        }
     }
 
+    // ✅ Handle loading phase gracefully
+    if (items == null) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalArrangement = Arrangement.Center
+        ) {
+            CircularProgressIndicator()
+            Spacer(Modifier.height(10.dp))
+            Text("Loading kitchen items…")
+        }
+        return
+    }
+
+    // ✅ Handle empty AFTER load
+    if (items!!.isEmpty()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text("No pending items for this order.")
+        }
+        return
+    }
+
+    // ✅ Normal UI when items exist
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
-
-        // 🔥 FIXED TOP BUTTON (NOT SCROLLING)
         Button(
             modifier = Modifier
                 .fillMaxWidth()
@@ -49,25 +79,21 @@ fun KitchenScreen(
             Text("Done All", color = Color.White)
         }
 
-        // 🔹 LIST TAKES REMAINING SPACE ONLY
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f)   // ⭐ THIS IS THE KEY FIX
+                .weight(1f)
         ) {
-            items(items, key = { it.id }) { item ->
-
+            items(items!!, key = { it.id }) { item ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(12.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-
                     Text("${item.name} x${item.quantity}")
 
                     Row {
-
                         Button(
                             onClick = { viewModel.markCancelled(item.id) },
                             colors = ButtonDefaults.buttonColors(

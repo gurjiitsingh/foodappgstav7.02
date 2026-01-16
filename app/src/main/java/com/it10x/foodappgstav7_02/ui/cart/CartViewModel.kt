@@ -129,7 +129,7 @@ class CartViewModel(
 
     fun initSession(orderType: String, tableId: String? = null) {
 
-        // ✅ KEEP existing session for takeaway/delivery
+        // ✅ Keep existing session if orderType/table didn't change
         if (
             sessionId.value != null &&
             currentOrderType.value == orderType &&
@@ -139,16 +139,18 @@ class CartViewModel(
         }
 
         val sid = when (orderType) {
-            "DINE_IN" -> tableId
-            "TAKEAWAY" -> sessionId.value ?: "TAKEAWAY-${System.currentTimeMillis()}"
-            "DELIVERY" -> sessionId.value ?: "DELIVERY-${System.currentTimeMillis()}"
+            "DINE_IN" -> tableId  // sessionKey = tableId
+            "TAKEAWAY" -> "TAKEAWAY-${System.currentTimeMillis()}" // always new session
+            "DELIVERY" -> "DELIVERY-${System.currentTimeMillis()}" // always new session
             else -> null
         }
 
+        // ✅ save sessionKey
         savedStateHandle["orderType"] = orderType
         savedStateHandle["tableId"] = tableId
         savedStateHandle["sessionId"] = sid
     }
+
 
 
 

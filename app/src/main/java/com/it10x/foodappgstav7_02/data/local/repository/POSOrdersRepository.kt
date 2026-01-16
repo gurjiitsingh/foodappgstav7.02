@@ -1,5 +1,6 @@
 package com.it10x.foodappgstav7_02.data.local.repository
 
+import com.it10x.foodappgstav7_02.data.local.AppDatabase
 import com.it10x.foodappgstav7_02.data.local.dao.CartDao
 import com.it10x.foodappgstav7_02.data.local.dao.OrderMasterDao
 import com.it10x.foodappgstav7_02.data.local.dao.OrderProductDao
@@ -8,14 +9,9 @@ import com.it10x.foodappgstav7_02.data.local.entities.PosCartEntity
 import com.it10x.foodappgstav7_02.data.local.entities.PosOrderItemEntity
 import com.it10x.foodappgstav7_02.data.local.entities.PosOrderMasterEntity
 import kotlinx.coroutines.flow.Flow
-import java.util.UUID
-import androidx.room.withTransaction
-import com.it10x.foodappgstav7_02.data.local.AppDatabase
-import com.it10x.foodappgstav7_02.data.local.repository.OrderSequenceRepository
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import android.util.Log
 
 class POSOrdersRepository(
     private val db: AppDatabase, // 🔹 ADD THIS

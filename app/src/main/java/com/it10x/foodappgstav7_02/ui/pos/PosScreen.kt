@@ -380,6 +380,8 @@ fun PosScreen(
     // ================= KITCHEN POPUP =================
     if (showKitchen) {
         val kitchenKey by cartViewModel.sessionKey.collectAsState()
+        val kitchenViewModel: KitchenViewModel = viewModel()
+
         AlertDialog(
             onDismissRequest = { showKitchen = false },
             confirmButton = {},
@@ -388,11 +390,13 @@ fun PosScreen(
             },
             title = { Text("Kitchen – $kitchenKey") },
             text = {
-                val kitchenViewModel: KitchenViewModel = viewModel()
                 KitchenScreen(
-                    tableNo = kitchenKey !!,
+                    tableNo = kitchenKey!!,
                     viewModel = kitchenViewModel,
-                    onKitchenEmpty = { /* optional auto close */ }
+                    onKitchenEmpty = {
+                        // ✅ Close popup automatically when no items
+                        showKitchen = false
+                    }
                 )
             }
         )

@@ -6,20 +6,18 @@ import androidx.lifecycle.viewModelScope
 import com.it10x.foodappgstav7_02.data.local.dao.KotItemDao
 import com.it10x.foodappgstav7_02.data.local.dao.OrderMasterDao
 import com.it10x.foodappgstav7_02.data.local.dao.OrderProductDao
+import com.it10x.foodappgstav7_02.data.local.dao.OutletDao
 import com.it10x.foodappgstav7_02.data.local.entities.PosOrderItemEntity
 import com.it10x.foodappgstav7_02.data.local.entities.PosOrderMasterEntity
+import com.it10x.foodappgstav7_02.data.local.repository.OrderSequenceRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.util.UUID
-
-import com.it10x.foodappgstav7_02.data.local.AppDatabaseProvider
-import com.it10x.foodappgstav7_02.data.local.dao.OutletDao
-import com.it10x.foodappgstav7_02.data.local.repository.OrderSequenceRepository
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.UUID
 
 class BillViewModel(
     private val kotItemDao: KotItemDao,

@@ -77,27 +77,27 @@ class POSOrdersViewModel(
     fun placeOrder(
         orderType: String,
         tableNo: String?,
-        sessionId: String,   // ✅ ADD THIS
+        sessionId: String,
         paymentType: String,
         deviceId: String,
         deviceName: String?,
         appVersion: String?
     ) {
-        Log.d("KOT_STEP", "Start placeOrder() | tableNo=$tableNo orderType=$orderType")
+        Log.d("KITCHEN_DEBUG", "Start placeOrder() | tableNo=$tableNo orderType=$orderType")
 
         viewModelScope.launch {
             _loading.value = true
 
-            // ✅ Show exactly what identifiers we are using
+            // ✅ use sessionId as the real key for cart & KOT
             val sessionKey = sessionId
             Log.d("KITCHEN_DEBUG", "Resolved sessionKey=$sessionKey")
 
-            // ✅ Observe what repository fetches
-            val cartList = repository.getCartItems(tableNo, orderType).first()
-            Log.d("KITCHEN_DEBUG", "Cart fetched for type=$orderType, size=${cartList.size}")
+            // ✅ FIX: Use sessionKey (for takeaway & delivery)
+            val cartList = repository.getCartItems(sessionKey, orderType).first()
+            Log.d("KITCHEN_DEBUG", "Cart fetched for type=$orderType, sessionKey=$sessionKey, size=${cartList.size}")
 
             if (cartList.isEmpty()) {
-                Log.w("KITCHEN_DEBUG", "⚠️ No new items found for orderType=$orderType (table=$tableNo)")
+                Log.w("KITCHEN_DEBUG", "⚠️ No new items found for orderType=$orderType (sessionKey=$sessionKey)")
                 _loading.value = false
                 return@launch
             }
@@ -124,10 +124,9 @@ class POSOrdersViewModel(
 
                 Log.d("KITCHEN_DEBUG", "✅ KOT saved successfully (${cartList.size} items)")
 
-                // ✅ Verify what we’re about to clear
+                // ✅ FIX: clear by sessionKey (not tableNo)
                 Log.d("KITCHEN_DEBUG", "Clearing cart for sessionKey=$sessionKey")
-                repository.clearCart(orderType, tableNo)
-
+                repository.clearCart(orderType, sessionKey)
                 Log.d("KITCHEN_DEBUG", "✅ Cart cleared for sessionKey=$sessionKey")
 
             } catch (e: Exception) {
@@ -137,6 +136,7 @@ class POSOrdersViewModel(
             }
         }
     }
+
 
 
 
