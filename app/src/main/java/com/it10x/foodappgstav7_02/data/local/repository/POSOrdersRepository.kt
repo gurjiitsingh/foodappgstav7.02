@@ -9,8 +9,16 @@ import com.it10x.foodappgstav7_02.data.local.entities.PosOrderItemEntity
 import com.it10x.foodappgstav7_02.data.local.entities.PosOrderMasterEntity
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
+import androidx.room.withTransaction
+import com.it10x.foodappgstav7_02.data.local.AppDatabase
+import com.it10x.foodappgstav7_02.data.local.repository.OrderSequenceRepository
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import android.util.Log
 
 class POSOrdersRepository(
+    private val db: AppDatabase, // 🔹 ADD THIS
     private val orderMasterDao: OrderMasterDao,
     private val orderProductDao: OrderProductDao,
     private val cartDao: CartDao,
@@ -24,6 +32,11 @@ class POSOrdersRepository(
         return orderMasterDao.getOrderById(orderId)
     }
 
+    // 🔹 NEW: API-24 safe business date
+    private fun businessDate(): String {
+        return SimpleDateFormat("yyyyMMdd", Locale.getDefault())
+            .format(Date())
+    }
     // -------------------------
     // CART (per table)
     // -------------------------
@@ -118,58 +131,62 @@ class POSOrdersRepository(
         )
     }
 
+
+
+
+
     // -------------------------
     // INSERT ORDER
     // -------------------------
-    suspend fun insertOrder(
-        orderMaster: PosOrderMasterEntity,
-        cartItems: List<PosCartEntity>
-    ) {
-        // 1️⃣ Insert order master
-        orderMasterDao.insert(orderMaster)
-
-        // 2️⃣ Mark table RUNNING
-        orderMaster.tableNo?.let { tableId ->
-            markTableRunning(tableId, orderMaster.id)
-        }
-
-        val now = System.currentTimeMillis()
-
-        // 3️⃣ Cart → Order items
-        val orderItems = cartItems.map { cart ->
-            val itemSubtotal = cart.basePrice * cart.quantity
-            val taxAmount =
-                if (cart.taxType == "exclusive") cart.basePrice * (cart.taxRate / 100) else 0.0
-
-            val finalPrice = cart.basePrice + taxAmount
-
-            PosOrderItemEntity(
-                id = UUID.randomUUID().toString(),
-                orderMasterId = orderMaster.id,
-                productId = cart.productId,
-                name = cart.name,
-                categoryId = cart.categoryId,
-                parentId = cart.parentId,
-                isVariant = cart.parentId != null,
-                basePrice = cart.basePrice,
-                quantity = cart.quantity,
-                itemSubtotal = itemSubtotal,
-                taxRate = cart.taxRate,
-                taxType = cart.taxType,
-                taxAmountPerItem = taxAmount,
-                taxTotal = taxAmount * cart.quantity,
-                finalPricePerItem = finalPrice,
-                finalTotal = finalPrice * cart.quantity,
-                source = "POS",
-                createdAt = now
-            )
-        }
-
-        // 4️⃣ Insert items
-        orderProductDao.insertAll(orderItems)
-
-        // 5️⃣ Clear cart for that table
-       // orderMaster.tableNo?.let { clearCart(it) }
-        orderMaster.tableNo?.let { markAllSent(it) }
-    }
+//    suspend fun insertOrder(
+//        orderMaster: PosOrderMasterEntity,
+//        cartItems: List<PosCartEntity>
+//    ) {
+//        // 1️⃣ Insert order master
+//        orderMasterDao.insert(orderMaster)
+//
+//        // 2️⃣ Mark table RUNNING
+//        orderMaster.tableNo?.let { tableId ->
+//            markTableRunning(tableId, orderMaster.id)
+//        }
+//
+//        val now = System.currentTimeMillis()
+//
+//        // 3️⃣ Cart → Order items
+//        val orderItems = cartItems.map { cart ->
+//            val itemSubtotal = cart.basePrice * cart.quantity
+//            val taxAmount =
+//                if (cart.taxType == "exclusive") cart.basePrice * (cart.taxRate / 100) else 0.0
+//
+//            val finalPrice = cart.basePrice + taxAmount
+//
+//            PosOrderItemEntity(
+//                id = UUID.randomUUID().toString(),
+//                orderMasterId = orderMaster.id,
+//                productId = cart.productId,
+//                name = cart.name,
+//                categoryId = cart.categoryId,
+//                parentId = cart.parentId,
+//                isVariant = cart.parentId != null,
+//                basePrice = cart.basePrice,
+//                quantity = cart.quantity,
+//                itemSubtotal = itemSubtotal,
+//                taxRate = cart.taxRate,
+//                taxType = cart.taxType,
+//                taxAmountPerItem = taxAmount,
+//                taxTotal = taxAmount * cart.quantity,
+//                finalPricePerItem = finalPrice,
+//                finalTotal = finalPrice * cart.quantity,
+//                source = "POS",
+//                createdAt = now
+//            )
+//        }
+//
+//        // 4️⃣ Insert items
+//        orderProductDao.insertAll(orderItems)
+//
+//        // 5️⃣ Clear cart for that table
+//       // orderMaster.tableNo?.let { clearCart(it) }
+//        orderMaster.tableNo?.let { markAllSent(it) }
+//    }
 }

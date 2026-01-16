@@ -8,6 +8,17 @@ import kotlinx.coroutines.flow.Flow
 interface CartDao {
 
 
+    @Query("""
+    SELECT * FROM cart
+    WHERE productId = :productId
+      AND sessionId = :sessionId
+    LIMIT 1
+""")
+    suspend fun getByIdForSession(
+        productId: String,
+        sessionId: String
+    ): PosCartEntity?
+
 
     @Query("DELETE FROM cart WHERE sessionId LIKE :prefix || '%'")
     suspend fun clearCartByPrefix(prefix: String)
@@ -26,8 +37,7 @@ interface CartDao {
 """)
     fun getUnsentItems(sessionId: String): Flow<List<PosCartEntity>>
 
-    @Query("SELECT * FROM cart WHERE productId = :id AND sessionId = :sessionId LIMIT 1")
-    suspend fun getByIdForSession(id: String, sessionId: String): PosCartEntity?
+
 
     @Query("DELETE FROM cart WHERE sessionId = :sessionId")
     suspend fun clearCart(sessionId: String)

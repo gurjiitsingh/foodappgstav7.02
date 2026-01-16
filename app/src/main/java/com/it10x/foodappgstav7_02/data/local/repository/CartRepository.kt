@@ -38,13 +38,16 @@ class CartRepository(
         dao.clearCart(tableId)
     }
 
-    // ---------- DECREASE ----------
-    suspend fun decrease(productId: String, tableId: String) {
-        val existing = dao.getByIdForTable(productId, tableId) ?: return
-        if (existing.quantity > 1) {
-            dao.update(existing.copy(quantity = existing.quantity - 1))
-        } else {
-            dao.delete(existing)
-        }
+
+// ---------- DECREASE (SESSION BASED – FIXED) ----------
+suspend fun decrease(productId: String, sessionId: String) {
+    val existing = dao.getByIdForSession(productId, sessionId) ?: return
+    if (existing.quantity > 1) {
+        dao.update(existing.copy(quantity = existing.quantity - 1))
+    } else {
+        dao.delete(existing)
     }
+}
+
+
 }

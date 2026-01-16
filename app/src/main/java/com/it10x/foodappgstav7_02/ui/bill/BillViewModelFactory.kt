@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.it10x.foodappgstav7_02.data.local.AppDatabaseProvider
+import com.it10x.foodappgstav7_02.data.local.repository.OrderSequenceRepository
 
 class BillViewModelFactory(
     private val application: Application,
@@ -12,14 +13,24 @@ class BillViewModelFactory(
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(BillViewModel::class.java)) {
+
+            // ✅ DB (Application context is correct here)
             val db = AppDatabaseProvider.get(application)
+
+            // ✅ Repository for atomic SR No
+            val orderSequenceRepository = OrderSequenceRepository(db)
+
+            @Suppress("UNCHECKED_CAST")
             return BillViewModel(
                 kotItemDao = db.kotItemDao(),
                 orderMasterDao = db.orderMasterDao(),
                 orderProductDao = db.orderProductDao(),
+                orderSequenceRepository = orderSequenceRepository, // ✅ ADD
+                outletDao = db.outletDao(),                         // ✅ ADD
                 tableId = tableId
             ) as T
         }
+
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

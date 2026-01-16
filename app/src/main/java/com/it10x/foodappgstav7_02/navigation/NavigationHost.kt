@@ -146,10 +146,11 @@ fun NavigationHost(
 
             val ordersRepository = remember {
                 POSOrdersRepository(
+                    db = db,                          // ✅ ADD THIS
                     orderMasterDao = db.orderMasterDao(),
                     orderProductDao = db.orderProductDao(),
                     cartDao = db.cartDao(),
-                    tableDao = db.tableDao()   // ✅ ADD THIS
+                    tableDao = db.tableDao()
                 )
             }
 

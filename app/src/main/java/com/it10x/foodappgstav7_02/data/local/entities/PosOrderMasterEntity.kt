@@ -3,7 +3,7 @@ package com.it10x.foodappgstav7_02.data.local.entities
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-
+import androidx.room.ColumnInfo
 @Entity(
     tableName = "pos_order_master",
     indices = [
@@ -20,6 +20,7 @@ data class PosOrderMasterEntity(
     @PrimaryKey
     val id: String,                 // UUID (generated on POS)
 
+    @ColumnInfo(name = "srno")
     val srno: Int,                  // Daily running number (POS)
     val orderType: String,          // DINE_IN | TAKEAWAY | DELIVERY | ONLINE
     val tableNo: String?,           // Only for DINE_IN

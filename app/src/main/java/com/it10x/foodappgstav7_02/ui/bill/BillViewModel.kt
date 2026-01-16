@@ -14,10 +14,19 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.util.UUID
 
+import com.it10x.foodappgstav7_02.data.local.AppDatabaseProvider
+import com.it10x.foodappgstav7_02.data.local.dao.OutletDao
+import com.it10x.foodappgstav7_02.data.local.repository.OrderSequenceRepository
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
 class BillViewModel(
     private val kotItemDao: KotItemDao,
     private val orderMasterDao: OrderMasterDao,
     private val orderProductDao: OrderProductDao,
+    private val orderSequenceRepository: OrderSequenceRepository, // ✅ ADD
+    private val outletDao: OutletDao,                              // ✅ ADD
     private val tableId: String
 ) : ViewModel() {
 
@@ -29,6 +38,12 @@ class BillViewModel(
         observeBill()
     }
 
+
+    // 🔹 POS business date (API 24 safe)
+    private fun businessDate(): String {
+        return SimpleDateFormat("yyyyMMdd", Locale.getDefault())
+            .format(Date())
+    }
     private fun observeBill() {
         viewModelScope.launch {
             Log.d("BILL_STEP", "Observing KOT items for table=$tableId")
@@ -102,20 +117,19 @@ class BillViewModel(
     fun payBill(paymentType: String) {
         viewModelScope.launch {
 
+            // 1️⃣ Read DONE KOT items
             val kotItems = kotItemDao
                 .getItemsForTableSync(tableId)
                 .filter { it.status == "DONE" }
 
             Log.d(
-                "PAYMENT",
-                "Pay bill | table=$tableId DONE items=${kotItems.size}"
+                "ORDER_SRNO",
+                "payBill() | table=$tableId DONE items=${kotItems.size}"
             )
 
             if (kotItems.isEmpty()) return@launch
 
-            val orderId = UUID.randomUUID().toString()
-            val now = System.currentTimeMillis()
-
+            // 2️⃣ Calculate totals
             val itemSubtotal = kotItems.sumOf { it.basePrice * it.quantity }
             val taxTotal = kotItems.sumOf {
                 if (it.taxType == "exclusive") {
@@ -123,9 +137,31 @@ class BillViewModel(
                 } else 0.0
             }
 
+            val now = System.currentTimeMillis()
+            val orderId = UUID.randomUUID().toString()
+
+            // 3️⃣ Get outlet (SAFE)
+            val outlet = outletDao.getOutlet()
+                ?: throw IllegalStateException("Outlet not configured")
+
+            // 4️⃣ Generate ATOMIC SR NO (POS STANDARD)
+            val srno = orderSequenceRepository.nextOrderNo(
+                outletId = outlet.outletId,
+                businessDate = java.text.SimpleDateFormat(
+                    "yyyyMMdd",
+                    java.util.Locale.getDefault()
+                ).format(java.util.Date())
+            )
+
+            Log.d(
+                "ORDER_SRNO",
+                "Generated srno=$srno outletId=${outlet.outletId}"
+            )
+
+            // 5️⃣ Insert OrderMaster
             val orderMaster = PosOrderMasterEntity(
                 id = orderId,
-                srno = 0,
+                srno = srno,
                 orderType = "DINE_IN",
                 tableNo = tableId,
                 itemTotal = itemSubtotal,
@@ -135,7 +171,7 @@ class BillViewModel(
                 paymentType = paymentType,
                 paymentStatus = "PAID",
                 orderStatus = "COMPLETED",
-                deviceId = "POS-LOCAL",
+                deviceId = "POS",
                 deviceName = "POS",
                 appVersion = "1.0",
                 createdAt = now,
@@ -147,18 +183,22 @@ class BillViewModel(
 
             orderMasterDao.insert(orderMaster)
 
+            Log.d(
+                "ORDER_SRNO",
+                "Order saved | orderId=$orderId srno=$srno"
+            )
+
+            // 6️⃣ Insert OrderItems (FINAL SNAPSHOT)
             val orderItems = kotItems
-                .groupBy { it.productId }
+                .groupBy {
+                    Triple(it.productId, it.basePrice, it.taxRate)
+                }
                 .map { (_, group) ->
+
                     val first = group.first()
                     val quantity = group.sumOf { it.quantity }
 
-                    Log.d(
-                        "PAYMENT",
-                        "Order item | table=$tableId product=${first.name} qty=$quantity"
-                    )
-
-                    val itemSubtotalItem = first.basePrice * quantity
+                    val subtotal = first.basePrice * quantity
                     val taxPerItem =
                         if (first.taxType == "exclusive")
                             first.basePrice * (first.taxRate / 100)
@@ -176,25 +216,29 @@ class BillViewModel(
                         isVariant = first.isVariant,
                         basePrice = first.basePrice,
                         quantity = quantity,
-                        itemSubtotal = itemSubtotalItem,
+                        itemSubtotal = subtotal,
                         taxRate = first.taxRate,
                         taxType = first.taxType,
                         taxAmountPerItem = taxPerItem,
                         taxTotal = taxTotalItem,
                         finalPricePerItem = first.basePrice + taxPerItem,
-                        finalTotal = itemSubtotalItem + taxTotalItem,
+                        finalTotal = subtotal + taxTotalItem,
                         createdAt = now
                     )
                 }
 
             orderProductDao.insertAll(orderItems)
 
+            // 7️⃣ Clear KOT
             kotItemDao.clearForTable(tableId)
 
             Log.d(
-                "PAYMENT",
-                "Order completed & KOT cleared | orderId=$orderId table=$tableId"
+                "ORDER_SRNO",
+                "Payment completed | table=$tableId orderId=$orderId srno=$srno"
             )
         }
     }
+
+
+
 }

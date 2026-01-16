@@ -21,6 +21,11 @@ import com.it10x.foodappgstav7_02.data.local.entities.PosKotBatchEntity
 import com.it10x.foodappgstav7_02.data.local.entities.PosKotItemEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+// 🔹 NEW (for atomic order no + API 24 safe date)
+import com.it10x.foodappgstav7_02.data.local.repository.OrderSequenceRepository
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 class POSOrdersViewModel(
     private val repository: POSOrdersRepository,
     private val printerManager: PrinterManager
@@ -36,6 +41,11 @@ class POSOrdersViewModel(
     private val limit = 10
     private val srNoCounter = AtomicInteger(1)
 
+    // 🔹 NEW: API-24 safe business date (yyyyMMdd)
+    private fun businessDate(): String {
+        return SimpleDateFormat("yyyyMMdd", Locale.getDefault())
+            .format(Date())
+    }
     // -------------------------
     // PAGINATION
     // -------------------------
@@ -52,6 +62,10 @@ class POSOrdersViewModel(
             pageIndex.value = page
             val offset = page * limit
             val pagedOrders = repository.getPagedOrders(limit, offset)
+            pagedOrders.forEach {
+                Log.d("ORDER_SRNO", "Loaded order id=${it.id} srno=${it.srno}")
+            }
+
             _orders.value = pagedOrders.sortedByDescending { it.createdAt }
             _loading.value = false
         }
@@ -255,10 +269,6 @@ class POSOrdersViewModel(
     }
 
 
-
-
-
-
     // -------------------------
     // ORDER DETAILS
     // -------------------------
@@ -288,16 +298,16 @@ class POSOrdersViewModel(
 
                 val items = repository.getOrderItems(orderId)
                 if (items.isEmpty()) {
-                    Log.e(
-                        "POS_PRINT",
-                        "Order items EMPTY for orderId=$orderId (items=${items.size})"
+                    Log.d(
+                        "ORDER_SRNO",
+                        "Printing orderId=$orderId srno=${order.srno} items=${items.size}"
                     )
                     return@launch
                 }
 
                 Log.d(
-                    "POS_PRINT",
-                    "Printing order srno=${order.srno}, items=${items.size}"
+                    "ORDER_SRNO",
+                    "Printing orderId=$orderId srno=${order.srno} items=${items.size}"
                 )
 
                 printOrderStandard(order, items)
@@ -324,139 +334,7 @@ class POSOrdersViewModel(
         }
     }
 
-    // -------------------------
-// PAY & CLOSE TABLE
-// -------------------------
-    fun payAndCloseTable(
-        tableNo: String,
-        paymentType: String,
-        orderType: String,
-    ) {
-        viewModelScope.launch {
-            _loading.value = true
-            try {
-                val db = AppDatabaseProvider.get(printerManager.appContext())
-                val kotItemDao = db.kotItemDao()
-                val orderMasterDao = db.orderMasterDao()
-                val orderProductDao = db.orderProductDao() // ✅ correct DAO
-                val tableDao = db.tableDao()
 
-                // 1️⃣ Read DONE KOT items
-                val kotItems = kotItemDao.getItemsForTableSync(tableNo)
-                    .filter { it.status == "DONE" }
-
-                if (kotItems.isEmpty()) {
-                    Log.e("BILL", "No DONE KOT items for table=$tableNo")
-                    return@launch
-                }
-
-                // 2️⃣ Calculate totals (tax set default 0.0)
-                val itemTotal = kotItems.sumOf { it.basePrice * it.quantity }
-                val taxTotal = kotItems.sumOf { 0.0 } // default
-                val grandTotal = itemTotal + taxTotal
-
-                // 3️⃣ Create OrderMaster
-                val orderId = UUID.randomUUID().toString()
-                val now = System.currentTimeMillis()
-
-                val master = PosOrderMasterEntity(
-                    id = orderId,
-                    srno = srNoCounter.getAndIncrement(),
-                    orderType = "DINE_IN",
-                    tableNo = tableNo ?: orderType,
-                    itemTotal = itemTotal,
-                    taxTotal = taxTotal,
-                    discountTotal = 0.0,
-                    grandTotal = grandTotal,
-                    paymentType = paymentType,
-                    paymentStatus = "PAID",
-                    orderStatus = "COMPLETED",
-                    source = "POS",
-                    deviceId = "UNKNOWN",
-                    deviceName = "UNKNOWN",
-                    appVersion = "UNKNOWN",
-                    createdAt = now,
-                    updatedAt = now,
-                    syncStatus = "PENDING",
-                    lastSyncedAt = null,
-                    notes = null
-                )
-
-                orderMasterDao.insert(master)
-
-                // 4️⃣ Copy KOT → OrderItems
-                // 4️⃣ Group DONE KOT items → OrderItems (FINAL SNAPSHOT)
-                val grouped = kotItems.groupBy {
-                    Triple(
-                        it.productId,
-                        it.basePrice,
-                        it.taxRate
-                    )
-                }
-
-                val orderItems = grouped.map { (_, items) ->
-
-                    val first = items.first()
-                    val quantity = items.sumOf { it.quantity }
-
-                    val subtotal = first.basePrice * quantity
-                    val taxTotal =
-                        if (first.taxType == "exclusive")
-                            first.basePrice * (first.taxRate / 100) * quantity
-                        else 0.0
-
-                    PosOrderItemEntity(
-                        id = UUID.randomUUID().toString(),
-                        orderMasterId = orderId,
-
-                        productId = first.productId,
-                        name = first.name,
-                        categoryId = first.categoryId,
-
-                        parentId = first.parentId,
-                        isVariant = first.isVariant,
-
-                        basePrice = first.basePrice,
-                        quantity = quantity,
-                        itemSubtotal = subtotal,
-
-                        taxRate = first.taxRate,
-                        taxType = first.taxType,
-                        taxAmountPerItem = taxTotal / quantity,
-                        taxTotal = taxTotal,
-
-                        finalPricePerItem = first.basePrice + (taxTotal / quantity),
-                        finalTotal = subtotal + taxTotal,
-
-                        createdAt = now
-                    )
-                }
-
-
-                orderProductDao.insertAll(orderItems)
-
-                // 5️⃣ Print FINAL BILL (optional - keep same)
-                val printOrder = PrintOrderBuilder.build(master, orderItems)
-                printerManager.printText(
-                    PrinterRole.BILLING,
-                    ReceiptFormatter.billing(printOrder)
-                )
-
-                // 6️⃣ Clear KOT
-                kotItemDao.clearForTable(tableNo)
-
-                // 7️⃣ Close table
-                tableDao.closeTable(tableNo)
-
-                Log.d("BILL", "✅ Payment completed table=$tableNo")
-
-            } catch (e: Exception) {
-                Log.e("BILL", "❌ Payment failed", e)
-            } finally {
-                _loading.value = false
-            }
-        }
-    }
 
 
 

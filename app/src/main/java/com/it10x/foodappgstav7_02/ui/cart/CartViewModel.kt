@@ -111,10 +111,13 @@ class CartViewModel(
     fun decrease(productId: String) {
         if (!canMutateCart()) return
 
+        val sid = sessionId.value ?: return
+
         viewModelScope.launch {
-            repository.decrease(productId, sessionId.value!!)
+            repository.decrease(productId, sid)
         }
     }
+
 
     fun clear() {
         sessionId.value?.let { sid ->
@@ -125,10 +128,20 @@ class CartViewModel(
     }
 
     fun initSession(orderType: String, tableId: String? = null) {
+
+        // ✅ KEEP existing session for takeaway/delivery
+        if (
+            sessionId.value != null &&
+            currentOrderType.value == orderType &&
+            currentTableId.value == tableId
+        ) {
+            return
+        }
+
         val sid = when (orderType) {
             "DINE_IN" -> tableId
-            "TAKEAWAY" -> "TAKEAWAY-${System.currentTimeMillis()}"
-            "DELIVERY" -> "DELIVERY-${System.currentTimeMillis()}"
+            "TAKEAWAY" -> sessionId.value ?: "TAKEAWAY-${System.currentTimeMillis()}"
+            "DELIVERY" -> sessionId.value ?: "DELIVERY-${System.currentTimeMillis()}"
             else -> null
         }
 
@@ -136,6 +149,7 @@ class CartViewModel(
         savedStateHandle["tableId"] = tableId
         savedStateHandle["sessionId"] = sid
     }
+
 
 
 

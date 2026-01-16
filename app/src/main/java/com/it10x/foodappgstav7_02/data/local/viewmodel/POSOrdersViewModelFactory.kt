@@ -19,10 +19,11 @@ class POSOrdersViewModelFactory(
         if (modelClass.isAssignableFrom(POSOrdersViewModel::class.java)) {
 
             val repository = POSOrdersRepository(
+                db = db,                                // ✅ ADD THIS
                 orderMasterDao = db.orderMasterDao(),
                 orderProductDao = db.orderProductDao(),
                 cartDao = db.cartDao(),
-                tableDao = db.tableDao()   // ✅ REQUIRED FIX
+                tableDao = db.tableDao()
             )
 
             @Suppress("UNCHECKED_CAST")
