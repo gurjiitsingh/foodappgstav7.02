@@ -1,8 +1,8 @@
 package com.it10x.foodappgstav7_02.printer
 
-import com.it10x.foodappgstav7_02.data.local.entities.PosCartEntity
-import com.it10x.foodappgstav7_02.data.local.entities.PosOrderItemEntity
-import com.it10x.foodappgstav7_02.data.local.entities.PosOrderMasterEntity
+import com.it10x.foodappgstav7_02.data.pos.entities.PosCartEntity
+import com.it10x.foodappgstav7_02.data.pos.entities.PosOrderItemEntity
+import com.it10x.foodappgstav7_02.data.pos.entities.PosOrderMasterEntity
 import java.text.SimpleDateFormat
 import java.util.*
 

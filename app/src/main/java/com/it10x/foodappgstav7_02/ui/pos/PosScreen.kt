@@ -19,20 +19,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.it10x.foodappgstav7_02.data.local.AppDatabaseProvider
-import com.it10x.foodappgstav7_02.data.local.repository.CartRepository
+import com.it10x.foodappgstav7_02.data.pos.AppDatabaseProvider
+import com.it10x.foodappgstav7_02.data.pos.repository.CartRepository
 import com.it10x.foodappgstav7_02.ui.cart.CartViewModel
-import com.it10x.foodappgstav7_02.data.local.viewmodel.getParentProducts
-import com.it10x.foodappgstav7_02.data.local.viewmodel.POSOrdersViewModel
+import com.it10x.foodappgstav7_02.data.pos.viewmodel.getParentProducts
+import com.it10x.foodappgstav7_02.data.pos.viewmodel.POSOrdersViewModel
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.it10x.foodappgstav7_02.data.local.entities.TableEntity
+import com.it10x.foodappgstav7_02.data.pos.entities.TableEntity
 import com.it10x.foodappgstav7_02.ui.cart.CartViewModelFactory
-import com.it10x.foodappgstav7_02.viewmodel.TableViewModel
+import com.it10x.foodappgstav7_02.viewmodel.PosTableViewModel
 import com.it10x.foodappgstav7_02.ui.kitchen.KitchenScreen
 import com.it10x.foodappgstav7_02.ui.bill.BillScreenDialog
 
@@ -107,11 +107,11 @@ fun PosScreen(
         getParentProducts(allProducts)
     }
 
-   var selectedCatId by remember { mutableStateOf<String?>(null) }
+    var selectedCatId by remember { mutableStateOf<String?>(null) }
 
 
 
-    val tableVm: TableViewModel = viewModel()
+    val tableVm: PosTableViewModel = viewModel()
     val tables by tableVm.tables.collectAsState()
     LaunchedEffect(Unit) { tableVm.loadTables() }
 
@@ -149,7 +149,7 @@ fun PosScreen(
 
 
     //var showTableSelector by remember { mutableStateOf(false) }
-      // ✅ PAYMENT TYPE STATE (DEFAULT CASH)
+    // ✅ PAYMENT TYPE STATE (DEFAULT CASH)
     var paymentType by remember { mutableStateOf("CASH") }
 
     // ✅ NEW: POPUP STATES
@@ -209,32 +209,25 @@ fun PosScreen(
 
 
                 // ---------- ORDER CONTROLS ----------
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
 
-                    // ORDER TYPE
+                if (isPhone) {
+                    // ===== MOBILE: 2 ROWS =====
+                    // Row 1: Dine In + Takeaway
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 8.dp),
+                            .padding(bottom = 4.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-
                         PosOrderTypeButton(
                             label = "Dine In",
                             selected = orderType == "DINE_IN",
                             onClick = {
                                 orderType = "DINE_IN"
                                 showTableSelector = true
-                                // 🔹 Init session
                                 cartViewModel.initSession(orderType, tableId)
                             }
                         )
-
                         PosOrderTypeButton(
                             label = "Takeaway",
                             selected = orderType == "TAKEAWAY",
@@ -242,12 +235,18 @@ fun PosScreen(
                                 orderType = "TAKEAWAY"
                                 posSessionViewModel.clearTable()
                                 showTableSelector = false
-
-                                // 🔑 MUST happen immediately
                                 cartViewModel.initSession("TAKEAWAY")
                             }
                         )
+                    }
 
+                    // Row 2: Delivery + Table Chip (optional, can hide if needed)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                         PosOrderTypeButton(
                             label = "Delivery",
                             selected = orderType == "DELIVERY",
@@ -272,36 +271,105 @@ fun PosScreen(
                     }
 
 
+                }else{
 
 
+                    // Row 1: Dine In + Takeaway
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
 
-                    if (showTableSelector && orderType == "DINE_IN") {
-                        TableSelectorGrid(
-                            tables = tables, // ✅ use dynamic list
-                            selectedTable = tableId,
+                        // ORDER TYPE
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+
+                            PosOrderTypeButton(
+                                label = "Dine In",
+                                selected = orderType == "DINE_IN",
+                                onClick = {
+                                    orderType = "DINE_IN"
+                                    showTableSelector = true
+                                    // 🔹 Init session
+                                    cartViewModel.initSession(orderType, tableId)
+                                }
+                            )
+
+                            PosOrderTypeButton(
+                                label = "Takeaway",
+                                selected = orderType == "TAKEAWAY",
+                                onClick = {
+                                    orderType = "TAKEAWAY"
+                                    posSessionViewModel.clearTable()
+                                    showTableSelector = false
+
+                                    // 🔑 MUST happen immediately
+                                    cartViewModel.initSession("TAKEAWAY")
+                                }
+                            )
+
+                            PosOrderTypeButton(
+                                label = "Delivery",
+                                selected = orderType == "DELIVERY",
+                                onClick = {
+                                    orderType = "DELIVERY"
+                                    posSessionViewModel.clearTable()
+                                    showTableSelector = false
+
+                                    cartViewModel.initSession("DELIVERY")
+                                }
+                            )
 
 
-                            onTableSelected = { tableId ->
-                                val table = tables.first { it.table.id == tableId }.table
-                                posSessionViewModel.setTable(
-                                    tableId = table.id,
-                                    tableName = table.tableName
+                            // Optional: show selected table
+                            if (orderType == "DINE_IN" && tableName != null) {
+                                OrderChip(
+                                    label = tableName!!,
+                                    selected = true,
+                                    onClick = { showTableSelector = true }
                                 )
-                                // 🔹 Init DINE_IN session
-                                cartViewModel.initSession("DINE_IN", table.id)
-                                showTableSelector = false
-                            },
+                            }
+                        }
 
 
-                            onDismiss = { showTableSelector = false }
-                        )
+
+
+
+
+
+
                     }
-
 
 
                 }
 
+                if (showTableSelector && orderType == "DINE_IN") {
+                    TableSelectorGrid(
+                        tables = tables, // ✅ use dynamic list
+                        selectedTable = tableId,
 
+
+                        onTableSelected = { tableId ->
+                            val table = tables.first { it.table.id == tableId }.table
+                            posSessionViewModel.setTable(
+                                tableId = table.id,
+                                tableName = table.tableName
+                            )
+                            // 🔹 Init DINE_IN session
+                            cartViewModel.initSession("DINE_IN", table.id)
+                            showTableSelector = false
+                        },
+
+
+                        onDismiss = { showTableSelector = false }
+                    )
+                }
 
                 ProductList(
                     filteredProducts = filteredProducts,
@@ -324,7 +392,7 @@ fun PosScreen(
                     paymentType = paymentType,
                     onPaymentChange = { paymentType = it },
                     onOrderPlaced = {
-                     //   cartViewModel.clear()
+                        //   cartViewModel.clear()
                     },
                     onOpenKitchen = {
                         showKitchen = true
@@ -360,11 +428,11 @@ fun PosScreen(
                 tableViewModel = tableVm,          // ✅ PASS IT
                 orderType = orderType,
                 tableNo = tableId ?: orderType,
-               // tableStatus = currentTableStatus,
+                // tableStatus = currentTableStatus,
                 paymentType = paymentType,
                 onPaymentChange = { paymentType = it },
                 onOrderPlaced = {
-                   // cartViewModel.clear()
+                    // cartViewModel.clear()
                 },
                 onOpenKitchen = {
                     showKitchen = true
@@ -421,7 +489,8 @@ fun PosScreen(
                 BillScreenDialog(
                     tableId = billingKey!!,   // 🔑 KEY FIX
                     tableViewModel = tableVm,
-                    onClose = { showBill = false }
+                    onClose = { showBill = false },
+                    orderType = orderType,
                 )
             }
         )
@@ -531,7 +600,7 @@ fun OrderChip(
 
 @Composable
 fun TableSelectorGrid(
-    tables: List<TableViewModel.TableUiState>,
+    tables: List<PosTableViewModel.TableUiState>,
     selectedTable: String?,
     onTableSelected: (String) -> Unit,
     onDismiss: () -> Unit
@@ -552,10 +621,10 @@ fun TableSelectorGrid(
                     val isSelected = selectedTable == table.id
 
                     val bgColor = when (ui.color) {
-                        TableViewModel.TableColor.GREEN -> Color(0xFFDCFCE7)   // 🟢 running
-                        TableViewModel.TableColor.YELLOW -> Color(0xFFFEF9C3)  // 🟡 bill requested
-                        TableViewModel.TableColor.RED -> Color(0xFFFEE2E2)     // 🔴 ready to bill
-                        TableViewModel.TableColor.GRAY -> Color(0xFFF3F4F6)    // ⚪ available
+                        PosTableViewModel.TableColor.GREEN -> Color(0xFFDCFCE7)   // 🟢 running
+                        PosTableViewModel.TableColor.YELLOW -> Color(0xFFFEF9C3)  // 🟡 bill requested
+                        PosTableViewModel.TableColor.RED -> Color(0xFFFEE2E2)     // 🔴 ready to bill
+                        PosTableViewModel.TableColor.GRAY -> Color(0xFFF3F4F6)    // ⚪ available
                     }
 
                     Surface(

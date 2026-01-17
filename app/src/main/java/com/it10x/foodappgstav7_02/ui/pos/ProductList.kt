@@ -15,8 +15,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.it10x.foodappgstav7_02.data.local.entities.ProductEntity
-import com.it10x.foodappgstav7_02.data.local.entities.PosCartEntity
+import com.it10x.foodappgstav7_02.data.pos.entities.ProductEntity
+import com.it10x.foodappgstav7_02.data.pos.entities.PosCartEntity
 import com.it10x.foodappgstav7_02.ui.cart.CartViewModel
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.lazy.grid.GridCells

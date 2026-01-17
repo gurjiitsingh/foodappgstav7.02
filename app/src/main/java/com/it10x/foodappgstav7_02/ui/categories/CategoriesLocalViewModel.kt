@@ -1,10 +1,10 @@
-package com.it10x.foodappgstav7_02.data.local.viewmodel
+package com.it10x.foodappgstav7_02.data.pos.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.it10x.foodappgstav7_02.data.local.dao.CategoryDao
-import com.it10x.foodappgstav7_02.data.local.entities.CategoryEntity
+import com.it10x.foodappgstav7_02.data.pos.dao.CategoryDao
+import com.it10x.foodappgstav7_02.data.pos.entities.CategoryEntity
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map

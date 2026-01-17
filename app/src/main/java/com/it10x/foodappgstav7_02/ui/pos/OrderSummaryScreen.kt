@@ -8,7 +8,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.it10x.foodappgstav7_02.ui.cart.CartViewModel
-import com.it10x.foodappgstav7_02.data.local.viewmodel.OrderCalculator
+import com.it10x.foodappgstav7_02.data.pos.viewmodel.OrderCalculator
 
 @Composable
 fun OrderSummaryScreen(

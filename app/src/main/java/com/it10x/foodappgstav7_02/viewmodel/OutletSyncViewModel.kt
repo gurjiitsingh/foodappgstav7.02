@@ -4,8 +4,8 @@ package com.it10x.foodappgstav7_02.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.it10x.foodappgstav7_02.data.local.AppDatabaseProvider
-import com.it10x.foodappgstav7_02.data.repository.OutletSyncRepository
+import com.it10x.foodappgstav7_02.data.pos.AppDatabaseProvider
+import com.it10x.foodappgstav7_02.data.online.models.repository.OutletSyncRepository
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

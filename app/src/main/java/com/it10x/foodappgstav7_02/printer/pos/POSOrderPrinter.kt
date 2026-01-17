@@ -2,10 +2,10 @@ package com.it10x.foodappgstav7_02.printer.pos
 
 import android.util.Log
 import com.it10x.foodappgstav7_02.data.PrinterRole
-import com.it10x.foodappgstav7_02.data.local.dao.OrderProductDao
-import com.it10x.foodappgstav7_02.data.local.dao.OrderMasterDao
-import com.it10x.foodappgstav7_02.data.local.entities.PosOrderItemEntity
-import com.it10x.foodappgstav7_02.data.local.entities.PosOrderMasterEntity
+import com.it10x.foodappgstav7_02.data.pos.dao.OrderProductDao
+import com.it10x.foodappgstav7_02.data.pos.dao.OrderMasterDao
+import com.it10x.foodappgstav7_02.data.pos.entities.PosOrderItemEntity
+import com.it10x.foodappgstav7_02.data.pos.entities.PosOrderMasterEntity
 import com.it10x.foodappgstav7_02.printer.PrinterManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay

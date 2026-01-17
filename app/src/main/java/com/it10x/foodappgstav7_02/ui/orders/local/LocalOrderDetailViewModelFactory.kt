@@ -2,10 +2,10 @@ package com.it10x.foodappgstav7_02.ui.orders.local
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.it10x.foodappgstav7_02.data.local.viewmodel.POSOrdersViewModel
+import com.it10x.foodappgstav7_02.data.pos.viewmodel.POSOrdersViewModel
 import com.it10x.foodappgstav7_02.printer.PrinterManager
 
-import com.it10x.foodappgstav7_02.data.local.repository.POSOrdersRepository
+import com.it10x.foodappgstav7_02.data.pos.repository.POSOrdersRepository
 
 class LocalOrderDetailViewModelFactory(
     private val orderId: String,

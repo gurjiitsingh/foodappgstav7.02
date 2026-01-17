@@ -10,7 +10,8 @@ import com.it10x.foodappgstav7_02.ui.payment.PaymentType
 @Composable
 fun BillScreenDialog(
     tableId: String,
-    tableViewModel: com.it10x.foodappgstav7_02.viewmodel.TableViewModel,
+    orderType: String,
+    tableViewModel: com.it10x.foodappgstav7_02.viewmodel.PosTableViewModel,
     onClose: () -> Unit
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -20,7 +21,8 @@ fun BillScreenDialog(
         key = "BillViewModel_$tableId",   // ⭐ IMPORTANT FIX
         factory = BillViewModelFactory(
             application = context.applicationContext as android.app.Application,
-            tableId = tableId
+            tableId = tableId,
+            orderType = orderType
         )
     )
 
@@ -47,7 +49,8 @@ fun BillScreenDialog(
                     }
 
                     onClose()
-                }
+                },
+
             )
         }
     )

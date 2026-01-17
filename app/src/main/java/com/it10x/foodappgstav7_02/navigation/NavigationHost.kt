@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -18,14 +17,14 @@ import androidx.navigation.navArgument
 import com.it10x.foodappgstav7_02.com.ui.settings.PrinterRoleSelectionScreen
 import com.it10x.foodappgstav7_02.data.PrinterPreferences
 import com.it10x.foodappgstav7_02.data.PrinterRole
-import com.it10x.foodappgstav7_02.data.local.AppDatabaseProvider
+import com.it10x.foodappgstav7_02.data.pos.AppDatabaseProvider
 
-import com.it10x.foodappgstav7_02.data.local.viewmodel.POSOrdersViewModel
-import com.it10x.foodappgstav7_02.data.local.viewmodel.POSOrdersViewModelFactory
+import com.it10x.foodappgstav7_02.data.pos.viewmodel.POSOrdersViewModel
+import com.it10x.foodappgstav7_02.data.pos.viewmodel.POSOrdersViewModelFactory
 import com.it10x.foodappgstav7_02.printer.PrinterManager
 import com.it10x.foodappgstav7_02.ui.categories.LocalCategoriesScreen
 import com.it10x.foodappgstav7_02.ui.home.HomeScreen
-import com.it10x.foodappgstav7_02.ui.orders.OrdersScreen
+import com.it10x.foodappgstav7_02.ui.orders.online.OnlineOrdersScreen
 import com.it10x.foodappgstav7_02.ui.orders.local.LocalOrderDetailScreen
 import com.it10x.foodappgstav7_02.ui.orders.local.LocalOrderDetailViewModel
 import com.it10x.foodappgstav7_02.ui.orders.local.LocalOrderDetailViewModelFactory
@@ -36,25 +35,12 @@ import com.it10x.foodappgstav7_02.ui.pos.PosScreen
 import com.it10x.foodappgstav7_02.ui.products.LocalProductsScreen
 import com.it10x.foodappgstav7_02.ui.settings.*
 import com.it10x.foodappgstav7_02.viewmodel.*
-import com.it10x.foodappgstav7_02.data.local.repository.POSOrdersRepository
+import com.it10x.foodappgstav7_02.data.pos.repository.POSOrdersRepository
 
 
-
-import com.it10x.foodappgstav7_02.ui.bill.BillScreen
-import com.it10x.foodappgstav7_02.ui.bill.BillViewModel
-
-import com.it10x.foodappgstav7_02.ui.kitchen.KitchenScreen
-import com.it10x.foodappgstav7_02.ui.payment.PaymentType
-import com.it10x.foodappgstav7_02.ui.kitchen.KitchenViewModel
-
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.it10x.foodappgstav7_02.data.local.repository.CartRepository
+import com.it10x.foodappgstav7_02.data.pos.repository.CartRepository
 import com.it10x.foodappgstav7_02.ui.cart.CartViewModel
 import com.it10x.foodappgstav7_02.ui.cart.CartViewModelFactory
-import com.it10x.foodappgstav7_02.ui.kitchen.KitchenViewModelFactory
 import com.it10x.foodappgstav7_02.ui.pos.PosSessionViewModel
 
 @Composable
@@ -84,8 +70,8 @@ fun NavigationHost(
 
     val application = context.applicationContext as Application
 
-    val ordersViewModel: OrdersViewModel = viewModel(
-        factory = OrdersViewModelFactory(printerManager)
+    val ordersViewModel: OnlineOrdersViewModel = viewModel(
+        factory = OnlineOrdersViewModelFactory(printerManager)
     )
     val posOrdersViewModel: POSOrdersViewModel = viewModel(
         factory = POSOrdersViewModelFactory(
@@ -181,7 +167,7 @@ fun NavigationHost(
 
         // ---------------- ONLINE ORDERS ----------------
         composable("orders") {
-            OrdersScreen(
+            OnlineOrdersScreen(
 
                 printerManager = printerManager,
                 ordersViewModel = ordersViewModel,

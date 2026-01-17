@@ -1,6 +1,6 @@
 package com.it10x.foodappgstav7_02.printer
 
-import com.it10x.foodappgstav7_02.data.local.entities.PosKotItemEntity
+import com.it10x.foodappgstav7_02.data.pos.entities.PosKotItemEntity
 
 // -----------------------------
 // PRINT MODELS (ONE TRUTH)

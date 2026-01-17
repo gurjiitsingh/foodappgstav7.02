@@ -15,8 +15,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.it10x.foodappgstav7_02.data.local.entities.PosOrderMasterEntity
-import com.it10x.foodappgstav7_02.data.local.viewmodel.POSOrdersViewModel
+import com.it10x.foodappgstav7_02.data.pos.entities.PosOrderMasterEntity
+import com.it10x.foodappgstav7_02.data.pos.viewmodel.POSOrdersViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 

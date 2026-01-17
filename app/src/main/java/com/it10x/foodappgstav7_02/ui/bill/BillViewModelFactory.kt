@@ -3,12 +3,13 @@ package com.it10x.foodappgstav7_02.ui.bill
 import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.it10x.foodappgstav7_02.data.local.AppDatabaseProvider
-import com.it10x.foodappgstav7_02.data.local.repository.OrderSequenceRepository
+import com.it10x.foodappgstav7_02.data.pos.AppDatabaseProvider
+import com.it10x.foodappgstav7_02.data.pos.repository.OrderSequenceRepository
 
 class BillViewModelFactory(
     private val application: Application,
-    private val tableId: String
+    private val tableId: String,
+    private val orderType: String
 ) : ViewModelProvider.Factory {
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -27,7 +28,8 @@ class BillViewModelFactory(
                 orderProductDao = db.orderProductDao(),
                 orderSequenceRepository = orderSequenceRepository, // ✅ ADD
                 outletDao = db.outletDao(),                         // ✅ ADD
-                tableId = tableId
+                tableId = tableId,
+                orderType = orderType
             ) as T
         }
 

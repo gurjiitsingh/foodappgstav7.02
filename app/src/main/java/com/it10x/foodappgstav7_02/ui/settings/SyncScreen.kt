@@ -13,7 +13,7 @@ import com.it10x.foodappgstav7_02.viewmodel.OutletSyncViewModel
 import com.it10x.foodappgstav7_02.viewmodel.TableSyncViewModel
 import com.it10x.foodappgstav7_02.viewmodel.OrderSyncViewModel
 import androidx.compose.ui.platform.LocalContext
-import com.it10x.foodappgstav7_02.data.local.AppDatabaseProvider
+import com.it10x.foodappgstav7_02.data.pos.AppDatabaseProvider
 import com.it10x.foodappgstav7_02.viewmodel.OrderSyncViewModelFactory
 
 

@@ -1,11 +1,9 @@
 package com.it10x.foodappgstav7_02.printer
 
-import android.util.Log
 import com.it10x.foodappgstav7_02.data.PrinterRole
-import com.it10x.foodappgstav7_02.data.models.OrderMasterData
-import com.it10x.foodappgstav7_02.data.models.OrderProductData
-import com.it10x.foodappgstav7_02.data.repository.OrdersRepository
-import com.it10x.foodappgstav7_02.viewmodel.OrdersViewModel
+import com.it10x.foodappgstav7_02.data.online.models.OrderMasterData
+import com.it10x.foodappgstav7_02.data.online.models.OrderProductData
+import com.it10x.foodappgstav7_02.data.online.models.repository.OrdersRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay

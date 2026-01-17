@@ -2,7 +2,7 @@ package com.it10x.foodappgstav7_02.ui.payment
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.it10x.foodappgstav7_02.data.local.repository.POSOrdersRepository
+import com.it10x.foodappgstav7_02.data.pos.repository.POSOrdersRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch

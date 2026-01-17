@@ -3,8 +3,8 @@ package com.it10x.foodappgstav7_02.viewmodel
 import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.it10x.foodappgstav7_02.data.local.AppDatabaseProvider
-import com.it10x.foodappgstav7_02.data.repository.PosOrderSyncRepository
+import com.it10x.foodappgstav7_02.data.pos.AppDatabaseProvider
+import com.it10x.foodappgstav7_02.data.online.models.repository.PosOrderSyncRepository
 
 class OrderSyncViewModelFactory(
     private val application: Application

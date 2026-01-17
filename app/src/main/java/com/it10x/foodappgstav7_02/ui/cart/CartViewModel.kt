@@ -3,8 +3,8 @@ package com.it10x.foodappgstav7_02.ui.cart
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.it10x.foodappgstav7_02.data.local.entities.PosCartEntity
-import com.it10x.foodappgstav7_02.data.local.repository.CartRepository
+import com.it10x.foodappgstav7_02.data.pos.entities.PosCartEntity
+import com.it10x.foodappgstav7_02.data.pos.repository.CartRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 

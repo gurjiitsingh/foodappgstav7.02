@@ -3,13 +3,13 @@ package com.it10x.foodappgstav7_02.ui.bill
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.it10x.foodappgstav7_02.data.local.dao.KotItemDao
-import com.it10x.foodappgstav7_02.data.local.dao.OrderMasterDao
-import com.it10x.foodappgstav7_02.data.local.dao.OrderProductDao
-import com.it10x.foodappgstav7_02.data.local.dao.OutletDao
-import com.it10x.foodappgstav7_02.data.local.entities.PosOrderItemEntity
-import com.it10x.foodappgstav7_02.data.local.entities.PosOrderMasterEntity
-import com.it10x.foodappgstav7_02.data.local.repository.OrderSequenceRepository
+import com.it10x.foodappgstav7_02.data.pos.dao.KotItemDao
+import com.it10x.foodappgstav7_02.data.pos.dao.OrderMasterDao
+import com.it10x.foodappgstav7_02.data.pos.dao.OrderProductDao
+import com.it10x.foodappgstav7_02.data.pos.dao.OutletDao
+import com.it10x.foodappgstav7_02.data.pos.entities.PosOrderItemEntity
+import com.it10x.foodappgstav7_02.data.pos.entities.PosOrderMasterEntity
+import com.it10x.foodappgstav7_02.data.pos.repository.OrderSequenceRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -25,10 +25,22 @@ class BillViewModel(
     private val orderProductDao: OrderProductDao,
     private val orderSequenceRepository: OrderSequenceRepository, // ✅ ADD
     private val outletDao: OutletDao,                              // ✅ ADD
-    private val tableId: String
+    private val tableId: String,
+    private val orderType: String
 ) : ViewModel() {
 
+    // =====================================================
+// DELIVERY ADDRESS (UI → VM SNAPSHOT)
+// =====================================================
+    private val _deliveryAddress =
+        MutableStateFlow<DeliveryAddressUiState?>(null)
+
+    val deliveryAddress: DeliveryAddressUiState?
+        get() = _deliveryAddress.value
     private val _uiState = MutableStateFlow(BillUiState(loading = true))
+
+    val orderTypePublic: String
+        get() = orderType
     val uiState: StateFlow<BillUiState> = _uiState
 
     init {
@@ -157,11 +169,41 @@ class BillViewModel(
             )
 
             // 5️⃣ Insert OrderMaster
+//            val orderMaster = PosOrderMasterEntity(
+//                id = orderId,
+//                srno = srno,
+//                orderType = orderType,
+//                tableNo = if (orderType == "DINE_IN") tableId else null,
+//                itemTotal = itemSubtotal,
+//                taxTotal = taxTotal,
+//                discountTotal = 0.0,
+//                grandTotal = itemSubtotal + taxTotal,
+//                paymentType = paymentType,
+//                paymentStatus = "PAID",
+//                orderStatus = "COMPLETED",
+//                deviceId = "POS",
+//                deviceName = "POS",
+//                appVersion = "1.0",
+//                createdAt = now,
+//                updatedAt = now,
+//                syncStatus = "PENDING",
+//                lastSyncedAt = null,
+//                notes = null
+//            )
+
             val orderMaster = PosOrderMasterEntity(
                 id = orderId,
                 srno = srno,
-                orderType = "DINE_IN",
-                tableNo = tableId,
+                orderType = orderType,
+                tableNo = if (orderType == "DINE_IN") tableId else null,
+                customerName = deliveryAddress?.name,
+                customerPhone = deliveryAddress?.phone,
+                dAddressLine1 = deliveryAddress?.line1,
+                dAddressLine2 = deliveryAddress?.line2,
+                dCity = deliveryAddress?.city,
+                dState = deliveryAddress?.state,
+                dZipcode = deliveryAddress?.zipcode,
+                dLandmark = deliveryAddress?.landmark,
                 itemTotal = itemSubtotal,
                 taxTotal = taxTotal,
                 discountTotal = 0.0,
@@ -237,6 +279,8 @@ class BillViewModel(
         }
     }
 
-
+    fun setDeliveryAddress(address: DeliveryAddressUiState) {
+        _deliveryAddress.value = address
+    }
 
 }

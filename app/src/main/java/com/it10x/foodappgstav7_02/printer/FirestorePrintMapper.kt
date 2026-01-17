@@ -1,8 +1,8 @@
 package com.it10x.foodappgstav7_02.printer
 
-import com.it10x.foodappgstav7_02.data.models.OrderMasterData
-import com.it10x.foodappgstav7_02.data.models.OrderProductData
-import com.it10x.foodappgstav7_02.data.models.formattedTime
+import com.it10x.foodappgstav7_02.data.online.models.OrderMasterData
+import com.it10x.foodappgstav7_02.data.online.models.OrderProductData
+import com.it10x.foodappgstav7_02.data.online.models.formattedTime
 
 object FirestorePrintMapper {
 

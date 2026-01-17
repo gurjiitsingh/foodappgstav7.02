@@ -1,7 +1,5 @@
 package com.it10x.foodappgstav7_02.ui.orders.local
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,8 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.it10x.foodappgstav7_02.data.local.entities.PosOrderItemEntity
-import com.it10x.foodappgstav7_02.data.local.entities.PosOrderMasterEntity
+import com.it10x.foodappgstav7_02.data.pos.entities.PosOrderItemEntity
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -37,151 +34,114 @@ fun LocalOrderDetailScreen(
             .padding(16.dp)
     ) {
 
-        // 🔙 HEADER
+        // ================= HEADER =================
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-
             IconButton(onClick = onBack) {
-                Icon(
-                    Icons.Default.ArrowBackIosNew,
-                    contentDescription = "Back"
-                )
+                Icon(Icons.Default.ArrowBackIosNew, contentDescription = "Back")
             }
-            TextButton(onClick = onBack) { Text("Back") }
-            Text("Order Details", style = MaterialTheme.typography.titleLarge)
-
-
-
-
-          //  TextButton(onClick = onBack) { Text("Back") }
+            Spacer(Modifier.width(8.dp))
+            Text(
+                "Order Details",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
         }
 
         Spacer(Modifier.height(12.dp))
 
-        // 🗂 ORDER INFO
+        // ================= ORDER + ADDRESS (2 COLUMNS) =================
         order?.let { o ->
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFF7F7F7))
             ) {
-                Column(modifier = Modifier.padding(12.dp)) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp)
+                ) {
 
-                    // 🔝 Order number + date
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                    // ---------- LEFT : ORDER INFO ----------
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 12.dp)
                     ) {
+                        Text("Order Info", fontWeight = FontWeight.Bold)
+
+                        Spacer(Modifier.height(6.dp))
+
+                        Text("Order #: ${o.srno}")
                         Text(
-                            "Order #${o.srno}",
-                            fontWeight = FontWeight.Bold
-                        )
-
-                        val sdf = rememberDateFormatter()
-
-
-                        Text(
-                            sdf.format(Date(o.createdAt)),
-                            color = Color.Gray,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-
-                        // 👤 CUSTOMER INFO
-                        if (!o.customerName.isNullOrBlank() || !o.customerPhone.isNullOrBlank()) {
-                            Spacer(Modifier.height(6.dp))
-                            Text(
-                                text = "Customer: ${o.customerName ?: "Walk-in"}",
-                                fontWeight = FontWeight.Medium
-                            )
-                            o.customerPhone?.let {
-                                Text(
-                                    text = "Phone: $it",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Color.Gray
-                                )
-                            }
-                        }
-                        // 📦 DELIVERY ADDRESS (ONLY IF PRESENT)
-                        if (
-                            !o.dAddressLine1.isNullOrBlank() ||
-                            !o.dCity.isNullOrBlank()
-                        ) {
-                            Spacer(Modifier.height(6.dp))
-                            Text("Delivery Address:", fontWeight = FontWeight.Medium)
-
-                            listOfNotNull(
-                                o.dAddressLine1,
-                                o.dAddressLine2,
-                                listOfNotNull(o.dCity, o.dState, o.dZipcode).joinToString(" ").takeIf { it.isNotBlank() },
-                                o.dLandmark?.let { "Near $it" }
-                            ).forEach {
-                                Text(
-                                    text = it,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Color.Gray
-                                )
-                            }
-                        }
-
-
-
-
-
-                    }
-
-                    Spacer(Modifier.height(6.dp))
-
-                    // 🍽 Order type + table
-                    Row {
-                        Text(
-                            "Type: ${o.orderType}",
-                            modifier = Modifier.padding(end = 12.dp)
-                        )
-                        if (!o.tableNo.isNullOrEmpty()) {
-                            Text("Table: ${o.tableNo}")
-                        }
-                    }
-
-                    Spacer(Modifier.height(4.dp))
-
-                    // 💳 Payment info
-                    Text(
-                        "Payment: ${o.paymentType} (${o.paymentStatus})",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-
-                    // 📦 Order status
-                    Text(
-                        "Status: ${o.orderStatus}",
-                        fontWeight = FontWeight.Medium,
-                        color = when (o.orderStatus) {
-                            "NEW" -> Color(0xFF1976D2)
-                            "ACCEPTED" -> Color(0xFF388E3C)
-                            "COMPLETED" -> Color(0xFF2E7D32)
-                            "CANCELLED" -> Color(0xFFD32F2F)
-                            else -> Color.DarkGray
-                        }
-                    )
-
-                    // 🕒 Created time (extra clarity)
-                    val sdf = rememberDateFormatter()
-
-                    Text(
-                        sdf.format(Date(o.createdAt)),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.Gray
-                    )
-
-                    // 📝 Notes (optional)
-                    if (!o.notes.isNullOrEmpty()) {
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            "Notes: ${o.notes}",
+                            rememberDateFormatter().format(Date(o.createdAt)),
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.Gray
                         )
+
+                        Spacer(Modifier.height(6.dp))
+
+                        Text("Type: ${o.orderType}")
+                        o.tableNo?.let {
+                            Text("Table: $it")
+                        }
+
+                        Spacer(Modifier.height(6.dp))
+
+                        Text("Payment: ${o.paymentType}")
+                        Text(
+                            "Status: ${o.orderStatus}",
+                            fontWeight = FontWeight.Medium,
+                            color = when (o.orderStatus) {
+                                "NEW" -> Color(0xFF1976D2)
+                                "ACCEPTED" -> Color(0xFF388E3C)
+                                "COMPLETED" -> Color(0xFF2E7D32)
+                                "CANCELLED" -> Color(0xFFD32F2F)
+                                else -> Color.DarkGray
+                            }
+                        )
+                    }
+
+                    // ---------- RIGHT : DELIVERY ADDRESS ----------
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Delivery Address", fontWeight = FontWeight.Bold)
+
+                        Spacer(Modifier.height(6.dp))
+
+                        Text(
+                            o.customerName ?: "Walk-in",
+                            fontWeight = FontWeight.Medium
+                        )
+
+                        o.customerPhone?.let {
+                            Text(
+                                it,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Gray
+                            )
+                        }
+
+                        Spacer(Modifier.height(4.dp))
+
+                        listOfNotNull(
+                            o.dAddressLine1,
+                            o.dAddressLine2,
+                            listOfNotNull(
+                                o.dCity,
+                                o.dState,
+                                o.dZipcode
+                            ).joinToString(" ").takeIf { it.isNotBlank() },
+                            o.dLandmark?.let { "Near $it" }
+                        ).forEach { line ->
+                            Text(
+                                line,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Gray
+                            )
+                        }
                     }
                 }
             }
@@ -189,13 +149,14 @@ fun LocalOrderDetailScreen(
             Spacer(Modifier.height(12.dp))
         }
 
-
-        // 🧾 ITEMS
+        // ================= ITEMS (SCROLLABLE) =================
         Text("Items", style = MaterialTheme.typography.titleMedium)
         Divider(Modifier.padding(vertical = 4.dp))
 
         LazyColumn(
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(1f)          // ⭐ makes list scroll
+                .fillMaxWidth()
         ) {
             items(products, key = { it.id }) { item ->
                 OrderProductRow(item)
@@ -205,105 +166,121 @@ fun LocalOrderDetailScreen(
 
         Spacer(Modifier.height(12.dp))
 
-        // 💰 TOTALS
-        OrderTotals(subtotal = subtotal, tax = tax, grandTotal = grandTotal)
-
-
-        Spacer(Modifier.height(12.dp))
-
-        // 🖨 PRINT BUTTON
-//        Button(
-//            onClick = { viewModel.printOrder() },
-//            modifier = Modifier.fillMaxWidth()
-//        ) {
-//            Text("Print Order")
-//        }
+        // ================= TOTALS (FIXED BOTTOM) =================
+        OrderTotals(
+            subtotal = subtotal,
+            tax = tax,
+            grandTotal = grandTotal
+        )
     }
 }
 
 @Composable
 fun OrderProductRow(item: PosOrderItemEntity) {
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+            .padding(vertical = 6.dp)
     ) {
 
-        Column(modifier = Modifier.weight(1f)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top
+        ) {
 
-            Text(
-                item.name,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium
-            )
+            // LEFT SIDE: NAME + DETAILS
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
 
-            // ✅ VARIANT INDICATOR (SAFE)
-            if (item.isVariant && !item.parentId.isNullOrEmpty()) {
+                // 🔹 Item name
                 Text(
-                    text = "Variant item",
+                    text = item.name,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium
+                )
+
+                Spacer(Modifier.height(2.dp))
+
+                // 🔹 Quantity × base price
+                Text(
+                    text = "${item.quantity} × ₹${"%.2f".format(item.basePrice)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+
+                // 🔹 Variant indicator (if any)
+                if (item.isVariant && !item.parentId.isNullOrEmpty()) {
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text = "Variant item",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color(0xFF616161)
+                    )
+                }
+
+                // 🔹 Tax info
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = "GST ${item.taxRate}% (${item.taxType})",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF616161)
+                    color = Color.Gray
                 )
             }
 
-            Spacer(Modifier.height(2.dp))
+            // RIGHT SIDE: TOTAL
+            Column(
+                horizontalAlignment = Alignment.End
+            ) {
+                Text(
+                    text = "₹${"%.2f".format(item.finalTotal)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium
+                )
 
-            Text(
-                "${item.quantity} × ₹${"%.2f".format(item.basePrice)}",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
-            )
-
-            // ✅ TAX INFO (NO RE-CALCULATION)
-            Text(
-                text = "Tax: ${item.taxRate}% (${item.taxType})",
-                style = MaterialTheme.typography.labelSmall,
-                color = Color.Gray
-            )
-        }
-
-        Column(horizontalAlignment = Alignment.End) {
-            Text(
-                "₹${"%.2f".format(item.finalTotal)}",
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium
-            )
-
-            Text(
-                "₹${"%.2f".format(item.finalPricePerItem)} / item",
-                style = MaterialTheme.typography.labelSmall,
-                color = Color.Gray
-            )
+                Text(
+                    text = "₹${"%.2f".format(item.finalPricePerItem)} / item",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.Gray
+                )
+            }
         }
     }
 }
 
 
 @Composable
-fun OrderTotals(subtotal: Double, tax: Double, grandTotal: Double) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        TotalRow("Items Subtotal", subtotal)
-        TotalRow("Total GST", tax)
+fun OrderTotals(
+    subtotal: Double,
+    tax: Double,
+    grandTotal: Double
+) {
+    Column {
+        TotalRow("Subtotal", subtotal)
+        TotalRow("GST", tax)
         Divider(Modifier.padding(vertical = 4.dp))
-        TotalRow("Payable Amount", grandTotal, bold = true)
+        TotalRow("Grand Total", grandTotal, bold = true)
     }
 }
 
-
 @Composable
-fun TotalRow(label: String, value: Double, bold: Boolean = false) {
+fun TotalRow(
+    label: String,
+    value: Double,
+    bold: Boolean = false
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(label, fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal)
-        Text("₹${"%.2f".format(value)}", fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal)
+        Text(
+            "₹${"%.2f".format(value)}",
+            fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal
+        )
     }
 }
-
-
-
 
 @Composable
 private fun rememberDateFormatter(): SimpleDateFormat {

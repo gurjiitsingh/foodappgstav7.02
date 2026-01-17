@@ -7,8 +7,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.it10x.foodappgstav7_02.data.local.AppDatabaseProvider
-import com.it10x.foodappgstav7_02.data.local.viewmodel.*
+import com.it10x.foodappgstav7_02.data.pos.AppDatabaseProvider
+import com.it10x.foodappgstav7_02.data.pos.viewmodel.*
 
 @Composable
 fun LocalProductsScreen() {

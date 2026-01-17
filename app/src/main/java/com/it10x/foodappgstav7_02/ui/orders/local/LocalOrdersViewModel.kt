@@ -2,7 +2,7 @@ package com.it10x.foodappgstav7_02.ui.orders.local
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.it10x.foodappgstav7_02.data.local.dao.OrderMasterDao
+import com.it10x.foodappgstav7_02.data.pos.dao.OrderMasterDao
 import com.it10x.foodappgstav7_02.printer.pos.POSOrderPrinter
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn

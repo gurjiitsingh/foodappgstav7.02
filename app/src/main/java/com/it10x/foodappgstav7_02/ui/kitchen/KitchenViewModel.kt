@@ -5,9 +5,9 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.it10x.foodappgstav7_02.data.PrinterRole
-import com.it10x.foodappgstav7_02.data.local.AppDatabaseProvider
-import com.it10x.foodappgstav7_02.data.local.entities.PosKotItemEntity
-import com.it10x.foodappgstav7_02.data.local.usecase.KotToBillUseCase
+import com.it10x.foodappgstav7_02.data.pos.AppDatabaseProvider
+import com.it10x.foodappgstav7_02.data.pos.entities.PosKotItemEntity
+import com.it10x.foodappgstav7_02.data.pos.usecase.KotToBillUseCase
 import com.it10x.foodappgstav7_02.printer.PrintItem
 import com.it10x.foodappgstav7_02.printer.PrintOrder
 import com.it10x.foodappgstav7_02.printer.PrinterManager

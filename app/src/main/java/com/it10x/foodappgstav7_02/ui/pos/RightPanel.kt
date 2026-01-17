@@ -11,9 +11,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.it10x.foodappgstav7_02.data.local.entities.PosCartEntity
+import com.it10x.foodappgstav7_02.data.pos.entities.PosCartEntity
 import com.it10x.foodappgstav7_02.ui.cart.CartViewModel
-import com.it10x.foodappgstav7_02.data.local.viewmodel.POSOrdersViewModel
+import com.it10x.foodappgstav7_02.data.pos.viewmodel.POSOrdersViewModel
 
 import android.provider.Settings
 import android.os.Build
@@ -21,7 +21,7 @@ import android.util.Log
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.it10x.foodappgstav7_02.BuildConfig
-import com.it10x.foodappgstav7_02.viewmodel.TableViewModel
+import com.it10x.foodappgstav7_02.viewmodel.PosTableViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -29,7 +29,7 @@ import com.it10x.foodappgstav7_02.viewmodel.TableViewModel
 fun RightPanel(
     cartViewModel: CartViewModel,
     ordersViewModel: POSOrdersViewModel,
-    tableViewModel: TableViewModel,
+    tableViewModel: PosTableViewModel,
     orderType: String,
     tableNo: String?,
     paymentType: String,

@@ -1,6 +1,5 @@
 package com.it10x.foodappgstav7_02
 
-import android.app.Application
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -20,49 +19,30 @@ import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.launch
 
 import com.it10x.foodappgstav7_02.data.PrinterPreferences
-import com.it10x.foodappgstav7_02.data.repository.OrdersRepository
+import com.it10x.foodappgstav7_02.data.online.models.repository.OrdersRepository
 import com.it10x.foodappgstav7_02.printer.PrinterManager
-import com.it10x.foodappgstav7_02.viewmodel.OrdersViewModel
+import com.it10x.foodappgstav7_02.viewmodel.OnlineOrdersViewModel
 import com.it10x.foodappgstav7_02.viewmodel.RealtimeOrdersViewModel
 import com.it10x.foodappgstav7_02.navigation.NavigationHost
 import com.it10x.foodappgstav7_02.printer.AutoPrintManager
 import com.it10x.foodappgstav7_02.service.OrderListenerService
 
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
-
-import android.content.pm.ActivityInfo
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 
-import androidx.compose.material.icons.filled.ReceiptLong
 
-
-import androidx.compose.material.icons.filled.PointOfSale
-import androidx.compose.material.icons.filled.ReceiptLong
-import androidx.compose.ui.Alignment
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.width
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 
-import androidx.compose.ui.unit.dp
-import com.google.firebase.FirebaseApp
-import com.google.firebase.FirebaseOptions
 import com.it10x.foodappgstav7_02.firebase.ClientIdStore
-import com.it10x.foodappgstav7_02.firebase.ClientRegistry
 import com.it10x.foodappgstav7_02.ui.settings.ClientSetupScreen
 
 
@@ -103,10 +83,10 @@ class MainActivity : ComponentActivity() {
             val printerManager = remember { PrinterManager(this) }
             val ordersRepository = remember { OrdersRepository() }
 
-            val ordersViewModel: OrdersViewModel = viewModel(
+            val ordersViewModel: OnlineOrdersViewModel = viewModel(
                 factory = object : ViewModelProvider.Factory {
                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                        return OrdersViewModel(printerManager) as T
+                        return OnlineOrdersViewModel(printerManager) as T
                     }
                 }
             )

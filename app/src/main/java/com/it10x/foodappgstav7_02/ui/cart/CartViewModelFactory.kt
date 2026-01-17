@@ -3,7 +3,7 @@ package com.it10x.foodappgstav7_02.ui.cart
 import androidx.lifecycle.AbstractSavedStateViewModelFactory
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.it10x.foodappgstav7_02.data.local.repository.CartRepository
+import com.it10x.foodappgstav7_02.data.pos.repository.CartRepository
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.CreationExtras

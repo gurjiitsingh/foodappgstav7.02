@@ -3,10 +3,10 @@ package com.it10x.foodappgstav7_02.ui.orders.local
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.it10x.foodappgstav7_02.data.PrinterRole
-import com.it10x.foodappgstav7_02.data.local.entities.PosOrderItemEntity
-import com.it10x.foodappgstav7_02.data.local.entities.PosOrderMasterEntity
-import com.it10x.foodappgstav7_02.data.local.repository.POSOrdersRepository
-import com.it10x.foodappgstav7_02.data.local.viewmodel.POSOrdersViewModel
+import com.it10x.foodappgstav7_02.data.pos.entities.PosOrderItemEntity
+import com.it10x.foodappgstav7_02.data.pos.entities.PosOrderMasterEntity
+import com.it10x.foodappgstav7_02.data.pos.repository.POSOrdersRepository
+import com.it10x.foodappgstav7_02.data.pos.viewmodel.POSOrdersViewModel
 import com.it10x.foodappgstav7_02.printer.PrinterManager
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
