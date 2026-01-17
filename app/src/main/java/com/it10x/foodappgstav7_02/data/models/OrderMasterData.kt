@@ -79,7 +79,7 @@ data class OrderMasterData(
     // TIMESTAMPS
     // =====================================================
     var createdAt: Timestamp? = null,
-
+    var localCreatedAt: Long? = null,
     // =====================================================
     // AUTOMATION
     // =====================================================
@@ -116,3 +116,9 @@ fun OrderMasterData.formattedTime(): String {
     return sdf.format(java.util.Date(millis))
 }
 
+
+
+fun OrderMasterData.safeCreatedAtMillis(): Long =
+    createdAt?.toDate()?.time
+        ?: localCreatedAt
+        ?: 0L

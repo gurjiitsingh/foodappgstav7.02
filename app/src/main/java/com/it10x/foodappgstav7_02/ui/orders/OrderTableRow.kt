@@ -15,6 +15,8 @@ import java.text.SimpleDateFormat
 import java.util.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Print
+import com.it10x.foodappgstav7_02.data.models.safeCreatedAtMillis
+
 @Composable
 fun PosOrderTableRow(
     order: OrderMasterData,
@@ -73,7 +75,7 @@ fun PosOrderTableRow(
 
         // Time
         Text(
-            text = formatPosTime(order.createdAtMillis()),
+            text = formatPosTime(order.safeCreatedAtMillis()),
             modifier = Modifier.weight(0.20f),
             style = MaterialTheme.typography.bodySmall
         )

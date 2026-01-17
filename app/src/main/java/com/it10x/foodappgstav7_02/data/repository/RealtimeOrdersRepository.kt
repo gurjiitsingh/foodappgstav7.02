@@ -16,8 +16,9 @@ class RealtimeOrdersRepository {
         onNewOrder: (OrderMasterData) -> Unit
     ) {
         listener = db.collection("orderMaster")
-            .orderBy("createdAt", Query.Direction.DESCENDING)
-            .limit(5) // only latest few orders
+          //  .whereIn("source", listOf("WEB", "APP"))   // ✅ CRITICAL FIX
+          //  .orderBy("createdAt", Query.Direction.DESCENDING)
+            .limit(15)
             .addSnapshotListener { snapshots, error ->
 
                 if (error != null) {

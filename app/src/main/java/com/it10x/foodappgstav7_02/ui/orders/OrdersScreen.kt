@@ -39,7 +39,11 @@ fun OrdersScreen(
     // -----------------
     // Original orders list
     // -----------------
-    LaunchedEffect(Unit) { ordersViewModel.loadFirstPage() }
+   // LaunchedEffect(Unit) { ordersViewModel.loadFirstPage() }
+    LaunchedEffect(Unit) {
+        realtimeOrdersViewModel.startListening()
+        ordersViewModel.loadFirstPage()
+    }
 
     val pagedOrders by ordersViewModel.orders.collectAsState()
     val realtimeOrders by realtimeOrdersViewModel.realtimeOrders.collectAsState()
@@ -61,8 +65,8 @@ fun OrdersScreen(
             .fillMaxSize()
             .padding(12.dp)
     ) {
-//        Text("POS Orders", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-//        Spacer(Modifier.height(8.dp))
+        Text("Online  Orders", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(8.dp))
 
         when {
             loading && combinedOrders.isEmpty() -> Text("Loading orders...")

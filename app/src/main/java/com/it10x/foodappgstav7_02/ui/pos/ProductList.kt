@@ -173,9 +173,15 @@ private fun ParentProductCard(
                     onClick = { cartViewModel.decrease(product.id) },
                     modifier = Modifier
                         .size(32.dp)
-                        .background(Color(0xFFD32F2F), MaterialTheme.shapes.small)
+                        .background(Color.White, MaterialTheme.shapes.small) // ✅ white background
+                        .border(1.5.dp, Color(0xFFD32F2F), MaterialTheme.shapes.small) // ✅ red border
                 ) {
-                    Text("−", color = Color.White, fontSize = 18.sp)
+                    Text(
+                        text = "−",
+                        color = Color(0xFFD32F2F), // ✅ bold red text
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
 
                 // ➕ add to cart
