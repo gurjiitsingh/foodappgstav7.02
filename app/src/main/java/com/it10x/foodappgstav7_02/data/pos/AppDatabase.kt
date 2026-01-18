@@ -19,7 +19,7 @@ import com.it10x.foodappgstav7_02.data.pos.entities.config.*
         PosKotBatchEntity::class,
         OrderSequenceEntity::class
     ],
-    version = 43,              // ⬆️ increment version since schema changed
+    version = 44,              // ⬆️ increment version since schema changed
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -34,5 +34,7 @@ abstract class AppDatabase : RoomDatabase() {
         abstract fun kotBatchDao(): KotBatchDao
     abstract fun kotItemDao(): KotItemDao
     abstract fun orderSequenceDao(): OrderSequenceDao
+
+    abstract fun salesMasterDao(): SalesMasterDao
 
 }

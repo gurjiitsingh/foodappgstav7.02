@@ -43,6 +43,10 @@ import com.it10x.foodappgstav7_02.ui.cart.CartViewModel
 import com.it10x.foodappgstav7_02.ui.cart.CartViewModelFactory
 import com.it10x.foodappgstav7_02.ui.pos.PosSessionViewModel
 
+import com.it10x.foodappgstav7_02.ui.sales.SalesScreen
+import com.it10x.foodappgstav7_02.ui.sales.SalesViewModel
+import com.it10x.foodappgstav7_02.ui.sales.SalesViewModelFactory
+
 @Composable
 fun NavigationHost(
     navController: NavHostController,
@@ -201,6 +205,25 @@ fun NavigationHost(
                 ordersViewModel = posOrdersViewModel,
                 posSessionViewModel = posSessionViewModel,
                 cartViewModel = cartViewModel
+            )
+        }
+
+// ---------------- SALES ----------------
+        // ---------------- SALES ----------------
+        composable("sales") {
+
+            val context = LocalContext.current
+            val db = AppDatabaseProvider.get(context)
+
+            val salesViewModel: SalesViewModel = viewModel(
+                factory = SalesViewModelFactory(
+                    salesMasterDao = db.salesMasterDao()
+                )
+            )
+
+            SalesScreen(
+                viewModel = salesViewModel,
+                onBack = { navController.popBackStack() }
             )
         }
 

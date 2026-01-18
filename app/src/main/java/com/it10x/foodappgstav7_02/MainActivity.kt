@@ -178,7 +178,25 @@ class MainActivity : ComponentActivity() {
                                 navController.navigate("local_orders")
                             }
                         )
+// ===============================
+// SALES / Z-REPORT
+// ===============================
+                        SidebarSectionHeader("REPORTS")
 
+                        NavigationDrawerItem(
+                            label = { Text("Sales / Z-Report") },
+                            selected = false,
+                            onClick = {
+                                scope.launch { drawerState.close() }
+                                navController.navigate("sales") // opens SalesScreen
+                            }
+                        )
+                        Divider(
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp)
+                                .padding(bottom = 4.dp),
+                            thickness = 0.5.dp
+                        )
 
 
                         // ===============================
