@@ -86,7 +86,7 @@ class PrinterManager(
     text: String,
     onResult: (Boolean) -> Unit = {}
 ) {
-
+        Log.e("PRINT", "printer configured for role=$role")
     val config = prefs.getPrinterConfig(role)
     if (config == null) {
         Log.e("PRINT", "No printer configured for role=$role")

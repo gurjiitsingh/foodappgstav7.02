@@ -136,7 +136,7 @@ fun RightPanel(
                         Settings.Secure.ANDROID_ID
                     )
 
-                    ordersViewModel.placeOrder(
+                    ordersViewModel.sendToKitchen(
                         orderType = orderType,
                         tableNo = tableNo,
                         sessionId = cartViewModel.sessionKey.value!!, // ✅ THIS

@@ -16,6 +16,10 @@ object ReceiptFormatter {
     private const val LINE_WIDTH = 32
     private const val ALIGN_LEFT = "\u001B\u0061\u0000"
 
+
+
+
+
     // -----------------------------
     // BILLING RECEIPT
     // -----------------------------

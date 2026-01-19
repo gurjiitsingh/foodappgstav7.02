@@ -74,7 +74,7 @@ class POSOrdersViewModel(
     // -------------------------
     // PLACE ORDER + AUTO PRINT
     // -------------------------
-    fun placeOrder(
+    fun sendToKitchen(
         orderType: String,
         tableNo: String?,
         sessionId: String,
@@ -249,7 +249,7 @@ class POSOrdersViewModel(
             }
 
 //oldprintingremoved
-          //  Log.d("OUTLET_PRINT", "🖨 FINAL TITLE:\n$outletTitle")
+            Log.d("OUTLET_PRINT", "🖨 FINAL TITLE:\n$outletTitle")
 
             // ---------------- BILLING PRINT ----------------
             printerManager.printText(
@@ -258,7 +258,7 @@ class POSOrdersViewModel(
             )
 
             // SMALL DELAY
-     //       kotlinx.coroutines.delay(150)
+            //kotlinx.coroutines.delay(150)
 
             // ---------------- KITCHEN PRINT ----------------
             printerManager.printText(

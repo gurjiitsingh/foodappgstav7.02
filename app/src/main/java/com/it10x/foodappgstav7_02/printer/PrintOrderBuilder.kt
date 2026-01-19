@@ -4,6 +4,7 @@ import com.it10x.foodappgstav7_02.data.pos.entities.PosOrderItemEntity
 import com.it10x.foodappgstav7_02.data.pos.entities.PosOrderMasterEntity
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.String
 
 object PrintOrderBuilder {
 
@@ -28,20 +29,24 @@ object PrintOrderBuilder {
 
             // ---------- CORE ----------
             orderNo = master.srno.toString(),
-            customerName = "Walk-in",
             dateTime = master.createdAt.formatMillis(),
 
             // ---------- ORDER TYPE ----------
             orderType = master.orderType,
             tableNo = master.tableNo,
 
+
+
             // ---------- DELIVERY ----------
-            dAddressLine1 = null,
-            dAddressLine2 = null,
-            dCity = null,
+            customerName = master.customerName?:"Walk-in",
+            customerPhone = master.customerPhone,
+            dAddressLine1 = master.dAddressLine1,
+            dAddressLine2 = master.dAddressLine2,
+            dCity = master.dCity,
+            dLandmark = master.dLandmark,
             dState = null,
             dZipcode = null,
-            dLandmark = null,
+
 
             // ---------- ITEMS ----------
             items = printItems,
