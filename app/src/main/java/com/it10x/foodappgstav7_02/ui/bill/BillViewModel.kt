@@ -3,6 +3,8 @@ package com.it10x.foodappgstav7_02.ui.bill
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.it10x.foodappgstav7_02.data.PrinterRole
+import com.it10x.foodappgstav7_02.data.pos.AppDatabaseProvider
 import com.it10x.foodappgstav7_02.data.pos.dao.KotItemDao
 import com.it10x.foodappgstav7_02.data.pos.dao.OrderMasterDao
 import com.it10x.foodappgstav7_02.data.pos.dao.OrderProductDao
@@ -10,10 +12,15 @@ import com.it10x.foodappgstav7_02.data.pos.dao.OutletDao
 import com.it10x.foodappgstav7_02.data.pos.entities.PosOrderItemEntity
 import com.it10x.foodappgstav7_02.data.pos.entities.PosOrderMasterEntity
 import com.it10x.foodappgstav7_02.data.pos.repository.OrderSequenceRepository
+import com.it10x.foodappgstav7_02.printer.PrintOrderBuilder
+import com.it10x.foodappgstav7_02.printer.PrinterManager
+import com.it10x.foodappgstav7_02.printer.ReceiptFormatter
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -26,7 +33,8 @@ class BillViewModel(
     private val orderSequenceRepository: OrderSequenceRepository, // ✅ ADD
     private val outletDao: OutletDao,                              // ✅ ADD
     private val tableId: String,
-    private val orderType: String
+    private val orderType: String,
+    private val printerManager: PrinterManager
 ) : ViewModel() {
 
     // =====================================================
@@ -269,6 +277,11 @@ class BillViewModel(
 
             orderProductDao.insertAll(orderItems)
 
+
+            printOrderStandard(orderMaster, orderItems)
+
+
+
             // 7️⃣ Clear KOT
             kotItemDao.clearForTable(tableId)
 
@@ -281,6 +294,83 @@ class BillViewModel(
 
     fun setDeliveryAddress(address: DeliveryAddressUiState) {
         _deliveryAddress.value = address
+    }
+
+
+
+
+    // -------------------------
+    // PRINT ORDERS (AUTO + MANUAL)
+    // -------------------------
+    private fun printOrderStandard(
+        order: PosOrderMasterEntity,
+        items: List<PosOrderItemEntity>
+    ) {
+        Log.d("PRINT_SOURCE", "🟢 POSOrdersViewModel.printOrderStandard CALLED")
+
+        viewModelScope.launch {
+
+            //  Log.d("OUTLET_PRINT", "📨 Building PrintOrder…")
+
+            val printOrder = PrintOrderBuilder.build(order, items)
+
+            // ---------------- OUTLET FROM ROOM ----------------
+            val db = AppDatabaseProvider.get(printerManager.appContext())
+            //    Log.d("OUTLET_DB_PRINT", "DB Path Print = ${db.openHelper.readableDatabase.path}")
+
+            //    Log.d("OUTLET_PRINT", "🔍 Fetching outlet from Room…")
+
+            val outlet = withContext(Dispatchers.IO) {
+                db.outletDao().getOutlet()
+            }
+
+            if (outlet == null) {
+                Log.e("OUTLET_PRINT", "❌ Outlet is NULL — using default title")
+            } else {
+                //  Log.d("OUTLET_PRINT", "✅ Outlet Loaded")
+                //   Log.d("OUTLET_PRINT", "name=${outlet.outletName}")
+                //   Log.d("OUTLET_PRINT", "city=${outlet.city}")
+                //   Log.d("OUTLET_PRINT", "phone=${outlet.phone}")
+            }
+
+            val outletTitle = if (outlet != null) {
+                listOfNotNull(
+                    outlet.outletName.takeIf { it.isNotBlank() },
+
+                    // ADDRESS
+                    outlet.addressLine1.takeIf { it.isNotBlank() },
+                    outlet.addressLine2?.takeIf { it.isNotBlank() },
+                    outlet.addressLine3?.takeIf { it.isNotBlank() },
+                    outlet.city.takeIf { it.isNotBlank() },
+
+                    // CONTACT
+                    outlet.phone.takeIf { it.isNotBlank() }?.let { "Contact No.: $it" },
+                    outlet.phone2?.takeIf { it.isNotBlank() }?.let { "$it" },
+                    outlet.email?.takeIf { it.isNotBlank() },
+
+                    // WEB
+                    outlet.web?.takeIf { it.isNotBlank() },
+
+                    // FOOTER NOTE
+                    outlet.footerNote?.takeIf { it.isNotBlank() },
+                    // TAX
+                    outlet.gstVatNumber?.takeIf { it.isNotBlank() }?.let { "GST: $it" }
+                ).joinToString("\n")
+            } else {
+                "FOOD APP"
+            }
+
+            //oldprintingremoved
+            //  Log.d("OUTLET_PRINT", "🖨 FINAL TITLE:\n$outletTitle")
+
+            // ---------------- BILLING PRINT ----------------
+            printerManager.printText(
+                PrinterRole.BILLING,
+                ReceiptFormatter.billing(printOrder, title = outletTitle)
+            )
+
+
+        }
     }
 
 }
