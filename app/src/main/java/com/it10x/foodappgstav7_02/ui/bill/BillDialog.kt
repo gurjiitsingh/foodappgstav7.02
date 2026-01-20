@@ -5,25 +5,39 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.it10x.foodappgstav7_02.data.pos.AppDatabaseProvider
+import com.it10x.foodappgstav7_02.data.pos.repository.POSOrdersRepository
+import com.it10x.foodappgstav7_02.printer.PrinterManager
 import com.it10x.foodappgstav7_02.ui.payment.PaymentType
+import com.it10x.foodappgstav7_02.viewmodel.PosTableViewModel
 
 @Composable
 fun BillScreenDialog(
     tableId: String,
     orderType: String,
-    tableViewModel: com.it10x.foodappgstav7_02.viewmodel.PosTableViewModel,
-    onClose: () -> Unit
-) {
-    val context = androidx.compose.ui.platform.LocalContext.current
+    tableViewModel: PosTableViewModel,
+    onClose: () -> Unit,
 
-    // ✅ ViewModel per TABLE (stable, correct)
-    val viewModel: BillViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
-        key = "BillViewModel_$tableId",   // ⭐ IMPORTANT FIX
+) {
+    val context = LocalContext.current
+
+    // ✅ Initialize dependencies
+    val application = context.applicationContext as android.app.Application
+    val db = AppDatabaseProvider.get(application)
+//    val repository = POSOrdersRepository(db)
+    val printerManager = PrinterManager(context)
+
+    // ✅ Create ViewModel (stable per table)
+    val viewModel: BillViewModel = viewModel(
+        key = "BillViewModel_$tableId",   // ensures unique VM per table
         factory = BillViewModelFactory(
-            application = context.applicationContext as android.app.Application,
+            application = application,
             tableId = tableId,
-            orderType = orderType
-        )
+            orderType = orderType,
+
+           )
     )
 
     AlertDialog(
@@ -34,23 +48,20 @@ fun BillScreenDialog(
                 Text("Close")
             }
         },
-        title = {
-            Text(text = "Final Bill")
-        },
+        title = { Text(text = "Final Bill") },
         text = {
             BillScreen(
                 viewModel = viewModel,
                 onPayClick = { paymentType ->
                     viewModel.payBill(paymentType.name)
 
+                    // ✅ Release table after billing (Dine-in only)
                     if (!tableId.startsWith("TAKEAWAY") && !tableId.startsWith("DELIVERY")) {
-                        // ✅ ONLY for dine-in
                         tableViewModel.releaseTable(tableId)
                     }
 
                     onClose()
                 },
-
             )
         }
     )

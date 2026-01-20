@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.it10x.foodappgstav7_02.data.pos.AppDatabaseProvider
 import com.it10x.foodappgstav7_02.data.pos.repository.OrderSequenceRepository
+import com.it10x.foodappgstav7_02.data.pos.repository.POSOrdersRepository
 import com.it10x.foodappgstav7_02.printer.PrinterManager
 
 class BillViewModelFactory(
@@ -25,6 +26,15 @@ class BillViewModelFactory(
             // ✅ PrinterManager instance (required by BillViewModel)
             val printerManager = PrinterManager(application.applicationContext)
 
+            // ✅ Build POSOrdersRepository manually (with all required DAOs)
+            val repository = POSOrdersRepository(
+                db = db,                            // ✅ Added missing DB reference
+                orderMasterDao = db.orderMasterDao(),
+                orderProductDao = db.orderProductDao(),
+                cartDao = db.cartDao(),
+                tableDao = db.tableDao()            // ✅ Added missing tableDao
+            )
+
             @Suppress("UNCHECKED_CAST")
             return BillViewModel(
                 kotItemDao = db.kotItemDao(),
@@ -34,7 +44,8 @@ class BillViewModelFactory(
                 outletDao = db.outletDao(),
                 tableId = tableId,
                 orderType = orderType,
-                printerManager = printerManager // ✅ Added here
+                repository = repository,              // ✅ Proper repository instance
+                printerManager = printerManager       // ✅ Printer manager instance
             ) as T
         }
 

@@ -21,6 +21,11 @@ import android.util.Log
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.it10x.foodappgstav7_02.BuildConfig
+import com.it10x.foodappgstav7_02.data.pos.AppDatabaseProvider
+import com.it10x.foodappgstav7_02.data.pos.repository.POSOrdersRepository
+import com.it10x.foodappgstav7_02.printer.PrinterManager
+import com.it10x.foodappgstav7_02.ui.bill.BillViewModel
+import com.it10x.foodappgstav7_02.ui.bill.BillViewModelFactory
 import com.it10x.foodappgstav7_02.viewmodel.PosTableViewModel
 
 
@@ -39,6 +44,25 @@ fun RightPanel(
     onOpenBill: (String) -> Unit
 ) {
     val context = LocalContext.current
+
+
+
+    val application = context.applicationContext as android.app.Application
+    val db = AppDatabaseProvider.get(application)
+
+    val printerManager = PrinterManager(context)
+
+    val billViewModel: BillViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+        key = "BillVM_${tableNo ?: orderType}",
+        factory = BillViewModelFactory(
+            application = application,
+            tableId = tableNo ?: orderType,
+            orderType = orderType,
+
+        )
+    )
+
+
 
     val cartItems: List<PosCartEntity> by
     cartViewModel.cart.collectAsState(initial = emptyList())
@@ -75,6 +99,9 @@ fun RightPanel(
             "TAKEAWAY", "DELIVERY" -> true
             else -> false
         }
+
+
+
 
 
     Column(
@@ -136,10 +163,10 @@ fun RightPanel(
                         Settings.Secure.ANDROID_ID
                     )
 
-                    ordersViewModel.sendToKitchen(
+                    billViewModel.sendToKitchen(
                         orderType = orderType,
                         tableNo = tableNo,
-                        sessionId = cartViewModel.sessionKey.value!!, // ✅ THIS
+                        sessionId = cartViewModel.sessionKey.value!!,
                         paymentType = "UNPAID",
                         deviceId = deviceId,
                         deviceName = Build.MODEL ?: "Unknown Device",

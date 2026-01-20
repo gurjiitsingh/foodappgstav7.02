@@ -2,6 +2,8 @@ package com.it10x.foodappgstav7_02.data.pos.repository
 
 import com.it10x.foodappgstav7_02.data.pos.AppDatabase
 import com.it10x.foodappgstav7_02.data.pos.dao.CartDao
+import com.it10x.foodappgstav7_02.data.pos.dao.KotBatchDao
+import com.it10x.foodappgstav7_02.data.pos.dao.KotItemDao
 import com.it10x.foodappgstav7_02.data.pos.dao.OrderMasterDao
 import com.it10x.foodappgstav7_02.data.pos.dao.OrderProductDao
 import com.it10x.foodappgstav7_02.data.pos.dao.TableDao
@@ -14,7 +16,7 @@ import java.util.Date
 import java.util.Locale
 
 class POSOrdersRepository(
-    private val db: AppDatabase, // 🔹 ADD THIS
+    private val db: AppDatabase, // 🔹 Keep DB reference for KOT or outlet lookups
     private val orderMasterDao: OrderMasterDao,
     private val orderProductDao: OrderProductDao,
     private val cartDao: CartDao,
@@ -33,39 +35,33 @@ class POSOrdersRepository(
         return SimpleDateFormat("yyyyMMdd", Locale.getDefault())
             .format(Date())
     }
+
     // -------------------------
-    // CART (per table)
+    // CART (per table/session)
     // -------------------------
     fun getCartItems(tableId: String?, orderType: String): Flow<List<PosCartEntity>> {
         return if (orderType == "DINE_IN" && tableId != null) {
             cartDao.getCartForTable(tableId)
         } else {
-            // Takeaway or Delivery uses sessionId pattern
+            // Takeaway or Delivery uses sessionId prefix
             val prefix = "${orderType}-"
             cartDao.getCartForSessionPrefix(prefix)
         }
     }
 
-
-
-//    fun getUnsentItems(tableId: String?): Flow<List<PosCartEntity>> =
-//        cartDao.getUnsentItems(tableId)
-
     fun getUnsentItems(tableId: String): Flow<List<PosCartEntity>> =
         cartDao.getUnsentItems(tableId)
+
     suspend fun markAllSent(tableId: String) {
         cartDao.markAllSent(tableId)
     }
 
-//    suspend fun clearCart(tableId: String) {
-//        cartDao.clearCart(tableId)
-//    }
-
+    // ✅ Clears cart safely depending on order type
     suspend fun clearCart(orderType: String, tableId: String?) {
         when (orderType) {
             "DINE_IN" -> {
                 if (!tableId.isNullOrBlank()) {
-                    cartDao.clearCart(tableId)      // tableId used as sessionId
+                    cartDao.clearCart(tableId)      // Table-based session
                 }
             }
             "TAKEAWAY", "DELIVERY" -> {
@@ -79,7 +75,7 @@ class POSOrdersRepository(
     }
 
     // -------------------------
-    // TABLE STATE
+    // TABLE STATE MANAGEMENT
     // -------------------------
     suspend fun markTableRunning(tableId: String, orderId: String) {
         tableDao.updateStatus(tableId, "OCCUPIED")
@@ -92,7 +88,7 @@ class POSOrdersRepository(
 
     suspend fun closeTable(tableId: String) {
         tableDao.updateStatus(tableId, "AVAILABLE")
-        tableDao.setActiveOrder(tableId, "") // or create a clearActiveOrder DAO
+        tableDao.setActiveOrder(tableId, "") // or a clearActiveOrder() DAO
     }
 
     // -------------------------
@@ -127,62 +123,6 @@ class POSOrdersRepository(
         )
     }
 
-
-
-
-
-    // -------------------------
-    // INSERT ORDER
-    // -------------------------
-//    suspend fun insertOrder(
-//        orderMaster: PosOrderMasterEntity,
-//        cartItems: List<PosCartEntity>
-//    ) {
-//        // 1️⃣ Insert order master
-//        orderMasterDao.insert(orderMaster)
-//
-//        // 2️⃣ Mark table RUNNING
-//        orderMaster.tableNo?.let { tableId ->
-//            markTableRunning(tableId, orderMaster.id)
-//        }
-//
-//        val now = System.currentTimeMillis()
-//
-//        // 3️⃣ Cart → Order items
-//        val orderItems = cartItems.map { cart ->
-//            val itemSubtotal = cart.basePrice * cart.quantity
-//            val taxAmount =
-//                if (cart.taxType == "exclusive") cart.basePrice * (cart.taxRate / 100) else 0.0
-//
-//            val finalPrice = cart.basePrice + taxAmount
-//
-//            PosOrderItemEntity(
-//                id = UUID.randomUUID().toString(),
-//                orderMasterId = orderMaster.id,
-//                productId = cart.productId,
-//                name = cart.name,
-//                categoryId = cart.categoryId,
-//                parentId = cart.parentId,
-//                isVariant = cart.parentId != null,
-//                basePrice = cart.basePrice,
-//                quantity = cart.quantity,
-//                itemSubtotal = itemSubtotal,
-//                taxRate = cart.taxRate,
-//                taxType = cart.taxType,
-//                taxAmountPerItem = taxAmount,
-//                taxTotal = taxAmount * cart.quantity,
-//                finalPricePerItem = finalPrice,
-//                finalTotal = finalPrice * cart.quantity,
-//                source = "POS",
-//                createdAt = now
-//            )
-//        }
-//
-//        // 4️⃣ Insert items
-//        orderProductDao.insertAll(orderItems)
-//
-//        // 5️⃣ Clear cart for that table
-//       // orderMaster.tableNo?.let { clearCart(it) }
-//        orderMaster.tableNo?.let { markAllSent(it) }
-//    }
+    // (Optional) Future: Add KOT management helper functions here if needed
+    // e.g. fetch pending KOT items, clear printed KOTs, etc.
 }

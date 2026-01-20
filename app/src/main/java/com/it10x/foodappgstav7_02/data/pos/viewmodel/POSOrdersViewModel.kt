@@ -74,68 +74,68 @@ class POSOrdersViewModel(
     // -------------------------
     // PLACE ORDER + AUTO PRINT
     // -------------------------
-    fun sendToKitchen(
-        orderType: String,
-        tableNo: String?,
-        sessionId: String,
-        paymentType: String,
-        deviceId: String,
-        deviceName: String?,
-        appVersion: String?
-    ) {
-        Log.d("KITCHEN_DEBUG", "Start placeOrder() | tableNo=$tableNo orderType=$orderType")
-
-        viewModelScope.launch {
-            _loading.value = true
-
-            // ✅ use sessionId as the real key for cart & KOT
-            val sessionKey = sessionId
-            Log.d("KITCHEN_DEBUG", "Resolved sessionKey=$sessionKey")
-
-            // ✅ FIX: Use sessionKey (for takeaway & delivery)
-            val cartList = repository.getCartItems(sessionKey, orderType).first()
-            Log.d("KITCHEN_DEBUG", "Cart fetched for type=$orderType, sessionKey=$sessionKey, size=${cartList.size}")
-
-            if (cartList.isEmpty()) {
-                Log.w("KITCHEN_DEBUG", "⚠️ No new items found for orderType=$orderType (sessionKey=$sessionKey)")
-                _loading.value = false
-                return@launch
-            }
-
-            try {
-                val now = System.currentTimeMillis()
-                val orderId = UUID.randomUUID().toString()
-
-                Log.d("KOT_STEP", "Creating new KOT batchId=$orderId for $orderType")
-
-                val kotSaved = saveKotOnly(
-                    orderType = orderType,
-                    tableNo = sessionKey,
-                    cartItems = cartList,
-                    deviceId = deviceId,
-                    deviceName = deviceName,
-                    appVersion = appVersion
-                )
-
-                if (!kotSaved) {
-                    Log.e("KITCHEN_DEBUG", "❌ saveKotOnly() failed for session=$sessionKey")
-                    return@launch
-                }
-
-                Log.d("KITCHEN_DEBUG", "✅ KOT saved successfully (${cartList.size} items)")
-
-                // ✅ FIX: clear by sessionKey (not tableNo)
-                Log.d("KITCHEN_DEBUG", "Clearing cart for sessionKey=$sessionKey")
-                repository.clearCart(orderType, sessionKey)
-                Log.d("KITCHEN_DEBUG", "✅ Cart cleared for sessionKey=$sessionKey")
-
-            } catch (e: Exception) {
-                Log.e("KITCHEN_DEBUG", "💥 Exception during placeOrder()", e)
-            } finally {
-                _loading.value = false
-            }
-        }
-    }
+//    fun sendToKitchen(
+//        orderType: String,
+//        tableNo: String?,
+//        sessionId: String,
+//        paymentType: String,
+//        deviceId: String,
+//        deviceName: String?,
+//        appVersion: String?
+//    ) {
+//        Log.d("KITCHEN_DEBUG", "Start placeOrder() | tableNo=$tableNo orderType=$orderType")
+//
+//        viewModelScope.launch {
+//            _loading.value = true
+//
+//            // ✅ use sessionId as the real key for cart & KOT
+//            val sessionKey = sessionId
+//            Log.d("KITCHEN_DEBUG", "Resolved sessionKey=$sessionKey")
+//
+//            // ✅ FIX: Use sessionKey (for takeaway & delivery)
+//            val cartList = repository.getCartItems(sessionKey, orderType).first()
+//            Log.d("KITCHEN_DEBUG", "Cart fetched for type=$orderType, sessionKey=$sessionKey, size=${cartList.size}")
+//
+//            if (cartList.isEmpty()) {
+//                Log.w("KITCHEN_DEBUG", "⚠️ No new items found for orderType=$orderType (sessionKey=$sessionKey)")
+//                _loading.value = false
+//                return@launch
+//            }
+//
+//            try {
+//                val now = System.currentTimeMillis()
+//                val orderId = UUID.randomUUID().toString()
+//
+//                Log.d("KOT_STEP", "Creating new KOT batchId=$orderId for $orderType")
+//
+//                val kotSaved = saveKotOnly(
+//                    orderType = orderType,
+//                    tableNo = sessionKey,
+//                    cartItems = cartList,
+//                    deviceId = deviceId,
+//                    deviceName = deviceName,
+//                    appVersion = appVersion
+//                )
+//
+//                if (!kotSaved) {
+//                    Log.e("KITCHEN_DEBUG", "❌ saveKotOnly() failed for session=$sessionKey")
+//                    return@launch
+//                }
+//
+//                Log.d("KITCHEN_DEBUG", "✅ KOT saved successfully (${cartList.size} items)")
+//
+//                // ✅ FIX: clear by sessionKey (not tableNo)
+//                Log.d("KITCHEN_DEBUG", "Clearing cart for sessionKey=$sessionKey")
+//                repository.clearCart(orderType, sessionKey)
+//                Log.d("KITCHEN_DEBUG", "✅ Cart cleared for sessionKey=$sessionKey")
+//
+//            } catch (e: Exception) {
+//                Log.e("KITCHEN_DEBUG", "💥 Exception during placeOrder()", e)
+//            } finally {
+//                _loading.value = false
+//            }
+//        }
+//    }
 
 
 
@@ -146,45 +146,45 @@ class POSOrdersViewModel(
     // AUTO PRINT
     // -------------------------
    // private fun autoPrint(order: PosOrderMasterEntity, cartItems: List<PosCartEntity>) {
-    private suspend fun autoPrint(
-        order: PosOrderMasterEntity,
-        cartItems: List<PosCartEntity>
-    ): Boolean {
-        return try {
-
-            // Convert cart → order items
-            val items = cartItems.map { cart ->
-                PosOrderItemEntity(
-                    id = UUID.randomUUID().toString(),
-                    orderMasterId = order.id,
-                    productId = cart.productId,
-                    categoryId = cart.categoryId,
-                    parentId = cart.parentId,
-                    isVariant = cart.isVariant,
-                    name = cart.name,
-                    quantity = cart.quantity,
-                    basePrice = cart.basePrice,
-                    itemSubtotal = cart.basePrice * cart.quantity,
-                    taxRate = cart.taxRate,
-                    taxType = cart.taxType,
-                    taxAmountPerItem = 0.0,
-                    taxTotal = 0.0,
-                    finalPricePerItem = cart.basePrice,
-                    finalTotal = cart.basePrice * cart.quantity,
-                    createdAt = System.currentTimeMillis()
-                )
-            }
-
-            // 🔥 SUSPEND call (waits until print finishes)
-            printOrderStandard(order, items)
-
-            true   // ✅ print success
-
-        } catch (e: Exception) {
-            Log.e("AUTO_PRINT", "Printing failed", e)
-            false  // ❌ print failed
-        }
-    }
+//    private suspend fun autoPrint(
+//        order: PosOrderMasterEntity,
+//        cartItems: List<PosCartEntity>
+//    ): Boolean {
+//        return try {
+//
+//            // Convert cart → order items
+//            val items = cartItems.map { cart ->
+//                PosOrderItemEntity(
+//                    id = UUID.randomUUID().toString(),
+//                    orderMasterId = order.id,
+//                    productId = cart.productId,
+//                    categoryId = cart.categoryId,
+//                    parentId = cart.parentId,
+//                    isVariant = cart.isVariant,
+//                    name = cart.name,
+//                    quantity = cart.quantity,
+//                    basePrice = cart.basePrice,
+//                    itemSubtotal = cart.basePrice * cart.quantity,
+//                    taxRate = cart.taxRate,
+//                    taxType = cart.taxType,
+//                    taxAmountPerItem = 0.0,
+//                    taxTotal = 0.0,
+//                    finalPricePerItem = cart.basePrice,
+//                    finalTotal = cart.basePrice * cart.quantity,
+//                    createdAt = System.currentTimeMillis()
+//                )
+//            }
+//
+//            // 🔥 SUSPEND call (waits until print finishes)
+//            printOrderStandard(order, items)
+//
+//            true   // ✅ print success
+//
+//        } catch (e: Exception) {
+//            Log.e("AUTO_PRINT", "Printing failed", e)
+//            false  // ❌ print failed
+//        }
+//    }
 
 
     // -------------------------

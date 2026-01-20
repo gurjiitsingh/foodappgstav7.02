@@ -109,37 +109,65 @@ $itemsBlock
     // -----------------------------
     private fun buildHeaderBlock(order: PrintOrder): String {
 
-        val base = mutableListOf(
-            "Order No : ${order.orderNo}",
-            "Customer : ${order.customerName.ifBlank { "Walk-in" }}",
-            "Date     : ${order.dateTime}"
-        )
+        val base = mutableListOf<String>()
+
+        // --- Common fields ---
+        base.add("Order No : ${order.orderNo}")
+        base.add("Customer : ${order.customerName.ifBlank { "Walk-in" }}")
+        base.add("Date     : ${order.dateTime}")
 
         when (order.orderType) {
 
+            // -----------------------------
+            // DINE-IN ORDERS
+            // -----------------------------
             "DINE_IN" -> {
                 order.tableNo?.takeIf { it.isNotBlank() }?.let {
                     base.add("Table    : $it")
                 }
             }
 
+            // -----------------------------
+            // TAKEAWAY ORDERS
+            // -----------------------------
+            "TAKEAWAY" -> {
+                // Only show phone if filled
+                order.customerPhone?.takeIf { it.isNotBlank() }?.let {
+                    base.add("Phone    : $it")
+                }
+            }
+
+            // -----------------------------
+            // DELIVERY / ONLINE ORDERS
+            // -----------------------------
             "DELIVERY", "ONLINE" -> {
-                listOfNotNull(
-                    order.dAddressLine1,
-                    order.dAddressLine2,
-                    listOfNotNull(order.dCity, order.dZipcode).joinToString(" ").takeIf { it.isNotBlank() },
-                   // order.dState,
-                    order.customerPhone.let { "Phone $it" },
-                    order.dLandmark?.let { "$it" }
-                ).takeIf { it.isNotEmpty() }?.let { addressLines ->
+                val addressLines = mutableListOf<String>()
+
+                order.dAddressLine1?.takeIf { it.isNotBlank() }?.let { addressLines.add(it) }
+                order.dAddressLine2?.takeIf { it.isNotBlank() }?.let { addressLines.add(it) }
+                order.dLandmark?.takeIf { it.isNotBlank() }?.let { addressLines.add("Landmark: $it") }
+
+                // City + Zip
+                listOfNotNull(order.dCity, order.dZipcode)
+                    .joinToString(" ")
+                    .takeIf { it.isNotBlank() }
+                    ?.let { addressLines.add(it) }
+
+                if (addressLines.isNotEmpty()) {
                     base.add("Address  :")
                     base.addAll(addressLines)
+                }
+
+                order.customerPhone?.takeIf { it.isNotBlank() }?.let {
+                    base.add("Phone    : $it")
                 }
             }
         }
 
         return base.joinToString("\n")
     }
+
+
 
     // -----------------------------
     // HELPERS

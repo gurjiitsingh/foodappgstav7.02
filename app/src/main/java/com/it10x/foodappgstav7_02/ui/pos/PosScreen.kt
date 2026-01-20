@@ -491,6 +491,7 @@ fun PosScreen(
                     tableViewModel = tableVm,
                     onClose = { showBill = false },
                     orderType = orderType,
+
                 )
             }
         )
