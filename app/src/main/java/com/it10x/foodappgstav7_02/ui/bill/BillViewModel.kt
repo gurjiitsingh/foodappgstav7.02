@@ -225,11 +225,12 @@ class BillViewModel(
                 it.addressLine2?.takeIf { it.isNotBlank() },
                 it.addressLine3?.takeIf { it.isNotBlank() },
                 it.city.takeIf { it.isNotBlank() },
+                it.footerNote?.takeIf { it.isNotBlank() },
                 it.phone.takeIf { it.isNotBlank() }?.let { p -> "Contact No.: $p" },
                 it.phone2?.takeIf { it.isNotBlank() },
                 it.email?.takeIf { it.isNotBlank() },
                 it.web?.takeIf { it.isNotBlank() },
-                it.footerNote?.takeIf { it.isNotBlank() },
+
                 it.gstVatNumber?.takeIf { it.isNotBlank() }?.let { gst -> "GST: $gst" }
             ).joinToString("\n")
         } ?: "FOOD APP"

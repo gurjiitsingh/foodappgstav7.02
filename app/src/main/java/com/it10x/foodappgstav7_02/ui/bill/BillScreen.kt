@@ -168,11 +168,16 @@ private fun onPaymentClick(
 // =====================================================
 // VALIDATION
 // =====================================================
-private fun isAddressValid(addr: DeliveryAddressUiState): Boolean {
-    return addr.phone.isNotBlank() &&
-            addr.line1.isNotBlank() &&
-            addr.city.isNotBlank() &&
-            addr.zipcode.isNotBlank()
+private fun isAddressValid(
+    addr: DeliveryAddressUiState,
+    requireCity: Boolean = false,
+    requireZip: Boolean = false
+): Boolean {
+    if (addr.phone.isBlank()) return false
+    if (addr.line1.isBlank()) return false
+    if (requireCity && addr.city.isBlank()) return false
+    if (requireZip && addr.zipcode.isBlank()) return false
+    return true
 }
 
 // =====================================================
@@ -249,17 +254,17 @@ fun DeliveryAddressDialog(
                     addressState.value = addressState.value.copy(line2 = it)
                 }
 
-                AddressField("City", addressState.value.city) {
-                    addressState.value = addressState.value.copy(city = it)
-                }
+//                AddressField("City", addressState.value.city) {
+//                    addressState.value = addressState.value.copy(city = it)
+//                }
 
-                AddressField("State", addressState.value.state) {
-                    addressState.value = addressState.value.copy(state = it)
-                }
+//                AddressField("State", addressState.value.state) {
+//                    addressState.value = addressState.value.copy(state = it)
+//                }
 
-                AddressField("Zipcode", addressState.value.zipcode) {
-                    addressState.value = addressState.value.copy(zipcode = it)
-                }
+//                AddressField("Zipcode", addressState.value.zipcode) {
+//                    addressState.value = addressState.value.copy(zipcode = it)
+//                }
 
                 AddressField("Landmark", addressState.value.landmark) {
                     addressState.value = addressState.value.copy(landmark = it)

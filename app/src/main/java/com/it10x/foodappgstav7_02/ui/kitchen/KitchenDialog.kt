@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 fun KitchenDialog(
     tableNo: String,
     viewModel: KitchenViewModel,
+    orderType: String,
     onDismiss: () -> Unit
 ) {
     AlertDialog(
@@ -24,7 +25,8 @@ fun KitchenDialog(
             KitchenScreen(
                 tableNo = tableNo,
                 viewModel = viewModel,
-                onKitchenEmpty = onDismiss   // ✅ IMPORTANT
+                onKitchenEmpty = onDismiss,
+                orderType = orderType
             )
         }
     )

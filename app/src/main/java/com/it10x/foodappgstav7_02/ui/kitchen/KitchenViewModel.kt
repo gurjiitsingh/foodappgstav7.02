@@ -61,7 +61,7 @@ class KitchenViewModel(
 
 
 
-    fun markDone(itemId: String, print: Boolean = true) {
+    fun markDone(itemId: String,orderType: String,  print: Boolean = true) {
         viewModelScope.launch {
 
             kotToBillUseCase.markDoneAndMerge(itemId)
@@ -73,7 +73,7 @@ class KitchenViewModel(
 
             val slip = ReceiptFormatter.posKitchen(
                 sessionKey = item.tableNo ?: item.kotBatchId,
-                orderType = "DINE_IN",
+                orderType = orderType,
                 items = listOf(item)
             )
 
@@ -87,7 +87,7 @@ class KitchenViewModel(
 
 
 
-    fun markDoneAll(tableNo: String) {
+    fun markDoneAll(orderType: String, tableNo: String) {
         viewModelScope.launch {
 
             val unprintedItems = kotItemDao.getUnprintedItems(tableNo)
@@ -96,7 +96,7 @@ class KitchenViewModel(
             // 🔥 PRINT ONCE (ALL ITEMS)
             val slip = ReceiptFormatter.posKitchen(
                 sessionKey = tableNo,
-                orderType = "DINE_IN",
+                orderType = orderType,
                 items = unprintedItems
             )
 
@@ -150,63 +150,3 @@ class KitchenViewModel(
 
 
 
-//    fun markDoneAll(tableNo: String) {
-//        viewModelScope.launch {
-//
-//            val unprintedItems =
-//                kotItemDao.getUnprintedPendingItems(tableNo)
-//
-//            if (unprintedItems.isNotEmpty()) {
-//
-//                val slip = ReceiptFormatter.posKitchen(
-//                    sessionKey = tableNo,
-//                    orderType = "DINE_IN",
-//                    items = unprintedItems
-//                )
-//
-//                printerManager.printText(
-//                    PrinterRole.KITCHEN,
-//                    slip
-//                )
-//
-//                kotItemDao.markAllPrintedForTable(tableNo)
-//            }
-//
-//            // Mark all pending items DONE
-//            unprintedItems.forEach {
-//                kotToBillUseCase.markDoneAndMerge(it.id)
-//            }
-//        }
-//    }
-
-//    fun markDone(itemId: String) {
-//        viewModelScope.launch {
-//
-//            val item = kotItemDao.getItemByIdSync(itemId) ?: return@launch
-//
-//            // 1️⃣ Print ONLY if never printed
-//            if (!item.isPrinted) {
-//
-//                val slip = ReceiptFormatter.posKitchen(
-//                    sessionKey = item.tableNo ?: item.kotBatchId,
-//                    orderType = item.tableNo?.let { "DINE_IN" } ?: "TAKEAWAY",
-//                    items = listOf(item)   // ✅ SINGLE ITEM
-//                )
-//
-//                printerManager.printText(
-//                    PrinterRole.KITCHEN,
-//                    slip
-//                )
-//
-//                kotItemDao.markPrinted(item.id)
-//            }
-//
-//            // 2️⃣ Business logic (unchanged)
-//            kotToBillUseCase.markDoneAndMerge(itemId)
-//
-//            Log.d(
-//                "KITCHEN_PRINT",
-//                "Item done | printed=${item.isPrinted} | ${item.name}"
-//            )
-//        }
-//    }

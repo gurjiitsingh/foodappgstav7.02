@@ -22,7 +22,6 @@ import com.it10x.foodappgstav7_02.data.pos.entities.PosKotItemEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 // 🔹 NEW (for atomic order no + API 24 safe date)
-import com.it10x.foodappgstav7_02.data.pos.repository.OrderSequenceRepository
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -251,10 +250,11 @@ class POSOrdersViewModel(
 //oldprintingremoved
             Log.d("OUTLET_PRINT", "🖨 FINAL TITLE:\n$outletTitle")
 
+          val printReceipt =  ReceiptFormatter.billing(printOrder, title = outletTitle)
             // ---------------- BILLING PRINT ----------------
             printerManager.printText(
                 PrinterRole.BILLING,
-                ReceiptFormatter.billing(printOrder, title = outletTitle)
+                printReceipt
             )
 
             // SMALL DELAY

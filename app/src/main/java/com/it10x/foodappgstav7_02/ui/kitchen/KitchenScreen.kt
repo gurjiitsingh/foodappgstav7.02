@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun KitchenScreen(
     tableNo: String,
+    orderType: String, // ✅ ADD THIS
     viewModel: KitchenViewModel,
     onKitchenEmpty: () -> Unit
 ) {
@@ -74,7 +75,7 @@ fun KitchenScreen(
                 .fillMaxWidth()
                 .padding(12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
-            onClick = { viewModel.markDoneAll(tableNo) }
+            onClick = { viewModel.markDoneAll(orderType,tableNo) }
         ) {
             Text("Done All", color = Color.White)
         }
@@ -106,7 +107,7 @@ fun KitchenScreen(
                         Spacer(Modifier.width(8.dp))
 
                         Button(
-                            onClick = { viewModel.markDone(item.id) },
+                            onClick = { viewModel.markDone(item.id, orderType) },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFF16A34A)
                             )

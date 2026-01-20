@@ -489,7 +489,9 @@ fun PosScreen(
                     onKitchenEmpty = {
                         // ✅ Close popup automatically when no items
                         showKitchen = false
-                    }
+
+                    },
+                    orderType = orderType
                 )
             }
         )

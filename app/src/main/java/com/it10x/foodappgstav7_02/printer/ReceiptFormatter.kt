@@ -75,6 +75,13 @@ Thank You!
         }
     }
 
+
+
+    fun billing83(order: PrintOrder, title: String = "FOOD APP"): String {
+        return billingWithWidth(order, title, lineWidth = 48) // 48 chars for 83mm
+    }
+
+
     // -----------------------------
     // KITCHEN RECEIPT
     // -----------------------------
@@ -103,6 +110,34 @@ $itemsBlock
             )
         }
     }
+
+
+
+    fun kitchen83(order: PrintOrder, title: String = "KITCHEN"): String {
+        val itemsBlock = if (order.items.isEmpty()) {
+            "No items"
+        } else {
+            order.items.joinToString("\n") {
+                "${it.quantity.toString().padEnd(4)} ${it.name}"
+            }
+        }
+
+        return buildString {
+            append(ALIGN_LEFT)
+            append(
+                """
+******** $title ********
+Order No : ${order.orderNo}
+${"-".repeat(48)}
+$itemsBlock
+${"-".repeat(48)}
+
+
+""".trimIndent()
+            )
+        }
+    }
+
 
     // -----------------------------
     // HEADER LOGIC (IMPORTANT)
@@ -218,5 +253,82 @@ $itemsBlock
             append("------------------------\n\n")
         }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // -----------------------------
+// INTERNAL HELPERS (dynamic lineWidth)
+// -----------------------------
+    private fun billingWithWidth(order: PrintOrder, title: String, lineWidth: Int): String {
+
+        val headerBlock = buildHeaderBlock(order)
+
+        val itemsBlock = if (order.items.isEmpty()) {
+            "No items found"
+        } else {
+            val header =
+                "QTY".padEnd(5) +               // slightly more space for qty
+                        "ITEM".padEnd(lineWidth - 20) + // dynamic item width
+                        "PRICE".padStart(7) +
+                        "TOTAL".padStart(7)
+
+            val divider = "-".repeat(lineWidth)
+
+            val lines = order.items.joinToString("\n") { item ->
+                val qty = item.quantity.toString().padEnd(5)
+                val name = item.name.take(lineWidth - 20).padEnd(lineWidth - 20)
+                val price = format(item.price).padStart(7)
+                val total = format(item.subtotal).padStart(7)
+                qty + name + price + total
+            }
+
+            "$header\n$divider\n$lines"
+        }
+
+        return buildString {
+            append(ALIGN_LEFT)
+            append(
+                """
+${"-".repeat(lineWidth)}
+$title
+${"-".repeat(lineWidth)}
+$headerBlock
+${"-".repeat(lineWidth)}
+$itemsBlock
+${"-".repeat(lineWidth)}
+${totalLineWidth("Item Total", order.itemTotal, lineWidth)}
+${totalLineWidth("Delivery", order.deliveryFee, lineWidth)}
+${totalLineWidth("Discount", order.discount, lineWidth)}
+${totalLineWidth("Tax", order.tax, lineWidth)}
+${"-".repeat(lineWidth)}
+${totalLineWidth("GRAND TOTAL", order.grandTotal, lineWidth)}
+${"-".repeat(lineWidth)}
+Thank You!
+
+
+""".trimIndent()
+            )
+        }
+    }
+
+    // totalLine helper for dynamic width
+    private fun totalLineWidth(label: String, value: Double, lineWidth: Int): String {
+        if (value == 0.0) return ""
+        val left = label.padEnd(lineWidth - 12)
+        val right = format(value).padStart(12)
+        return left + right
+    }
+
 
 }

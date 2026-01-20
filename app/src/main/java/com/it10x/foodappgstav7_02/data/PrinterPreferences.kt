@@ -3,6 +3,7 @@ package com.it10x.foodappgstav7_02.data
 import android.content.Context
 import android.hardware.usb.UsbManager
 import com.it10x.foodappgstav7_02.data.PrinterConfig
+import com.it10x.foodappgstav7_02.printer.PaperSize
 
 
 class PrinterPreferences(
@@ -11,7 +12,7 @@ class PrinterPreferences(
 
     private val prefs = context.getSharedPreferences("printer_prefs", Context.MODE_PRIVATE)
 
-
+    private  val KEY_PAPER_SIZE = "paper_size_"
     // -------------------------
     // PRINTER TYPE
     // -------------------------
@@ -169,5 +170,16 @@ fun getPrinterConfig(role: PrinterRole): PrinterConfig? {
 
 
 
+
+    fun setPaperSize(role: PrinterRole, size: PaperSize) {
+        prefs.edit()
+            .putString(KEY_PAPER_SIZE + role.name, size.name)
+            .apply()
+    }
+
+    fun getPaperSize(role: PrinterRole): PaperSize {
+        val value = prefs.getString(KEY_PAPER_SIZE + role.name, PaperSize.MM_58.name)
+        return PaperSize.valueOf(value!!)
+    }
 
 }
