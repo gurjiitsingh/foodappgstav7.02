@@ -41,7 +41,9 @@ fun RightPanel(
     onPaymentChange: (String) -> Unit,
     onOrderPlaced: () -> Unit,
     onOpenKitchen: (String) -> Unit,
-    onOpenBill: (String) -> Unit
+    onOpenBill: (String) -> Unit,
+    isMobile: Boolean,
+    onClose: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
 
@@ -106,8 +108,14 @@ fun RightPanel(
 
     Column(
         modifier = Modifier
-            .widthIn(max = 320.dp)
-            .fillMaxHeight()
+            .fillMaxWidth()
+            .then(
+                if (isMobile) {
+                    Modifier.fillMaxHeight(0.88f)   // ✅ mobile bottom sheet height
+                } else {
+                    Modifier.widthIn(max = 320.dp).fillMaxHeight()
+                }
+            )
             .background(Color(0xFFF7F7F7))
             .padding(12.dp)
             .padding(bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding())
@@ -136,8 +144,35 @@ fun RightPanel(
 
 //        Divider()
 
+        if (isMobile) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Cart",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                TextButton(
+                    onClick = { onClose?.invoke() }
+                ) {
+                    Text("Close")
+                }
+            }
+            Divider()
+        }
+
+
         // ---------- CART ----------
-        LazyColumn(modifier = Modifier.weight(1f)) {
+        LazyColumn(
+            modifier = Modifier
+                .weight(1f)
+                .padding(vertical = 6.dp)
+        ) {
             items(cartItems, key = { it.productId }) { item ->
                 CartRow(item, cartViewModel)
             }

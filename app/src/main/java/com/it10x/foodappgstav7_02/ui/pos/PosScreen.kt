@@ -24,7 +24,7 @@ import com.it10x.foodappgstav7_02.data.pos.repository.CartRepository
 import com.it10x.foodappgstav7_02.ui.cart.CartViewModel
 import com.it10x.foodappgstav7_02.data.pos.viewmodel.getParentProducts
 import com.it10x.foodappgstav7_02.data.pos.viewmodel.POSOrdersViewModel
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+
 
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.ui.text.style.TextOverflow
@@ -381,29 +381,29 @@ fun PosScreen(
             }
 
             // ---------- CART (TABLET ONLY) ----------
+
             if (!isPhone) {
                 RightPanel(
                     cartViewModel = cartViewModel,
                     ordersViewModel = ordersViewModel,
-                    tableViewModel = tableVm,          // ✅ PASS IT
+                    tableViewModel = tableVm,
                     orderType = orderType,
                     tableNo = tableId ?: orderType,
-                    //tableStatus = currentTableStatus,
                     paymentType = paymentType,
                     onPaymentChange = { paymentType = it },
                     onOrderPlaced = {
-                        //   cartViewModel.clear()
+                        // cartViewModel.clear()
                     },
                     onOpenKitchen = {
                         showKitchen = true
                     },
                     onOpenBill = {
                         showBill = true
-                    }
+                    },
+                    isMobile = false    // ✅ ADD THIS LINE
                 )
-
-
             }
+
         }
 
         // ---------- MOBILE CART FAB ----------
@@ -418,30 +418,55 @@ fun PosScreen(
         }
     }
 
+//    if (isPhone && showCartSheet) {
+//        ModalBottomSheet(
+//            onDismissRequest = { showCartSheet = false },
+//            sheetState = rememberModalBottomSheetState(
+//                skipPartiallyExpanded = true
+//            )
+//        ) {
+//            RightPanel(
+//                cartViewModel = cartViewModel,
+//                ordersViewModel = ordersViewModel,
+//                tableViewModel = tableVm,
+//                orderType = orderType,
+//                tableNo = tableId ?: orderType,
+//                paymentType = paymentType,
+//                onPaymentChange = { paymentType = it },
+//                onOrderPlaced = { },
+//                onOpenKitchen = { showKitchen = true },
+//                onOpenBill = { showBill = true },
+//                isMobile = true,
+//                onClose = { showCartSheet = false }
+//            )
+//
+//        }
+//    }
+
     if (isPhone && showCartSheet) {
+
+        val sheetState = rememberModalBottomSheetState(
+            skipPartiallyExpanded = true // 🔑 KEY FIX
+        )
+
         ModalBottomSheet(
+            sheetState = sheetState,
             onDismissRequest = { showCartSheet = false }
         ) {
             RightPanel(
                 cartViewModel = cartViewModel,
                 ordersViewModel = ordersViewModel,
-                tableViewModel = tableVm,          // ✅ PASS IT
+                tableViewModel = tableVm,
                 orderType = orderType,
                 tableNo = tableId ?: orderType,
-                // tableStatus = currentTableStatus,
                 paymentType = paymentType,
                 onPaymentChange = { paymentType = it },
-                onOrderPlaced = {
-                    // cartViewModel.clear()
-                },
-                onOpenKitchen = {
-                    showKitchen = true
-                },
-                onOpenBill = {
-                    showBill = true
-                }
+                onOrderPlaced = { },
+                onOpenKitchen = { showKitchen = true },
+                onOpenBill = { showBill = true },
+                isMobile = true,
+                onClose = { showCartSheet = false }
             )
-
         }
     }
 
