@@ -38,7 +38,7 @@ class AutoPrintManager(
                         itemsReady = true
                         return@repeat
                     }
-                    delay(1000)
+                    delay(500)
                 }
 
                 if (!itemsReady) return@launch

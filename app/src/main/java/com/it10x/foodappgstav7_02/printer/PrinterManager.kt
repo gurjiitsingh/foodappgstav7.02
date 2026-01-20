@@ -81,6 +81,84 @@ class PrinterManager(
     // --------------------------------
     // REAL PRINT (USED BY BUTTON + AUTO)
     // --------------------------------
+    fun printTextNew(
+        role: PrinterRole,
+        order: PrintOrder, outletTitle: String = "FOOD APP",
+        onResult: (Boolean) -> Unit = {}
+    ) {
+
+        Log.e("PRINT", "printer configured for role=$role")
+        val config = prefs.getPrinterConfig(role)
+        if (config == null) {
+            Log.e("PRINT", "No printer configured for role=$role")
+            onResult(false)
+            return
+        }
+
+        // Determine page width from printer config
+        val lineWidth = when (config.pageWidth) {  // assume you added 'pageWidth' in PrinterConfig
+            48 -> 48      // 83mm printer
+            else -> 32    // default 58mm printer
+        }
+
+        if(config.pageSize==MM_80){
+            val receiptText = ReceiptFormatter.billing48(order, title = outletTitle)
+        }else{
+            val receiptText = ReceiptFormatter.billing(order, title = outletTitle)
+        }
+
+        //Log.d("PRINT", "Printing role=$role type=${config.type}")
+        //  var  text1="kljkl"
+        when (config.type) {
+
+            PrinterType.BLUETOOTH -> {
+                if (config.bluetoothAddress.isBlank()) {
+                    onResult(false)
+                    return
+                }
+                BluetoothPrinter.printText(
+                    config.bluetoothAddress,
+                    receiptText,
+                    onResult
+                )
+            }
+
+            PrinterType.LAN -> {
+                if (config.ip.isBlank()) {
+                    onResult(false)
+                    return
+                }
+                LanPrinter.printText(
+                    config.ip,
+                    config.port,
+                    receiptText,
+                    onResult
+                )
+            }
+
+            PrinterType.USB -> {
+                val device = config.usbDevice ?: run {
+                    onResult(false)
+                    return
+                }
+                USBPrinter.printText(
+                    receiptText,
+                    onResult
+                )
+
+//USBPrinter.printText(
+//    context,
+//    device,
+//    text,
+//    onResult
+//)
+
+            }
+
+            PrinterType.WIFI -> onResult(false)
+        }
+    }
+
   fun printText(
     role: PrinterRole,
     text: String,
