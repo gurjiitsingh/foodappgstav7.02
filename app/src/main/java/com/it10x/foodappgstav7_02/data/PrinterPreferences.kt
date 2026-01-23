@@ -182,4 +182,13 @@ fun getPrinterConfig(role: PrinterRole): PrinterConfig? {
         return PaperSize.valueOf(value!!)
     }
 
+
+    fun getPrinterSize(role: PrinterRole): String? {
+        return prefs.getString("${role.name}_PRINTER_SIZE", null)
+    }
+
+    fun setPrinterSize(role: PrinterRole, size: String) {
+        prefs.edit().putString("${role.name}_PRINTER_SIZE", size).apply()
+    }
+
 }

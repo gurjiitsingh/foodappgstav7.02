@@ -11,8 +11,19 @@ class MyApp : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        val clientId = ClientIdStore.get(this) ?: return
-        val cfg = ClientRegistry.get(clientId)
+        val clientId = ClientIdStore.get(this)
+        if (clientId.isNullOrBlank()) {
+            // Log once, but do NOT crash app
+            android.util.Log.w("MyApp", "ClientId not found, Firebase not initialized")
+            return
+        }
+
+        val cfg = ClientRegistry.get(clientId) ?: run {
+            android.util.Log.e("MyApp", "Invalid client config for id=$clientId")
+            return
+        }
+
+        if (FirebaseApp.getApps(this).isNotEmpty()) return
 
         val options = FirebaseOptions.Builder()
             .setApiKey(cfg.apiKey)
@@ -20,9 +31,7 @@ class MyApp : Application() {
             .setProjectId(cfg.projectId)
             .build()
 
-        if (FirebaseApp.getApps(this).isEmpty()) {
-            FirebaseApp.initializeApp(this, options)
-        }
+        FirebaseApp.initializeApp(this, options)
     }
 }
 

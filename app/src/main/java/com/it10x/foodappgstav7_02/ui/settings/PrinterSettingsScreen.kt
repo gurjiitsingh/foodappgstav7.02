@@ -1,10 +1,12 @@
 package com.it10x.foodappgstav7_02.ui.settings
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -14,11 +16,12 @@ import com.it10x.foodappgstav7_02.data.PrinterRole
 import com.it10x.foodappgstav7_02.data.PrinterType
 import com.it10x.foodappgstav7_02.viewmodel.PrinterSettingsViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PrinterSettingsScreen(
     viewModel: PrinterSettingsViewModel,
     prefs: PrinterPreferences,
-    role: PrinterRole,                  // ✅ REQUIRED
+    role: PrinterRole,
     onSave: () -> Unit,
     onBack: () -> Unit,
     onBluetoothSelected: (PrinterSettingsViewModel) -> Unit,
@@ -29,139 +32,177 @@ fun PrinterSettingsScreen(
 
     val printerType by viewModel.printerTypeMap[role]!!.collectAsState()
     val btPrinterName by viewModel.btNameMap[role]!!.collectAsState()
-
     val usbPrinterName = prefs.getUSBPrinterName(role)
     val usbPrinterId = prefs.getUSBPrinterId(role)
+
+    var selectedSize by remember {
+        mutableStateOf(prefs.getPrinterSize(role) ?: "80mm")
+    }
+
+    var expanded by remember { mutableStateOf(false) }
+    val sizes = listOf("58mm", "80mm")
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(20.dp)
+            .padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
 
+        // 🔹 Title
         Text(
             text = "Printer Settings - ${role.name}",
             fontWeight = FontWeight.Bold,
             style = MaterialTheme.typography.titleLarge
         )
 
-        Spacer(Modifier.height(20.dp))
+        Divider(Modifier.padding(vertical = 4.dp))
 
-        // ---------- PRINTER TYPE ----------
+        // 🔹 Printer Type Section
+        Text(
+            text = "Connection Type",
+            fontWeight = FontWeight.Medium,
+            style = MaterialTheme.typography.titleMedium
+        )
 
-        PrinterType.values().forEach { type ->
-            val isSelected = printerType == type
-
-            if (isSelected) {
-                Button(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    onClick = {
-                        viewModel.updatePrinterType(role, type)
-
-                        when (type) {
-                            PrinterType.BLUETOOTH ->
-                                onBluetoothSelected(viewModel)
-
-                            PrinterType.USB ->
-                                onUSBSelected()
-
-                            PrinterType.LAN ->
-                                onLanSelected()
-
-                            else -> {}
-                        }
-                    }
-                ) {
-                    Text(type.name)
-                }
-            } else {
-                OutlinedButton(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    onClick = {
-                        viewModel.updatePrinterType(role, type)
-
-                        when (type) {
-                            PrinterType.BLUETOOTH ->
-                                onBluetoothSelected(viewModel)   // <-- FIXED HERE
-
-                            PrinterType.USB ->
-                                onUSBSelected()
-
-                            PrinterType.LAN ->
-                                onLanSelected()
-
-                            else -> {}
-                        }
-                    }
-                ) {
-                    Text(type.name)
-                }
-            }
-        }
-
-
-
-
-
-        Spacer(Modifier.height(16.dp))
-
-        // ---------- BLUETOOTH INFO ----------
-        if (printerType == PrinterType.BLUETOOTH && btPrinterName.isNotBlank()) {
-            Text("Bluetooth Printer: $btPrinterName")
-        }
-
-        // ---------- USB INFO ----------
-        if (printerType == PrinterType.USB && usbPrinterName.isNotBlank()) {
-            Text("USB Printer: $usbPrinterName (ID: $usbPrinterId)")
-        }
-
-        // ---------- LAN INFO ----------
-        if (printerType == PrinterType.LAN) {
-            val ip = prefs.getLanPrinterIP(role)
-            val port = prefs.getLanPrinterPort(role)
-
-            if (ip.isNotBlank()) {
-                Text("LAN Printer: $ip:$port")
-            }
-        }
-
-        Spacer(Modifier.height(24.dp))
-
-        // ---------- TEST PRINT ----------
-        Button(
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
             modifier = Modifier.fillMaxWidth(),
-            onClick = {
-                viewModel.testPrint(role) { success ->
-                    Toast.makeText(
-                        context,
-                        if (success) "Test print successful"
-                        else "Test print failed",
-                        Toast.LENGTH_SHORT
-                    ).show()
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(PrinterType.values().size) { index ->
+                val type = PrinterType.values()[index]
+                val isSelected = printerType == type
+                val buttonModifier = Modifier.fillMaxWidth()
+
+                if (isSelected) {
+                    Button(
+                        modifier = buttonModifier,
+                        onClick = {
+                            viewModel.updatePrinterType(role, type)
+                            when (type) {
+                                PrinterType.BLUETOOTH -> onBluetoothSelected(viewModel)
+                                PrinterType.USB -> onUSBSelected()
+                                PrinterType.LAN -> onLanSelected()
+                                else -> {}
+                            }
+                        }
+                    ) {
+                        Text(type.name)
+                    }
+                } else {
+                    OutlinedButton(
+                        modifier = buttonModifier,
+                        onClick = {
+                            viewModel.updatePrinterType(role, type)
+                            when (type) {
+                                PrinterType.BLUETOOTH -> onBluetoothSelected(viewModel)
+                                PrinterType.USB -> onUSBSelected()
+                                PrinterType.LAN -> onLanSelected()
+                                else -> {}
+                            }
+                        }
+                    ) {
+                        Text(type.name)
+                    }
                 }
             }
-        ) {
-            Text("Test Print")
         }
 
-        Spacer(Modifier.height(16.dp))
+        // 🔹 Paper Size Dropdown
+        Text(
+            text = "Paper Size",
+            fontWeight = FontWeight.Medium,
+            style = MaterialTheme.typography.titleMedium
+        )
 
-        // ---------- SAVE ----------
-        Button(
+        Box(modifier = Modifier.fillMaxWidth(0.5f)) { // ⬅️ narrower width
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = !expanded }
+            ) {
+                OutlinedTextField(
+                    value = selectedSize,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Select Size") },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                    },
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth()
+                )
+
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    sizes.forEach { size ->
+                        DropdownMenuItem(
+                            text = { Text(size) },
+                            onClick = {
+                                selectedSize = size
+                                expanded = false
+                                prefs.setPrinterSize(role, size)
+                            }
+                        )
+                    }
+                }
+            }
+        }
+
+        // 🔹 Connection Info
+        when (printerType) {
+            PrinterType.BLUETOOTH -> {
+                if (btPrinterName.isNotBlank())
+                    Text("Bluetooth Printer: $btPrinterName", style = MaterialTheme.typography.bodyMedium)
+            }
+            PrinterType.USB -> {
+                if (usbPrinterName.isNotBlank())
+                    Text("USB Printer: $usbPrinterName (ID: $usbPrinterId)", style = MaterialTheme.typography.bodyMedium)
+            }
+            PrinterType.LAN -> {
+                val ip = prefs.getLanPrinterIP(role)
+                val port = prefs.getLanPrinterPort(role)
+                if (ip.isNotBlank()) Text("LAN Printer: $ip:$port", style = MaterialTheme.typography.bodyMedium)
+            }
+            else -> {}
+        }
+
+        Divider(Modifier.padding(vertical = 8.dp))
+
+        // 🔹 Actions
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            onClick = onSave
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("Save")
-        }
+            Button(
+                modifier = Modifier.weight(1f),
+                onClick = {
+                    viewModel.testPrint(role) { success ->
+                        Toast.makeText(
+                            context,
+                            if (success) "Test print successful" else "Test print failed",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            ) {
+                Text("Test Print")
+            }
 
-        Spacer(Modifier.height(8.dp))
+            OutlinedButton(
+                modifier = Modifier.weight(1f),
+                onClick = onSave
+            ) {
+                Text("Save")
+            }
+        }
 
         OutlinedButton(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.align(Alignment.CenterHorizontally),
             onClick = onBack
         ) {
             Text("Back")
