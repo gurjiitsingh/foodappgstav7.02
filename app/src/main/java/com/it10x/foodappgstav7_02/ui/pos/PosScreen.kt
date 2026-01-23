@@ -200,6 +200,8 @@ fun PosScreen(
                 }
             }
 
+
+
             // ---------- PRODUCTS ----------
             Column(
                 modifier = Modifier
@@ -208,8 +210,12 @@ fun PosScreen(
             ) {
 
 
-                // ---------- ORDER CONTROLS ----------
 
+
+
+
+
+                // ---------- ORDER CONTROLS ----------
                 if (isPhone) {
                     // ===== MOBILE: 2 ROWS =====
                     // Row 1: Dine In + Takeaway
@@ -240,7 +246,7 @@ fun PosScreen(
                         )
                     }
 
-                    // Row 2: Delivery + Table Chip (optional, can hide if needed)
+                    // Row 2: Delivery + Table Chip
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -254,13 +260,58 @@ fun PosScreen(
                                 orderType = "DELIVERY"
                                 posSessionViewModel.clearTable()
                                 showTableSelector = false
-
                                 cartViewModel.initSession("DELIVERY")
                             }
                         )
 
+                        if (orderType == "DINE_IN" && tableName != null) {
+                            OrderChip(
+                                label = tableName!!,
+                                selected = true,
+                                onClick = { showTableSelector = true }
+                            )
+                        }
+                    }
+                }
+                    // ===== TABLET: SINGLE ROW =====
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        PosOrderTypeButton(
+                            label = "Dine In",
+                            selected = orderType == "DINE_IN",
+                            onClick = {
+                                orderType = "DINE_IN"
+                                showTableSelector = true
+                                cartViewModel.initSession(orderType, tableId)
+                            }
+                        )
 
-                        // Optional: show selected table
+                        PosOrderTypeButton(
+                            label = "Takeaway",
+                            selected = orderType == "TAKEAWAY",
+                            onClick = {
+                                orderType = "TAKEAWAY"
+                                posSessionViewModel.clearTable()
+                                showTableSelector = false
+                                cartViewModel.initSession("TAKEAWAY")
+                            }
+                        )
+
+                        PosOrderTypeButton(
+                            label = "Delivery",
+                            selected = orderType == "DELIVERY",
+                            onClick = {
+                                orderType = "DELIVERY"
+                                posSessionViewModel.clearTable()
+                                showTableSelector = false
+                                cartViewModel.initSession("DELIVERY")
+                            }
+                        )
+
                         if (orderType == "DINE_IN" && tableName != null) {
                             OrderChip(
                                 label = tableName!!,
@@ -271,83 +322,18 @@ fun PosScreen(
                     }
 
 
-                }else{
 
 
-                    // Row 1: Dine In + Takeaway
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-
-                        // ORDER TYPE
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-
-                            PosOrderTypeButton(
-                                label = "Dine In",
-                                selected = orderType == "DINE_IN",
-                                onClick = {
-                                    orderType = "DINE_IN"
-                                    showTableSelector = true
-                                    // 🔹 Init session
-                                    cartViewModel.initSession(orderType, tableId)
-                                }
-                            )
-
-                            PosOrderTypeButton(
-                                label = "Takeaway",
-                                selected = orderType == "TAKEAWAY",
-                                onClick = {
-                                    orderType = "TAKEAWAY"
-                                    posSessionViewModel.clearTable()
-                                    showTableSelector = false
-
-                                    // 🔑 MUST happen immediately
-                                    cartViewModel.initSession("TAKEAWAY")
-                                }
-                            )
-
-                            PosOrderTypeButton(
-                                label = "Delivery",
-                                selected = orderType == "DELIVERY",
-                                onClick = {
-                                    orderType = "DELIVERY"
-                                    posSessionViewModel.clearTable()
-                                    showTableSelector = false
-
-                                    cartViewModel.initSession("DELIVERY")
-                                }
-                            )
-
-
-                            // Optional: show selected table
-                            if (orderType == "DINE_IN" && tableName != null) {
-                                OrderChip(
-                                    label = tableName!!,
-                                    selected = true,
-                                    onClick = { showTableSelector = true }
-                                )
-                            }
-                        }
+                ProductList(
+                    filteredProducts = filteredProducts,
+                    variants = variants,
+                    cartViewModel = cartViewModel,
+                    tableNo = tableId,  // fallback if null
+                    posSessionViewModel = posSessionViewModel  // 🔑 pass it
+                )
 
 
 
-
-
-
-
-
-                    }
-
-
-                }
 
                 if (showTableSelector && orderType == "DINE_IN") {
                     TableSelectorGrid(
@@ -371,38 +357,35 @@ fun PosScreen(
                     )
                 }
 
-                ProductList(
-                    filteredProducts = filteredProducts,
-                    variants = variants,
-                    cartViewModel = cartViewModel,
-                    tableNo = tableId,  // fallback if null
-                    posSessionViewModel = posSessionViewModel  // 🔑 pass it
-                )
+
             }
 
             // ---------- CART (TABLET ONLY) ----------
 
             if (!isPhone) {
-                RightPanel(
-                    cartViewModel = cartViewModel,
-                    ordersViewModel = ordersViewModel,
-                    tableViewModel = tableVm,
-                    orderType = orderType,
-                    tableNo = tableId ?: orderType,
-                    paymentType = paymentType,
-                    onPaymentChange = { paymentType = it },
-                    onOrderPlaced = {
-                        // cartViewModel.clear()
-                    },
-                    onOpenKitchen = {
-                        showKitchen = true
-                    },
-                    onOpenBill = {
-                        showBill = true
-                    },
-                    isMobile = false    // ✅ ADD THIS LINE
-                )
+                Column(
+                    modifier = Modifier
+                        .width(360.dp) // 🟢 fixed width for right side (adjust as needed)
+                        .fillMaxHeight()
+                        .background(Color(0xFFF9FAFB)) // optional light background
+                        .padding(8.dp)
+                ) {
+                    RightPanel(
+                        cartViewModel = cartViewModel,
+                        ordersViewModel = ordersViewModel,
+                        tableViewModel = tableVm,
+                        orderType = orderType,
+                        tableNo = tableId ?: orderType,
+                        paymentType = paymentType,
+                        onPaymentChange = { paymentType = it },
+                        onOrderPlaced = { },
+                        onOpenKitchen = { showKitchen = true },
+                        onOpenBill = { showBill = true },
+                        isMobile = false
+                    )
+                }
             }
+
 
         }
 
@@ -418,30 +401,7 @@ fun PosScreen(
         }
     }
 
-//    if (isPhone && showCartSheet) {
-//        ModalBottomSheet(
-//            onDismissRequest = { showCartSheet = false },
-//            sheetState = rememberModalBottomSheetState(
-//                skipPartiallyExpanded = true
-//            )
-//        ) {
-//            RightPanel(
-//                cartViewModel = cartViewModel,
-//                ordersViewModel = ordersViewModel,
-//                tableViewModel = tableVm,
-//                orderType = orderType,
-//                tableNo = tableId ?: orderType,
-//                paymentType = paymentType,
-//                onPaymentChange = { paymentType = it },
-//                onOrderPlaced = { },
-//                onOpenKitchen = { showKitchen = true },
-//                onOpenBill = { showBill = true },
-//                isMobile = true,
-//                onClose = { showCartSheet = false }
-//            )
-//
-//        }
-//    }
+
 
     if (isPhone && showCartSheet) {
 
@@ -519,7 +479,7 @@ fun PosScreen(
                     onClose = { showBill = false },
                     orderType = orderType,
 
-                )
+                    )
             }
         )
     }

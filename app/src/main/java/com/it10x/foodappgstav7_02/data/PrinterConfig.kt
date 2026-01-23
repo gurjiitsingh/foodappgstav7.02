@@ -8,6 +8,5 @@ data class PrinterConfig(
     val ip: String = "",
     val port: Int = 9100,
     val usbDevice: UsbDevice? = null,
-    val role: PrinterRole,
-    val paperSize: PaperSize = PaperSize.MM_58   // optional default
+    val role: PrinterRole            // ✅ ADD THIS
 )

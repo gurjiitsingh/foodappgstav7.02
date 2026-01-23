@@ -76,67 +76,6 @@ Thank You!
     }
 
 
-    fun billing48(order: PrintOrder, title: String = "FOOD APP"): String {
-
-        val headerBlock = buildHeaderBlock(order)
-
-        val itemsBlock = if (order.items.isEmpty()) {
-            "No items found"
-        } else {
-            // Static 48-character layout
-            val header =
-                "QTY  " +                     // 5 chars
-                        "ITEM".padEnd(28) +           // 28 chars for item name
-                        "PRICE".padStart(7) +
-                        "TOTAL".padStart(8)
-
-            val divider = "-".repeat(48)
-
-            val lines = order.items.joinToString("\n") { item ->
-                val qty = item.quantity.toString().padEnd(5)
-                val name = item.name.take(28).padEnd(28)
-                val price = format(item.price).padStart(7)
-                val total = format(item.subtotal).padStart(8)
-                qty + name + price + total
-            }
-
-            "$header\n$divider\n$lines"
-        }
-
-        return buildString {
-            append(ALIGN_LEFT)
-            append(
-                """
-------------------------------------------------
-$title
-------------------------------------------------
-$headerBlock
-------------------------------------------------
-$itemsBlock
-------------------------------------------------
-${totalLineWidthStatic("Item Total", order.itemTotal)}
-${totalLineWidthStatic("Delivery", order.deliveryFee)}
-${totalLineWidthStatic("Discount", order.discount)}
-${totalLineWidthStatic("Tax", order.tax)}
-------------------------------------------------
-${totalLineWidthStatic("GRAND TOTAL", order.grandTotal)}
-------------------------------------------------
-Thank You!
-
-
-""".trimIndent()
-            )
-        }
-    }
-
-    // Static 48-character total line helper
-    private fun totalLineWidthStatic(label: String, value: Double): String {
-        if (value == 0.0) return ""
-        val left = label.padEnd(36)
-        val right = "%.2f".format(value).padStart(12)
-        return left + right
-    }
-
 
     fun billing83(order: PrintOrder, title: String = "FOOD APP"): String {
         return billingWithWidth(order, title, lineWidth = 48) // 48 chars for 83mm
