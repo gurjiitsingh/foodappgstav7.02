@@ -25,7 +25,11 @@ object ReceiptFormatter {
     // -----------------------------
     // BILLING RECEIPT
     // -----------------------------
-    fun billing(order: PrintOrder, title: String = "FOOD APP"): String {
+    fun billing(order: PrintOrder, outletInfo: OutletInfo): String {
+
+        val LINE_WIDTH = 32
+        Log.d("RECEIPT_FORMATTER", "billing48() called for orderNo=${order.orderNo}")
+        val outletHeader = buildOutletHeader(outletInfo, LINE_WIDTH)
 
         val headerBlock = buildHeaderBlock(order)
 
@@ -56,7 +60,7 @@ object ReceiptFormatter {
             append(
                 """
 ------------------------------
-$title
+$headerBlock
 ------------------------------
 $headerBlock
 ------------------------------
@@ -78,66 +82,10 @@ Thank You!
     }
 
 
-    fun billing48(order: PrintOrder, title: String = "FOOD APP"): String {
-
-        val LINE_WIDTH = 48
-        // ✅ Log when function is called
-        Log.d("RECEIPT_FORMATTER", "billing48() called for orderNo=${order.orderNo}, title=$title")
 
 
-        val headerBlock = buildHeaderBlock(order)
 
-        val itemsBlock = if (order.items.isEmpty()) {
-            "No items found"
-        } else {
-            // 48 chars total → distribute: qty(4) + name(26) + price(8) + total(10)
-            val header =
-                "QTY".padEnd(4) +
-                        "ITEM".padEnd(26) +
-                        "PRICE".padStart(8) +
-                        "TOTAL".padStart(10)
-
-            val divider = "-".repeat(LINE_WIDTH)
-
-            val lines = order.items.joinToString("\n") { item ->
-                val qty = item.quantity.toString().padEnd(4)
-                val name = item.name.take(26).padEnd(26)
-                val price = format(item.price).padStart(8)
-                val total = format(item.subtotal).padStart(10)
-                qty + name + price + total
-            }
-
-            "$header\n$divider\n$lines"
-        }
-
-        return buildString {
-            append(ALIGN_LEFT)
-            append(
-                """
-------------------------------------------------
-$title
-------------------------------------------------
-$headerBlock
-------------------------------------------------
-$itemsBlock
-------------------------------------------------
-${totalLine48("Item Total", order.itemTotal)}
-${totalLine48("Delivery", order.deliveryFee)}
-${totalLine48("Discount", order.discount)}
-${totalLine48("Tax", order.tax)}
-------------------------------------------------
-${totalLine48("GRAND TOTAL", order.grandTotal)}
-------------------------------------------------
-Thank You!
-
-
-""".trimIndent()
-            )
-        }
-    }
-
-
-    fun billing48_(order: PrintOrder, outletInfo: OutletInfo): String {
+    fun billing48(order: PrintOrder, outletInfo: OutletInfo): String {
 
         val LINE_WIDTH = 48
         Log.d("RECEIPT_FORMATTER", "billing48() called for orderNo=${order.orderNo}")
@@ -197,27 +145,7 @@ Thank You!
         }
     }
 
-    fun billing48_1(order: PrintOrder, outletInfo: OutletInfo): String {
-        val LINE_WIDTH = 48
-        Log.d("RECEIPT_FORMATTER", "billing48() called for orderNo=${order.orderNo}")
 
-        val outletHeader = buildOutletHeader(outletInfo, LINE_WIDTH)
-        val headerBlock = buildHeaderBlock(order)
-
-        return buildString {
-            append(ALIGN_LEFT)
-            append(
-                """
-------------------------------------------------
-$outletHeader
-------------------------------------------------
-$headerBlock
-------------------------------------------------
-...
-""".trimIndent()
-            )
-        }
-    }
 
 
     fun billing83(order: PrintOrder, title: String = "FOOD APP"): String {
@@ -486,14 +414,41 @@ Thank You!
         val lines = mutableListOf<String>()
         if (info.name.isNotBlank()) lines += centerText(info.name, width)
         if (info.addressLine1.isNotBlank()) lines += info.addressLine1.take(width)
-        info.addressLine2?.let { lines += it.take(width) }
-        info.addressLine3?.let { lines += it.take(width) }
-        info.city?.let { lines += it.take(width) }
-        info.phone?.let { lines += "Phone: $it" }
-        info.email?.let { lines += "Email: $it" }
-        info.web?.let { lines += "Web: $it" }
-        info.gst?.let { lines += "GST: $it" }
-        info.footerNote?.let { lines += it.take(width) }
+       if(width==32){
+            info.addressLine2?.let { lines += it.take(width) }
+            info.addressLine3?.let { lines += it.take(width) }
+            info.city?.let { lines += it.take(width) }
+            info.phone?.let { lines += "Phone: $it" }
+           info.phone2?.let { lines += ", $it" }
+            info.email?.let { lines += "Email: $it" }
+            info.web?.let { lines += "Web: $it" }
+            info.gst?.let { lines += "GST: $it" }
+            info.footerNote?.let { lines += it.take(width) }
+        }
+
+        if(width==48){
+            info.addressLine2?.let { lines += it.take(width) }
+            info.addressLine3?.let { lines += it.take(width) }
+            info.city?.let { lines += it.take(width) }
+            val phone1 = info.phone?.takeIf { it.isNotBlank() }
+            val phone2 = info.phone2?.takeIf { it.isNotBlank() }
+
+            if (phone1 != null && phone2 != null) {
+                // Both phones available
+                lines += "Phone: $phone1, $phone2".take(width)
+            } else if (phone1 != null) {
+                // Only first phone
+                lines += "Phone: $phone1".take(width)
+            } else if (phone2 != null) {
+                // Only second phone
+                lines += "Phone: $phone2".take(width)
+            }
+            info.email?.let { lines += "Email: $it" }
+            info.web?.let { lines += "Web: $it" }
+            info.gst?.let { lines += "GST: $it" }
+            info.footerNote?.let { lines += it.take(width) }
+        }
+
         return lines.joinToString("\n")
     }
 

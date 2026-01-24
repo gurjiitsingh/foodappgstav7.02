@@ -250,12 +250,12 @@ class POSOrdersViewModel(
 //oldprintingremoved
             Log.d("OUTLET_PRINT", "🖨 FINAL TITLE:\n$outletTitle")
 
-          val printReceipt =  ReceiptFormatter.billing(printOrder, title = outletTitle)
+       //   val printReceipt =  ReceiptFormatter.billing(printOrder, title = outletTitle)
             // ---------------- BILLING PRINT ----------------
-            printerManager.printText(
-                PrinterRole.BILLING,
-                printReceipt
-            )
+//            printerManager.printText(
+//                PrinterRole.BILLING,
+//                printReceipt
+//            )
 
             // SMALL DELAY
             //kotlinx.coroutines.delay(150)

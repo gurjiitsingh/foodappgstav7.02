@@ -44,15 +44,15 @@ class AutoPrintManager(
                 if (!itemsReady) return@launch
 
                 // 🖨 Print billing + kitchen
-                val billingReceipt = ReceiptFormatter.billing(
-                    FirestorePrintMapper.map(order, items),
-                    title = "FOOD APP"
-                )
+//                val billingReceipt = ReceiptFormatter.billing(
+//                    FirestorePrintMapper.map(order, items),
+//                    title = "FOOD APP"
+//                )
                 val kitchenReceipt = ReceiptFormatter.kitchen(
                     FirestorePrintMapper.map(order, items)
                 )
 
-                printerManager.printText(PrinterRole.BILLING, billingReceipt) { }
+           //     printerManager.printText(PrinterRole.BILLING, billingReceipt) { }
                 delay(10_000)
                 printerManager.printText(PrinterRole.KITCHEN, kitchenReceipt) { }
 

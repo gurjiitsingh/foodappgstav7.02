@@ -98,15 +98,15 @@ class OnlineOrdersViewModel(
             }
 
 
-            val billingReceipt =
-                ReceiptFormatter.billing(printOrder, title = outletTitle)
+//            val billingReceipt =
+//                ReceiptFormatter.billing(printOrder, title = outletTitle)
 
             val kitchenReceipt =
                 ReceiptFormatter.kitchen(printOrder)
 
-            printerManager.printText(PrinterRole.BILLING, billingReceipt) {
-                Log.d("PRINT", "Billing print success=$it")
-            }
+//            printerManager.printText(PrinterRole.BILLING, billingReceipt) {
+//                Log.d("PRINT", "Billing print success=$it")
+//            }
 
             kotlinx.coroutines.delay(10_000)
 
