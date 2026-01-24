@@ -201,6 +201,16 @@ fun PrinterSettingsScreen(
             }
         }
 
+        Button(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = {
+                prefs.logAllPrinterSettings()
+                Toast.makeText(context, "Settings logged to Logcat", Toast.LENGTH_SHORT).show()
+            }
+        ) {
+            Text("Debug Log Printers")
+        }
+
         OutlinedButton(
             modifier = Modifier.align(Alignment.CenterHorizontally),
             onClick = onBack

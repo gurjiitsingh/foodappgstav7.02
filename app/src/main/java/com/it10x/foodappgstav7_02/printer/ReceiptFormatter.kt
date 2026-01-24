@@ -1,5 +1,6 @@
 package com.it10x.foodappgstav7_02.printer
 
+import android.util.Log
 import com.it10x.foodappgstav7_02.data.pos.entities.PosKotItemEntity
 
 // -----------------------------
@@ -67,6 +68,65 @@ ${totalLine("Tax", order.tax)}
 ------------------------------
 ${totalLine("GRAND TOTAL", order.grandTotal)}
 ------------------------------
+Thank You!
+
+
+""".trimIndent()
+            )
+        }
+    }
+
+
+    fun billing48(order: PrintOrder, title: String = "FOOD APP"): String {
+
+        val LINE_WIDTH = 48
+        // ✅ Log when function is called
+        Log.d("RECEIPT_FORMATTER", "billing48() called for orderNo=${order.orderNo}, title=$title")
+
+
+        val headerBlock = buildHeaderBlock(order)
+
+        val itemsBlock = if (order.items.isEmpty()) {
+            "No items found"
+        } else {
+            // 48 chars total → distribute: qty(4) + name(26) + price(8) + total(10)
+            val header =
+                "QTY".padEnd(4) +
+                        "ITEM".padEnd(26) +
+                        "PRICE".padStart(8) +
+                        "TOTAL".padStart(10)
+
+            val divider = "-".repeat(LINE_WIDTH)
+
+            val lines = order.items.joinToString("\n") { item ->
+                val qty = item.quantity.toString().padEnd(4)
+                val name = item.name.take(26).padEnd(26)
+                val price = format(item.price).padStart(8)
+                val total = format(item.subtotal).padStart(10)
+                qty + name + price + total
+            }
+
+            "$header\n$divider\n$lines"
+        }
+
+        return buildString {
+            append(ALIGN_LEFT)
+            append(
+                """
+------------------------------------------------
+$title
+------------------------------------------------
+$headerBlock
+------------------------------------------------
+$itemsBlock
+------------------------------------------------
+${totalLine48("Item Total", order.itemTotal)}
+${totalLine48("Delivery", order.deliveryFee)}
+${totalLine48("Discount", order.discount)}
+${totalLine48("Tax", order.tax)}
+------------------------------------------------
+${totalLine48("GRAND TOTAL", order.grandTotal)}
+------------------------------------------------
 Thank You!
 
 
@@ -328,6 +388,14 @@ Thank You!
         val left = label.padEnd(lineWidth - 12)
         val right = format(value).padStart(12)
         return left + right
+    }
+
+
+    private fun totalLine48(label: String, amount: Double): String {
+        val formatted = format(amount)
+        // label left-aligned, amount right-aligned to total 48 characters
+        val space = 48 - label.length - formatted.length
+        return label + " ".repeat(if (space > 0) space else 1) + formatted
     }
 
 

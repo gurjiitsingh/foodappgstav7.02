@@ -191,4 +191,20 @@ fun getPrinterConfig(role: PrinterRole): PrinterConfig? {
         prefs.edit().putString("${role.name}_PRINTER_SIZE", size).apply()
     }
 
+    fun logAllPrinterSettings() {
+        PrinterRole.values().forEach { role ->
+            val type = getPrinterType(role)
+            val size = getPrinterSize(role)
+            val usbName = getUSBPrinterName(role)
+            val lanIP = getLanPrinterIP(role)
+            val lanPort = getLanPrinterPort(role)
+
+            android.util.Log.d(
+                "PrinterPrefs",
+                "Role: ${role.name}, Type: $type, Size: $size, USB: $usbName, LAN: $lanIP:$lanPort"
+            )
+        }
+    }
+
+
 }

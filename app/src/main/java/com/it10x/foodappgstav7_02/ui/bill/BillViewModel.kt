@@ -235,8 +235,14 @@ class BillViewModel(
             ).joinToString("\n")
         } ?: "FOOD APP"
 
+//        role: PrinterRole,
+//        order: PrintOrder,
+//        outletTitle: String = "FOOD APP",
+//        onResult: (Boolean) -> Unit = {}
+
         val receiptText = ReceiptFormatter.billing(printOrder, title = outletTitle)
-        printerManager.printText(PrinterRole.BILLING, receiptText)
+       // printerManager.printText(PrinterRole.BILLING, receiptText)
+        printerManager.printTextNew(PrinterRole.BILLING,printOrder, outletTitle)
         Log.d("PRINT_ORDER", "Receipt printed successfully | orderNo=${order.srno}")
     }
 
