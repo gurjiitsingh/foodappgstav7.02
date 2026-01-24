@@ -2,6 +2,7 @@ package com.it10x.foodappgstav7_02.printer
 
 import android.util.Log
 import com.it10x.foodappgstav7_02.data.pos.entities.PosKotItemEntity
+import com.it10x.foodappgstav7_02.data.print.OutletInfo
 
 // -----------------------------
 // PRINT MODELS (ONE TRUTH)
@@ -135,6 +136,88 @@ Thank You!
         }
     }
 
+
+    fun billing48_(order: PrintOrder, outletInfo: OutletInfo): String {
+
+        val LINE_WIDTH = 48
+        Log.d("RECEIPT_FORMATTER", "billing48() called for orderNo=${order.orderNo}")
+        val outletHeader = buildOutletHeader(outletInfo, LINE_WIDTH)
+
+
+
+
+        val headerBlock = buildHeaderBlock(order)
+
+        val itemsBlock = if (order.items.isEmpty()) {
+            "No items found"
+        } else {
+            // 48 chars total → distribute: qty(4) + name(26) + price(8) + total(10)
+            val header =
+                "QTY".padEnd(4) +
+                        "ITEM".padEnd(26) +
+                        "PRICE".padStart(8) +
+                        "TOTAL".padStart(10)
+
+            val divider = "-".repeat(LINE_WIDTH)
+
+            val lines = order.items.joinToString("\n") { item ->
+                val qty = item.quantity.toString().padEnd(4)
+                val name = item.name.take(26).padEnd(26)
+                val price = format(item.price).padStart(8)
+                val total = format(item.subtotal).padStart(10)
+                qty + name + price + total
+            }
+
+            "$header\n$divider\n$lines"
+        }
+
+        return buildString {
+            append(ALIGN_LEFT)
+            append(
+                """
+------------------------------------------------
+$outletHeader
+------------------------------------------------
+$headerBlock
+------------------------------------------------
+$itemsBlock
+------------------------------------------------
+${totalLine48("Item Total", order.itemTotal)}
+${totalLine48("Delivery", order.deliveryFee)}
+${totalLine48("Discount", order.discount)}
+${totalLine48("Tax", order.tax)}
+------------------------------------------------
+${totalLine48("GRAND TOTAL", order.grandTotal)}
+------------------------------------------------
+Thank You!
+
+
+""".trimIndent()
+            )
+        }
+    }
+
+    fun billing48_1(order: PrintOrder, outletInfo: OutletInfo): String {
+        val LINE_WIDTH = 48
+        Log.d("RECEIPT_FORMATTER", "billing48() called for orderNo=${order.orderNo}")
+
+        val outletHeader = buildOutletHeader(outletInfo, LINE_WIDTH)
+        val headerBlock = buildHeaderBlock(order)
+
+        return buildString {
+            append(ALIGN_LEFT)
+            append(
+                """
+------------------------------------------------
+$outletHeader
+------------------------------------------------
+$headerBlock
+------------------------------------------------
+...
+""".trimIndent()
+            )
+        }
+    }
 
 
     fun billing83(order: PrintOrder, title: String = "FOOD APP"): String {
@@ -396,6 +479,27 @@ Thank You!
         // label left-aligned, amount right-aligned to total 48 characters
         val space = 48 - label.length - formatted.length
         return label + " ".repeat(if (space > 0) space else 1) + formatted
+    }
+
+
+    private fun buildOutletHeader(info: OutletInfo, width: Int): String {
+        val lines = mutableListOf<String>()
+        if (info.name.isNotBlank()) lines += centerText(info.name, width)
+        if (info.addressLine1.isNotBlank()) lines += info.addressLine1.take(width)
+        info.addressLine2?.let { lines += it.take(width) }
+        info.addressLine3?.let { lines += it.take(width) }
+        info.city?.let { lines += it.take(width) }
+        info.phone?.let { lines += "Phone: $it" }
+        info.email?.let { lines += "Email: $it" }
+        info.web?.let { lines += "Web: $it" }
+        info.gst?.let { lines += "GST: $it" }
+        info.footerNote?.let { lines += it.take(width) }
+        return lines.joinToString("\n")
+    }
+
+    private fun centerText(text: String, width: Int): String {
+        val pad = (width - text.length) / 2
+        return " ".repeat(maxOf(pad, 0)) + text
     }
 
 

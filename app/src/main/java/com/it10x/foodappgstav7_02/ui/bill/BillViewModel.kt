@@ -28,7 +28,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
-
+import com.it10x.foodappgstav7_02.data.print.OutletInfo
 class BillViewModel(
     private val kotItemDao: KotItemDao,
     private val orderMasterDao: OrderMasterDao,
@@ -235,14 +235,33 @@ class BillViewModel(
             ).joinToString("\n")
         } ?: "FOOD APP"
 
-//        role: PrinterRole,
-//        order: PrintOrder,
-//        outletTitle: String = "FOOD APP",
-//        onResult: (Boolean) -> Unit = {}
 
-        val receiptText = ReceiptFormatter.billing(printOrder, title = outletTitle)
+
+        val outletInfo = outlet?.let {
+            OutletInfo(
+                name = it.outletName.takeIf { it.isNotBlank() } ?: "FOOD APP",
+                addressLine1 = it.addressLine1.takeIf { it.isNotBlank() } ?: "",
+                addressLine2 = it.addressLine2?.takeIf { it.isNotBlank() },
+                addressLine3 = it.addressLine3?.takeIf { it.isNotBlank() },
+                city = it.city.takeIf { it.isNotBlank() },
+                phone = it.phone.takeIf { it.isNotBlank() },
+                phone2 = it.phone2?.takeIf { it.isNotBlank() },
+                email = it.email?.takeIf { it.isNotBlank() },
+                web = it.web?.takeIf { it.isNotBlank() },
+                gst = it.gstVatNumber?.takeIf { it.isNotBlank() },
+                footerNote = it.footerNote?.takeIf { it.isNotBlank() }
+            )
+        } ?: OutletInfo(name = "FOOD APP")
+
+       // val receiptText = ReceiptFormatter.billing(printOrder, title = outletTitle)
        // printerManager.printText(PrinterRole.BILLING, receiptText)
-        printerManager.printTextNew(PrinterRole.BILLING,printOrder, outletTitle)
+
+
+
+
+       // printerManager.printTextNew(PrinterRole.BILLING,printOrder, outletTitle)
+
+        printerManager.printTextNew_(PrinterRole.BILLING, printOrder, outletInfo)
         Log.d("PRINT_ORDER", "Receipt printed successfully | orderNo=${order.srno}")
     }
 
