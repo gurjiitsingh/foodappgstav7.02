@@ -63,56 +63,22 @@ class OnlineOrdersViewModel(
 
             val printOrder = FirestorePrintMapper.map(order, items)
 
-            val outlet = withContext(Dispatchers.IO) {
-                AppDatabaseProvider
-                    .get(printerManager.appContext())
-                    .outletDao()
-                    .getOutlet()
-            }
 
-            val outletTitle = if (outlet != null) {
-                listOfNotNull(
-                    outlet.outletName.takeIf { it.isNotBlank() },
-
-                    // ADDRESS
-                    outlet.addressLine1.takeIf { it.isNotBlank() },
-                    outlet.addressLine2?.takeIf { it.isNotBlank() },
-                    outlet.addressLine3?.takeIf { it.isNotBlank() },
-                    outlet.city.takeIf { it.isNotBlank() },
-
-                    // CONTACT
-                    outlet.phone.takeIf { it.isNotBlank() }?.let { "Contact No.: $it," },
-                    outlet.phone2?.takeIf { it.isNotBlank() }?.let { "$it" },
-                    outlet.email?.takeIf { it.isNotBlank() },
-
-                    // WEB
-                    outlet.web?.takeIf { it.isNotBlank() },
-
-                    // FOOTER NOTE
-                    outlet.footerNote?.takeIf { it.isNotBlank() },
-                    // TAX
-                    outlet.gstVatNumber?.takeIf { it.isNotBlank() }?.let { "GST: $it" }
-                ).joinToString("\n")
-            } else {
-                "FOOD APP"
-            }
-
-
-//            val billingReceipt =
-//                ReceiptFormatter.billing(printOrder, title = outletTitle)
 
             val kitchenReceipt =
-                ReceiptFormatter.kitchen(printOrder)
+                ReceiptFormatter.kitchen1(printOrder)
 
-//            printerManager.printText(PrinterRole.BILLING, billingReceipt) {
-//                Log.d("PRINT", "Billing print success=$it")
-//            }
+            printerManager.printTextNew(PrinterRole.BILLING, printOrder)
 
             kotlinx.coroutines.delay(10_000)
 
-            printerManager.printText(PrinterRole.KITCHEN, kitchenReceipt) {
-                Log.d("PRINT", "Kitchen print success=$it")
-            }
+//            printerManager.printTextOld(PrinterRole.KITCHEN,
+//                sessionKey = "online",
+//                orderType = "online",
+//                items
+//            ){
+//                Log.d("PRINT", "Kitchen print success=$it")
+//            }
         }
     }
 

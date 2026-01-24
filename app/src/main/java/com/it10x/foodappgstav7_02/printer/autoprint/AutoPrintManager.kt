@@ -4,6 +4,7 @@ import com.it10x.foodappgstav7_02.data.PrinterRole
 import com.it10x.foodappgstav7_02.data.online.models.OrderMasterData
 import com.it10x.foodappgstav7_02.data.online.models.OrderProductData
 import com.it10x.foodappgstav7_02.data.online.models.repository.OrdersRepository
+import com.it10x.foodappgstav7_02.data.print.OutletMapper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -48,14 +49,25 @@ class AutoPrintManager(
 //                    FirestorePrintMapper.map(order, items),
 //                    title = "FOOD APP"
 //                )
-                val kitchenReceipt = ReceiptFormatter.kitchen(
-                    FirestorePrintMapper.map(order, items)
+
+
+
+//                val kitchenReceipt = ReceiptFormatter.kitchen(
+//                    FirestorePrintMapper.map(order, items)
+//                )
+
+
+
+                val printOrder = FirestorePrintMapper.map(order, items)
+
+                printerManager.printTextNew(PrinterRole.BILLING, printOrder)
+
+                delay(5_000)
+               // printerManager.printText(PrinterRole.KITCHEN, kitchenReceipt) { }
+                printerManager.printTextNew(
+                    PrinterRole.KITCHEN,
+                    printOrder
                 )
-
-           //     printerManager.printText(PrinterRole.BILLING, billingReceipt) { }
-                delay(10_000)
-                printerManager.printText(PrinterRole.KITCHEN, kitchenReceipt) { }
-
                 // ✅ Mark printed
                 ordersRepository.markOrderAsPrinted(order.id)
 

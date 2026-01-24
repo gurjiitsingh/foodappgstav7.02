@@ -156,7 +156,33 @@ Thank You!
     // -----------------------------
     // KITCHEN RECEIPT
     // -----------------------------
-    fun kitchen(order: PrintOrder, title: String = "KITCHEN"): String {
+
+    fun kitchen(items: List<PosKotItemEntity>, title: String = "KITCHEN"): String {
+
+        val itemsBlock = if (items.isEmpty()) {
+            "No items"
+        } else {
+            items.joinToString("\n") {
+                "${it.quantity.toString().padEnd(3)} ${it.name}"
+            }
+        }
+
+        return buildString {
+            append(ALIGN_LEFT)
+            append(
+                """
+******** $title ********
+
+------------------------
+$itemsBlock
+------------------------
+
+
+""".trimIndent()
+            )
+        }
+    }
+    fun kitchen1(order: PrintOrder, title: String = "KITCHEN"): String {
 
         val itemsBlock = if (order.items.isEmpty()) {
             "No items"

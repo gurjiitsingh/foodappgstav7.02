@@ -10,6 +10,10 @@ import com.it10x.foodappgstav7_02.data.print.OutletInfo
 import com.it10x.foodappgstav7_02.printer.bluetooth.BluetoothPrinter
 import com.it10x.foodappgstav7_02.printer.lan.LanPrinter
 import com.it10x.foodappgstav7_02.printer.usb.USBPrinter
+import com.it10x.foodappgstav7_02.data.print.OutletMapper
+import com.it10x.foodappgstav7_02.data.pos.AppDatabaseProvider
+import com.it10x.foodappgstav7_02.data.pos.entities.PosKotItemEntity
+import kotlinx.coroutines.runBlocking
 
 class PrinterManager(
     private val context: Context
@@ -151,7 +155,6 @@ class PrinterManager(
     fun printTextNew(
         role: PrinterRole,
         order: PrintOrder,
-        outletInfo: OutletInfo,
         onResult: (Boolean) -> Unit = {}
     ) {
         Log.e("PRINT_NEW", "Printing for role=$role")
@@ -167,12 +170,19 @@ class PrinterManager(
         }
 
         // ✅ Select format based on page size
-
         val size = prefs.getPrinterSize(role) ?: "58mm"
 
+        // ✅ Auto-load outlet info if not provided
+
+        val outletDao = AppDatabaseProvider.get(context).outletDao()
+        val outletEntity = runBlocking { outletDao.getOutlet() }
+        val info = OutletMapper.fromEntity(outletEntity)
+
+
+        // ✅ Select format based on printer page size
         val receiptText = when (size) {
-            "80mm" -> ReceiptFormatter.billing48(order, outletInfo)
-            else -> ReceiptFormatter.billing(order, outletInfo)
+            "80mm" -> ReceiptFormatter.billing48(order, info)
+            else -> ReceiptFormatter.billing(order, info)
         }
 
 
@@ -231,18 +241,14 @@ class PrinterManager(
     }
 
 
-
-
-
-
-    fun printTextNew1(
+    fun printTextOld(
         role: PrinterRole,
-        order: PrintOrder,
-        outletInfo: OutletInfo,
+        sessionKey: String,
+        orderType: String,
+        items: List<PosKotItemEntity>,
         onResult: (Boolean) -> Unit = {}
     ) {
-        Log.d("PRINT", "Printer configured for role=$role")
-
+        Log.e("PRINT", "printer configured for role=$role")
         val config = prefs.getPrinterConfig(role)
         if (config == null) {
             Log.e("PRINT", "No printer configured for role=$role")
@@ -250,58 +256,61 @@ class PrinterManager(
             return
         }
 
-        val size = prefs.getPrinterSize(role) ?: "58mm"
+        val text = ReceiptFormatter.posKitchen(
+            sessionKey ,
+            orderType,
+            items
+        )
 
-        val receiptText = when (size) {
-            "80mm" -> ReceiptFormatter.billing48(order, outletInfo)
-            else -> ReceiptFormatter.billing48(order, outletInfo)
-        }
-
-        // ✅ Printing logic (kept same as before)
+        //Log.d("PRINT", "Printing role=$role type=${config.type}")
+        //  var  text1="kljkl"
         when (config.type) {
+
             PrinterType.BLUETOOTH -> {
                 if (config.bluetoothAddress.isBlank()) {
-                    Log.e("PRINT_NEW", "Bluetooth address missing")
                     onResult(false)
                     return
                 }
                 BluetoothPrinter.printText(
                     config.bluetoothAddress,
-                    receiptText,
+                    text,
                     onResult
                 )
             }
 
             PrinterType.LAN -> {
                 if (config.ip.isBlank()) {
-                    Log.e("PRINT_NEW", "LAN IP missing")
                     onResult(false)
                     return
                 }
                 LanPrinter.printText(
                     config.ip,
                     config.port,
-                    receiptText,
+                    text,
                     onResult
                 )
             }
 
             PrinterType.USB -> {
                 val device = config.usbDevice ?: run {
-                    Log.e("PRINT_NEW", "USB device not found")
                     onResult(false)
                     return
                 }
                 USBPrinter.printText(
-                    receiptText,
+                    text,
                     onResult
                 )
+
+//USBPrinter.printText(
+//    context,
+//    device,
+//    text,
+//    onResult
+//)
+
             }
 
-            PrinterType.WIFI -> {
-                Log.e("PRINT_NEW", "WiFi printing not supported yet")
-                onResult(false)
-            }
+            PrinterType.WIFI -> onResult(false)
         }
     }
 

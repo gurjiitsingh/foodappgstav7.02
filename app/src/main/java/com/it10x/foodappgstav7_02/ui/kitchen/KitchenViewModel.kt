@@ -71,13 +71,12 @@ class KitchenViewModel(
             // ❌ If already printed → DO NOT PRINT AGAIN
             if (item.isPrinted || !print) return@launch
 
-            val slip = ReceiptFormatter.posKitchen(
+            printerManager.printTextOld(
+                PrinterRole.KITCHEN,
                 sessionKey = item.tableNo ?: item.kotBatchId,
                 orderType = orderType,
                 items = listOf(item)
-            )
-
-            printerManager.printText(PrinterRole.KITCHEN, slip)
+                )
 
             kotItemDao.markPrinted(item.id)
 
@@ -100,7 +99,9 @@ class KitchenViewModel(
                 items = unprintedItems
             )
 
-            printerManager.printText(PrinterRole.KITCHEN, slip)
+            printerManager.printTextOld(PrinterRole.KITCHEN, sessionKey = tableNo,
+                orderType = orderType,
+                items = unprintedItems)
 
             // ✅ MARK ALL
             kotItemDao.markAllDone(tableNo)

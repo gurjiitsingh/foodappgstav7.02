@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import com.it10x.foodappgstav7_02.data.pos.AppDatabaseProvider
 import com.it10x.foodappgstav7_02.data.pos.entities.PosKotBatchEntity
 import com.it10x.foodappgstav7_02.data.pos.entities.PosKotItemEntity
+import com.it10x.foodappgstav7_02.data.print.OutletMapper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 // 🔹 NEW (for atomic order no + API 24 safe date)
@@ -220,50 +221,21 @@ class POSOrdersViewModel(
              //   Log.d("OUTLET_PRINT", "phone=${outlet.phone}")
             }
 
-            val outletTitle = if (outlet != null) {
-                listOfNotNull(
-                    outlet.outletName.takeIf { it.isNotBlank() },
 
-                    // ADDRESS
-                    outlet.addressLine1.takeIf { it.isNotBlank() },
-                    outlet.addressLine2?.takeIf { it.isNotBlank() },
-                    outlet.addressLine3?.takeIf { it.isNotBlank() },
-                    outlet.city.takeIf { it.isNotBlank() },
 
-                    // CONTACT
-                    outlet.phone.takeIf { it.isNotBlank() }?.let { "Contact No.: $it" },
-                    outlet.phone2?.takeIf { it.isNotBlank() }?.let { "$it" },
-                    outlet.email?.takeIf { it.isNotBlank() },
+          // ---------------- BILLING PRINT ----------------
 
-                    // WEB
-                    outlet.web?.takeIf { it.isNotBlank() },
 
-                    // FOOTER NOTE
-                    outlet.footerNote?.takeIf { it.isNotBlank() },
-                    // TAX
-                    outlet.gstVatNumber?.takeIf { it.isNotBlank() }?.let { "GST: $it" }
-                ).joinToString("\n")
-            } else {
-                "FOOD APP"
-            }
 
-//oldprintingremoved
-            Log.d("OUTLET_PRINT", "🖨 FINAL TITLE:\n$outletTitle")
-
-       //   val printReceipt =  ReceiptFormatter.billing(printOrder, title = outletTitle)
-            // ---------------- BILLING PRINT ----------------
-//            printerManager.printText(
-//                PrinterRole.BILLING,
-//                printReceipt
-//            )
+            printerManager.printTextNew(PrinterRole.BILLING, printOrder)
 
             // SMALL DELAY
             //kotlinx.coroutines.delay(150)
 
             // ---------------- KITCHEN PRINT ----------------
-            printerManager.printText(
+            printerManager.printTextNew(
                 PrinterRole.KITCHEN,
-                ReceiptFormatter.kitchen(printOrder)
+                printOrder
             )
         }
     }

@@ -217,48 +217,11 @@ class BillViewModel(
         items: List<PosOrderItemEntity>
     ) = withContext(Dispatchers.IO) {
         val printOrder = PrintOrderBuilder.build(order, items)
+
         val outlet = outletDao.getOutlet()
-
-//        val outletTitle = outlet?.let {
-//            listOfNotNull(
-//                it.outletName.takeIf { it.isNotBlank() },
-//                it.addressLine1.takeIf { it.isNotBlank() },
-//                it.addressLine2?.takeIf { it.isNotBlank() },
-//                it.addressLine3?.takeIf { it.isNotBlank() },
-//                it.city.takeIf { it.isNotBlank() },
-//                it.footerNote?.takeIf { it.isNotBlank() },
-//                it.phone.takeIf { it.isNotBlank() }?.let { p -> "Contact No.: $p" },
-//                it.phone2?.takeIf { it.isNotBlank() },
-//                it.email?.takeIf { it.isNotBlank() },
-//                it.web?.takeIf { it.isNotBlank() },
-//
-//                it.gstVatNumber?.takeIf { it.isNotBlank() }?.let { gst -> "GST: $gst" }
-//            ).joinToString("\n")
-//        } ?: "FOOD APP"
-
-
-
-//        val outletInfo = outlet?.let {
-//            OutletInfo(
-//                name = it.outletName.takeIf { it.isNotBlank() } ?: "FOOD APP",
-//                addressLine1 = it.addressLine1.takeIf { it.isNotBlank() } ?: "",
-//                addressLine2 = it.addressLine2?.takeIf { it.isNotBlank() },
-//                addressLine3 = it.addressLine3?.takeIf { it.isNotBlank() },
-//                city = it.city.takeIf { it.isNotBlank() },
-//                phone = it.phone.takeIf { it.isNotBlank() },
-//                phone2 = it.phone2?.takeIf { it.isNotBlank() },
-//                email = it.email?.takeIf { it.isNotBlank() },
-//                web = it.web?.takeIf { it.isNotBlank() },
-//                gst = it.gstVatNumber?.takeIf { it.isNotBlank() },
-//                footerNote = it.footerNote?.takeIf { it.isNotBlank() }
-//            )
-//        } ?: OutletInfo(name = "FOOD APP")
-
-
-
         val outletInfo = OutletMapper.fromEntity(outlet)
 
-        printerManager.printTextNew(PrinterRole.BILLING, printOrder, outletInfo)
+        printerManager.printTextNew(PrinterRole.BILLING, printOrder)
         Log.d("PRINT_ORDER", "Receipt printed successfully | orderNo=${order.srno}")
     }
 
