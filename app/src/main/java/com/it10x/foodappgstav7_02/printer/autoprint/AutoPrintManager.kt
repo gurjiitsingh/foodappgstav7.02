@@ -58,7 +58,7 @@ class AutoPrintManager(
 
                 delay(2_000)
 
-                //KITCHEN PRINT ONLINE ORDER AUTO
+                //
                 val kotItems = OnlineOrderMapper.toKotItems(items)
 
                 printerManager.printTextKitchen(
