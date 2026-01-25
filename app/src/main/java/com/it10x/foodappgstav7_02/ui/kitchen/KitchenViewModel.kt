@@ -54,13 +54,6 @@ class KitchenViewModel(
     }
 
 
-
-
-
-
-
-
-
     fun markDone(itemId: String,orderType: String,  print: Boolean = true) {
         viewModelScope.launch {
 
@@ -71,7 +64,7 @@ class KitchenViewModel(
             // ❌ If already printed → DO NOT PRINT AGAIN
             if (item.isPrinted || !print) return@launch
 
-            printerManager.printTextOld(
+            printerManager.printTextKitchen(
                 PrinterRole.KITCHEN,
                 sessionKey = item.tableNo ?: item.kotBatchId,
                 orderType = orderType,
@@ -93,13 +86,10 @@ class KitchenViewModel(
             if (unprintedItems.isEmpty()) return@launch
 
             // 🔥 PRINT ONCE (ALL ITEMS)
-            val slip = ReceiptFormatter.posKitchen(
-                sessionKey = tableNo,
-                orderType = orderType,
-                items = unprintedItems
-            )
 
-            printerManager.printTextOld(PrinterRole.KITCHEN, sessionKey = tableNo,
+            printerManager.printTextKitchen(
+                PrinterRole.KITCHEN,
+                sessionKey = tableNo,
                 orderType = orderType,
                 items = unprintedItems)
 

@@ -230,7 +230,7 @@ class POSOrdersViewModel(
             printerManager.printTextNew(PrinterRole.BILLING, printOrder)
 
             // SMALL DELAY
-            //kotlinx.coroutines.delay(150)
+            kotlinx.coroutines.delay(150)
 
             // ---------------- KITCHEN PRINT ----------------
             printerManager.printTextNew(

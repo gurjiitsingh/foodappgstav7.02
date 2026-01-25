@@ -1,6 +1,8 @@
 package com.it10x.foodappgstav7_02.printer
 
+import android.util.Log
 import com.it10x.foodappgstav7_02.data.PrinterRole
+import com.it10x.foodappgstav7_02.data.mapper.OnlineOrderMapper
 import com.it10x.foodappgstav7_02.data.online.models.OrderMasterData
 import com.it10x.foodappgstav7_02.data.online.models.OrderProductData
 import com.it10x.foodappgstav7_02.data.online.models.repository.OrdersRepository
@@ -29,6 +31,7 @@ class AutoPrintManager(
         }
 
         CoroutineScope(Dispatchers.IO).launch {
+            delay(10_000)
             try {
                 // Wait for items
                 var itemsReady = false
@@ -44,30 +47,29 @@ class AutoPrintManager(
 
                 if (!itemsReady) return@launch
 
-                // 🖨 Print billing + kitchen
-//                val billingReceipt = ReceiptFormatter.billing(
-//                    FirestorePrintMapper.map(order, items),
-//                    title = "FOOD APP"
-//                )
 
 
 
-//                val kitchenReceipt = ReceiptFormatter.kitchen(
-//                    FirestorePrintMapper.map(order, items)
-//                )
 
-
-
+               //BILL PRINT ONLINE ORDER AUTO
                 val printOrder = FirestorePrintMapper.map(order, items)
 
                 printerManager.printTextNew(PrinterRole.BILLING, printOrder)
 
-                delay(5_000)
-               // printerManager.printText(PrinterRole.KITCHEN, kitchenReceipt) { }
-                printerManager.printTextNew(
+                delay(2_000)
+
+                //KITCHEN PRINT ONLINE ORDER AUTO
+                val kotItems = OnlineOrderMapper.toKotItems(items)
+
+                printerManager.printTextKitchen(
                     PrinterRole.KITCHEN,
-                    printOrder
-                )
+                    sessionKey = order.srno.toString(),
+                    orderType = "Online order",
+                    kotItems ){
+                    Log.d("PRINT", "Kitchen print success=$it")
+                }
+
+
                 // ✅ Mark printed
                 ordersRepository.markOrderAsPrinted(order.id)
 

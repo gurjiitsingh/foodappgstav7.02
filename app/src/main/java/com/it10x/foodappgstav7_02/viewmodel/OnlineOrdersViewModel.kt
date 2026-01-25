@@ -17,6 +17,7 @@ import com.it10x.foodappgstav7_02.printer.ReceiptFormatter
 import com.it10x.foodappgstav7_02.data.pos.AppDatabaseProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import com.it10x.foodappgstav7_02.data.mapper.OnlineOrderMapper
 class OnlineOrdersViewModel(
     private val printerManager: PrinterManager
 ) : ViewModel() {
@@ -55,30 +56,31 @@ class OnlineOrdersViewModel(
         viewModelScope.launch {
 
             val items = repo.getOrderProducts(order.id)
-
+            Log.e("PRINT", "Order No. ${order.srno}")
             if (items.isEmpty()) {
                 Log.e("PRINT", "No items for order ${order.srno}")
                 return@launch
             }
 
+            //BILL PRINT ONLINE ORDER WHEN BUTTON PRESSED
             val printOrder = FirestorePrintMapper.map(order, items)
-
-
-
-            val kitchenReceipt =
-                ReceiptFormatter.kitchen1(printOrder)
-
             printerManager.printTextNew(PrinterRole.BILLING, printOrder)
 
-            kotlinx.coroutines.delay(10_000)
+            kotlinx.coroutines.delay(2_000)
 
-//            printerManager.printTextOld(PrinterRole.KITCHEN,
-//                sessionKey = "online",
-//                orderType = "online",
-//                items
-//            ){
-//                Log.d("PRINT", "Kitchen print success=$it")
-//            }
+
+            //KITCHEN PRINT ONLINE ORDER WHEN BUTTON PRESSED
+            val kotItems = OnlineOrderMapper.toKotItems(items)
+
+            printerManager.printTextKitchen(
+                PrinterRole.KITCHEN,
+                sessionKey = order.srno.toString(),
+                orderType = "Online order",
+                kotItems ){
+                Log.d("PRINT", "Kitchen print success=$it")
+            }
+
+
         }
     }
 

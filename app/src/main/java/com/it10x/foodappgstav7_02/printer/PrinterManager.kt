@@ -241,7 +241,7 @@ class PrinterManager(
     }
 
 
-    fun printTextOld(
+    fun printTextKitchen(
         role: PrinterRole,
         sessionKey: String,
         orderType: String,
