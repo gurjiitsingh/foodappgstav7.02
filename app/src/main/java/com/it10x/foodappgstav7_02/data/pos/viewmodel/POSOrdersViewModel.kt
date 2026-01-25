@@ -10,6 +10,8 @@ import com.it10x.foodappgstav7_02.data.pos.repository.POSOrdersRepository
 import com.it10x.foodappgstav7_02.printer.PrintOrderBuilder
 import com.it10x.foodappgstav7_02.printer.PrinterManager
 import com.it10x.foodappgstav7_02.data.PrinterRole
+import com.it10x.foodappgstav7_02.data.mapper.OnlineOrderMapper
+import com.it10x.foodappgstav7_02.data.mapper.PosOrderToKotMapper
 import com.it10x.foodappgstav7_02.printer.ReceiptFormatter
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -188,7 +190,7 @@ class POSOrdersViewModel(
 
 
     // -------------------------
-    // PRINT ORDERS (AUTO + MANUAL)
+    // PRINT ORDERS (AUTO + MANUAL + BUTTON)
     // -------------------------
     private fun printOrderStandard(
         order: PosOrderMasterEntity,
@@ -232,11 +234,18 @@ class POSOrdersViewModel(
             // SMALL DELAY
             kotlinx.coroutines.delay(150)
 
-            // ---------------- KITCHEN PRINT ----------------
-            printerManager.printTextNew(
+
+            //KITCHEN PRINT ONLINE ORDER WHEN BUTTON PRESSED
+            val kotItems = PosOrderToKotMapper.toKotItems(items)
+
+            printerManager.printTextKitchen(
                 PrinterRole.KITCHEN,
-                printOrder
+                sessionKey = order.srno.toString(),
+                orderType = order.orderType,
+                items =kotItems
             )
+
+
         }
     }
 
