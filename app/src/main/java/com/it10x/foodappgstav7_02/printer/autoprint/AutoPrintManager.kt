@@ -67,7 +67,7 @@ class AutoPrintManager(
                     orderType = "Online order",
                     kotItems ){
                     Log.d("PRINT", "Kitchen print success=$it")
-                }
+                              }
 
 
                 // ✅ Mark printed

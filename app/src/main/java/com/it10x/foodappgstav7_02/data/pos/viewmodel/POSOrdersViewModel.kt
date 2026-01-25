@@ -81,7 +81,8 @@ class POSOrdersViewModel(
     // -------------------------
     private fun printOrderStandard(
         order: PosOrderMasterEntity,
-        items: List<PosOrderItemEntity>
+        items: List<PosOrderItemEntity>,
+        role: String
     ) {
         Log.d("PRINT_SOURCE", "🟢 POSOrdersViewModel.printOrderStandard CALLED")
 
@@ -115,23 +116,24 @@ class POSOrdersViewModel(
           // ---------------- BILLING PRINT ----------------
 
 
-
-            printerManager.printTextNew(PrinterRole.BILLING, printOrder)
-
+if(role == "bill") {
+    printerManager.printTextNew(PrinterRole.BILLING, printOrder)
+}
             // SMALL DELAY
             kotlinx.coroutines.delay(150)
 
 
             //KITCHEN PRINT ONLINE ORDER WHEN BUTTON PRESSED
-            val kotItems = PosOrderToKotMapper.toKotItems(items)
+            if(role == "kitchen") {
+                val kotItems = PosOrderToKotMapper.toKotItems(items)
 
-            printerManager.printTextKitchen(
-                PrinterRole.KITCHEN,
-                sessionKey = order.srno.toString(),
-                orderType = order.orderType,
-                items =kotItems
-            )
-
+                printerManager.printTextKitchen(
+                    PrinterRole.KITCHEN,
+                    sessionKey = order.srno.toString(),
+                    orderType = order.orderType,
+                    items = kotItems
+                )
+            }
 
         }
     }
@@ -151,7 +153,7 @@ class POSOrdersViewModel(
     // -------------------------
     // MANUAL PRINT OLD ORDER
     // -------------------------
-    fun printOrder(orderId: String) {
+    fun printOrder(orderId: String,role: String) {
         viewModelScope.launch {
             _loading.value = true
             try {
@@ -178,7 +180,8 @@ class POSOrdersViewModel(
                     "Printing orderId=$orderId srno=${order.srno} items=${items.size}"
                 )
 
-                printOrderStandard(order, items)
+    printOrderStandard(order, items, role)
+
 
             } catch (e: Exception) {
                 Log.e("POS_PRINT", "Exception while printing order", e)
