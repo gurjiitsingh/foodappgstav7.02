@@ -54,7 +54,9 @@ data class ProductEntity(
     // =====================================================
     // OPTIONAL META (SAFE)
     // =====================================================
-    val type: String?              // keep but DO NOT rely on it
+    val type: String? ,             // keep but DO NOT rely on it
+    // ------------ OUTLET LINK ------------
+    val outletId: String? = null
 )
 
 

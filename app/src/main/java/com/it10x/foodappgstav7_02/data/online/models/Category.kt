@@ -11,5 +11,6 @@ data class Category(
     val sortOrder: Int? = null,
     val disablePickupDiscount: Boolean? = null,
     val taxRate: Double? = null,
-    val taxType: String? = null
+    val taxType: String? = null,
+    val outletId: String? = null
 )

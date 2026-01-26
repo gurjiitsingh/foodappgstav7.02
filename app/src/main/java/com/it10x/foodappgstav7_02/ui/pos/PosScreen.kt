@@ -209,12 +209,6 @@ fun PosScreen(
                     .padding(12.dp)
             ) {
 
-
-
-
-
-
-
                 // ---------- ORDER CONTROLS ----------
                 if (isPhone) {
                     // ===== MOBILE: 2 ROWS =====
@@ -273,55 +267,56 @@ fun PosScreen(
                         }
                     }
                 }
-                    // ===== TABLET: SINGLE ROW =====
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        PosOrderTypeButton(
-                            label = "Dine In",
-                            selected = orderType == "DINE_IN",
-                            onClick = {
-                                orderType = "DINE_IN"
-                                showTableSelector = true
-                                cartViewModel.initSession(orderType, tableId)
-                            }
-                        )
-
-                        PosOrderTypeButton(
-                            label = "Takeaway",
-                            selected = orderType == "TAKEAWAY",
-                            onClick = {
-                                orderType = "TAKEAWAY"
-                                posSessionViewModel.clearTable()
-                                showTableSelector = false
-                                cartViewModel.initSession("TAKEAWAY")
-                            }
-                        )
-
-                        PosOrderTypeButton(
-                            label = "Delivery",
-                            selected = orderType == "DELIVERY",
-                            onClick = {
-                                orderType = "DELIVERY"
-                                posSessionViewModel.clearTable()
-                                showTableSelector = false
-                                cartViewModel.initSession("DELIVERY")
-                            }
-                        )
-
-                        if (orderType == "DINE_IN" && tableName != null) {
-                            OrderChip(
-                                label = tableName!!,
-                                selected = true,
-                                onClick = { showTableSelector = true }
-                            )
+                // ===== TABLET: SINGLE ROW =====
+                if (!isPhone) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    PosOrderTypeButton(
+                        label = "Dine In",
+                        selected = orderType == "DINE_IN",
+                        onClick = {
+                            orderType = "DINE_IN"
+                            showTableSelector = true
+                            cartViewModel.initSession(orderType, tableId)
                         }
+                    )
+
+                    PosOrderTypeButton(
+                        label = "Takeaway",
+                        selected = orderType == "TAKEAWAY",
+                        onClick = {
+                            orderType = "TAKEAWAY"
+                            posSessionViewModel.clearTable()
+                            showTableSelector = false
+                            cartViewModel.initSession("TAKEAWAY")
+                        }
+                    )
+
+                    PosOrderTypeButton(
+                        label = "Delivery",
+                        selected = orderType == "DELIVERY",
+                        onClick = {
+                            orderType = "DELIVERY"
+                            posSessionViewModel.clearTable()
+                            showTableSelector = false
+                            cartViewModel.initSession("DELIVERY")
+                        }
+                    )
+
+                    if (orderType == "DINE_IN" && tableName != null) {
+                        OrderChip(
+                            label = tableName!!,
+                            selected = true,
+                            onClick = { showTableSelector = true }
+                        )
                     }
+                }
 
-
+            }
 
 
                 ProductList(

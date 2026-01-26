@@ -24,7 +24,8 @@ data class CategoryEntity(
 
     // Sync safety
     val updatedAt: Long? = null,
-    val isDeleted: Boolean = false
+    val isDeleted: Boolean = false,
+    val outletId: String? = null
 )
 
 

@@ -26,66 +26,143 @@ class OrdersRepository {
     // ORDER MASTER
     // -----------------------------
     suspend fun getFirstPage(limit: Long = 10): List<OrderMasterData> {
-        val snapshot = db.collection("orderMaster")
-            .orderBy("createdAt", Query.Direction.DESCENDING)
-            .limit(limit)
-            .get()
-            .await()
+        return try {
+            // 🧠 Try the fast, indexed query first
+            val snapshot = db.collection("orderMaster")
+                .whereIn("source", listOf("WEB", "APP", "ONLINE"))
+                .orderBy("createdAt", Query.Direction.DESCENDING)
+                .limit(limit)
+                .get()
+                .await()
 
-        val docs = snapshot.documents
-        if (docs.isNotEmpty()) {
-            pageAnchors.add(docs.first())
-            lastDocument = docs.last()
-        }
+            val docs = snapshot.documents
+            if (docs.isNotEmpty()) {
+                pageAnchors.clear()
+                pageAnchors.add(docs.first())
+                lastDocument = docs.last()
+            }
 
-        return docs.mapNotNull {
-            it.toObject(OrderMasterData::class.java)?.copy(id = it.id)
+            docs.mapNotNull { it.toObject(OrderMasterData::class.java)?.copy(id = it.id) }
+
+        } catch (e: Exception) {
+            // ⚠️ Fallback if index is missing or Firestore fails
+            android.util.Log.w("ORDER_FETCH", "Indexed query failed, falling back: ${e.message}")
+
+            val snapshot = db.collection("orderMaster")
+                .orderBy("createdAt", Query.Direction.DESCENDING)
+                .limit(limit * 3)
+                .get()
+                .await()
+
+            val allOrders = snapshot.documents.mapNotNull {
+                it.toObject(OrderMasterData::class.java)?.copy(id = it.id)
+            }
+
+            // ✅ Local filter for online/web orders
+            val filteredOrders = allOrders.filter {
+                it.source?.uppercase() in listOf("WEB", "APP", "ONLINE")
+            }.take(limit.toInt())
+
+            filteredOrders
         }
     }
+
 
     suspend fun getNextPage(limit: Long = 10): List<OrderMasterData> {
         if (lastDocument == null) return emptyList()
 
-        val snapshot = db.collection("orderMaster")
-            .orderBy("createdAt", Query.Direction.DESCENDING)
-            .startAfter(lastDocument!!)
-            .limit(limit)
-            .get()
-            .await()
+        return try {
+            val snapshot = db.collection("orderMaster")
+                .whereIn("source", listOf("WEB", "APP", "ONLINE"))
+                .orderBy("createdAt", Query.Direction.DESCENDING)
+                .startAfter(lastDocument!!)
+                .limit(limit)
+                .get()
+                .await()
 
-        val docs = snapshot.documents
-        if (docs.isNotEmpty()) {
-            pageAnchors.add(docs.first())
-            lastDocument = docs.last()
-        }
+            val docs = snapshot.documents
+            if (docs.isNotEmpty()) {
+                pageAnchors.add(docs.first())
+                lastDocument = docs.last()
+            }
 
-        return docs.mapNotNull {
-            it.toObject(OrderMasterData::class.java)?.copy(id = it.id)
+            docs.mapNotNull { it.toObject(OrderMasterData::class.java)?.copy(id = it.id) }
+
+        } catch (e: Exception) {
+            android.util.Log.w("ORDER_FETCH", "Next page fallback: ${e.message}")
+
+            val snapshot = db.collection("orderMaster")
+                .orderBy("createdAt", Query.Direction.DESCENDING)
+                .startAfter(lastDocument!!)
+                .limit(limit * 3)
+                .get()
+                .await()
+
+            val allOrders = snapshot.documents.mapNotNull {
+                it.toObject(OrderMasterData::class.java)?.copy(id = it.id)
+            }
+
+            val filteredOrders = allOrders.filter {
+                it.source?.uppercase() in listOf("WEB", "APP", "ONLINE")
+            }.take(limit.toInt())
+
+            filteredOrders
         }
     }
+
 
     suspend fun getPrevPage(limit: Long = 10): List<OrderMasterData> {
         if (pageAnchors.size < 2) return emptyList()
 
+        // Move one page back
         pageAnchors.removeLast()
         val prevAnchor = pageAnchors.last()
 
-        val snapshot = db.collection("orderMaster")
-            .orderBy("createdAt", Query.Direction.DESCENDING)
-            .startAt(prevAnchor)
-            .limit(limit)
-            .get()
-            .await()
+        return try {
+            // 🧠 Try indexed query first
+            val snapshot = db.collection("orderMaster")
+                .whereIn("source", listOf("WEB", "APP", "ONLINE"))
+                .orderBy("createdAt", Query.Direction.DESCENDING)
+                .startAt(prevAnchor)
+                .limit(limit)
+                .get()
+                .await()
 
-        val docs = snapshot.documents
-        if (docs.isNotEmpty()) {
-            lastDocument = docs.last()
-        }
+            val docs = snapshot.documents
+            if (docs.isNotEmpty()) {
+                lastDocument = docs.last()
+            }
 
-        return docs.mapNotNull {
-            it.toObject(OrderMasterData::class.java)?.copy(id = it.id)
+            docs.mapNotNull { it.toObject(OrderMasterData::class.java)?.copy(id = it.id) }
+
+        } catch (e: Exception) {
+            // ⚠️ Fallback: no index → fetch more + filter locally
+            android.util.Log.w("ORDER_FETCH", "Prev page fallback: ${e.message}")
+
+            val snapshot = db.collection("orderMaster")
+                .orderBy("createdAt", Query.Direction.DESCENDING)
+                .startAt(prevAnchor)
+                .limit(limit * 3)
+                .get()
+                .await()
+
+            val allOrders = snapshot.documents.mapNotNull {
+                it.toObject(OrderMasterData::class.java)?.copy(id = it.id)
+            }
+
+            // ✅ Local filter: only show online/web/app orders
+            val filteredOrders = allOrders.filter {
+                it.source?.uppercase() in listOf("WEB", "APP", "ONLINE")
+            }.take(limit.toInt())
+
+            if (filteredOrders.isNotEmpty()) {
+                lastDocument = snapshot.documents.lastOrNull()
+            }
+
+            filteredOrders
         }
     }
+
 
     // -----------------------------
     // ORDER PRODUCTS (ITEMS) ✅ NEW

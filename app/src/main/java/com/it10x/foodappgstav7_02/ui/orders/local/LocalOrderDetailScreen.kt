@@ -101,13 +101,24 @@ fun LocalOrderDetailScreen(
                                 else -> Color.DarkGray
                             }
                         )
+                        Text(
+                            "Sync Status: ${o.syncStatus}",
+                            fontWeight = FontWeight.Medium,
+                            color = when (o.syncStatus) {
+                             //   "PENDING" -> Color(0xFF1976D2)
+//                                "ACCEPTED" -> Color(0xFF388E3C)
+                                "SYNCED" -> Color(0xFF2E7D32)
+                                "PENDING" -> Color(0xFFD32F2F)
+                                else -> Color.DarkGray
+                            }
+                        )
                     }
 
                     // ---------- RIGHT : DELIVERY ADDRESS ----------
                     Column(
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Delivery Address", fontWeight = FontWeight.Bold)
+                        if(o.orderType=="DELIVERY"){                        Text("Delivery Address", fontWeight = FontWeight.Bold)
 
                         Spacer(Modifier.height(6.dp))
 
@@ -142,7 +153,7 @@ fun LocalOrderDetailScreen(
                                 color = Color.Gray
                             )
                         }
-                    }
+                    }}
                 }
             }
 

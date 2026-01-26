@@ -34,7 +34,8 @@ class ProductSyncRepository(
                 desc = data["desc"] as? String ?: "",
                 image = data["image"] as? String,
                 taxRate = (data["taxRate"] as? Number)?.toDouble(),
-                taxType = data["taxType"] as? String
+                taxType = data["taxType"] as? String,
+                outletId = data["outletId"] as? String
             )
         }
 
@@ -102,7 +103,10 @@ class ProductSyncRepository(
                 // ------------ POS SEARCH ------------
 
                 searchCode = data["searchCode"] as? String
-                    ?: doc.id.takeLast(6)
+                    ?: doc.id.takeLast(6),
+
+                // ------------ OUTLET LINK ------------
+                outletId = data["outletId"] as? String
             )
 
             // --------------------------------------------------

@@ -21,5 +21,6 @@ data class Product(
     val taxType: String? = null,
     val parentId: String? = null,
     val hasVariants: Boolean? = null,
-    val type: String? = null
+    val type: String? = null,
+    val outletId: String? = null
 )
