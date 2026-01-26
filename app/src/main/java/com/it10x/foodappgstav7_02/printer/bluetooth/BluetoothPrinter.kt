@@ -78,7 +78,20 @@ object BluetoothPrinter {
                 output.write(safeText)
 
                 // ✅ FEED PAPER
-                output.write(byteArrayOf(0x0A, 0x0A, 0x0A))
+                // ✅ FEED 3 LINES + CUT PAPER
+                val feedAndCut = byteArrayOf(
+                    0x1B, 0x64, 0x03, // Feed 3 lines
+                    0x1D, 0x56, 0x01  // Full cut
+                )
+
+
+//                if (prefs.isAutoCutterEnabled()) {
+//                    output.write(feedAndCut)
+//                } else {
+//                    output.write(byteArrayOf(0x0A, 0x0A, 0x0A)) // just feed
+//                }
+
+                output.write(feedAndCut)
 
                 output.flush()
 

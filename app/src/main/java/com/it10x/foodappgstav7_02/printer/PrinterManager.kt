@@ -138,12 +138,7 @@ class PrinterManager(
        onResult
             )
 
-//USBPrinter.printText(
-//    context,
-//    device,
-//    text,
-//    onResult
-//)
+
 
         }
 
@@ -301,12 +296,6 @@ class PrinterManager(
                     onResult
                 )
 
-//USBPrinter.printText(
-//    context,
-//    device,
-//    text,
-//    onResult
-//)
 
             }
 

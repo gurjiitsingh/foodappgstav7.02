@@ -24,9 +24,7 @@ object USBPrinter {
         device: UsbDevice,
         onReady: (Boolean) -> Unit
     ) {
-        usbManager =
-            context.getSystemService(Context.USB_SERVICE) as UsbManager
-
+        usbManager = context.getSystemService(Context.USB_SERVICE) as UsbManager
         usbDevice = device
 
         USBPermissionHelper.requestPermission(context, device) {
@@ -45,8 +43,8 @@ object USBPrinter {
     // =================================================
     private fun setupConnection(device: UsbDevice) {
         val iface = device.getInterface(0)
-
         outEndpoint = null
+
         for (i in 0 until iface.endpointCount) {
             val ep = iface.getEndpoint(i)
             if (
@@ -66,8 +64,7 @@ object USBPrinter {
             ?: throw IllegalStateException("Unable to open USB device")
 
         connection?.claimInterface(iface, true)
-
-     //   Log.d(TAG, "USB printer connected: ${device.deviceName}")
+        Log.d(TAG, "USB printer connected: ${device.deviceName}")
     }
 
     // =================================================
@@ -94,18 +91,15 @@ object USBPrinter {
             Device Name  : ${device.deviceName}
             Status       : OK
             ----------------------------
-            
-            
+
+
         """.trimIndent()
 
-            printText(
-                testText
-            ) { success ->
+            printText(testText) { success ->
                 onResult(success)
             }
         }
     }
-
 
     // =================================================
     // CORE PRINT (ORDER / AUTO)
@@ -125,18 +119,21 @@ object USBPrinter {
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // ESC/POS INIT
+                // ✅ ESC/POS INIT
                 val init = byteArrayOf(0x1B, 0x40)
 
-                // FEED + CUT
-                val feedCut =
-                    byteArrayOf(0x0A, 0x0A, 0x1D, 0x56, 0x41, 0x10)
+                // ✅ FEED 3 LINES + FULL CUT (Safe for all printers)
+                val feedAndCut = byteArrayOf(
+                    0x1B, 0x64, 0x03, // Feed 3 lines
+                    0x1D, 0x56, 0x01  // Full cut
+                )
 
-                val data =
-                    init + text.toByteArray(Charsets.US_ASCII) + feedCut
+                // ✅ Convert LF → CRLF
+                val safeText = text.replace("\n", "\r\n").toByteArray(Charsets.US_ASCII)
 
-                val sent =
-                    conn.bulkTransfer(ep, data, data.size, 5000)
+                val data = init + safeText + feedAndCut
+
+                val sent = conn.bulkTransfer(ep, data, data.size, 5000)
 
                 withContext(Dispatchers.Main) {
                     onResult(sent > 0)
@@ -155,8 +152,7 @@ object USBPrinter {
     // DEVICE LIST
     // =================================================
     fun getConnectedUSBDevices(context: Context): List<UsbDevice> {
-        val manager =
-            context.getSystemService(Context.USB_SERVICE) as UsbManager
+        val manager = context.getSystemService(Context.USB_SERVICE) as UsbManager
         return manager.deviceList.values.toList()
     }
 
@@ -166,8 +162,7 @@ object USBPrinter {
     fun release() {
         try {
             connection?.close()
-        } catch (_: Exception) {
-        }
+        } catch (_: Exception) {}
         connection = null
         outEndpoint = null
         usbDevice = null

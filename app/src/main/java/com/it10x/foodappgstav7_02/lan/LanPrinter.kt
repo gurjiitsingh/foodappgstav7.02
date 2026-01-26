@@ -14,6 +14,9 @@ object LanPrinter {
 
     private val mainHandler = Handler(Looper.getMainLooper())
 
+    // -----------------------------
+    // TEST PRINT
+    // -----------------------------
     fun printTest(
         ip: String,
         port: Int,
@@ -30,8 +33,8 @@ object LanPrinter {
         Port         : $port
         Status       : OK
         ----------------------------
-        
-        
+
+
     """.trimIndent()
 
         printText(
@@ -42,8 +45,9 @@ object LanPrinter {
         )
     }
 
-
-
+    // -----------------------------
+    // CORE PRINT
+    // -----------------------------
     fun printText(
         ip: String,
         port: Int,
@@ -60,22 +64,30 @@ object LanPrinter {
 
                 output = socket.getOutputStream()
 
-                // ESC/POS init
+                // ✅ ESC/POS INIT
                 output.write(byteArrayOf(0x1B, 0x40))
-                output.write(text.toByteArray(Charsets.UTF_8))
-                output.write(byteArrayOf(0x0A, 0x0A, 0x0A))
+
+                // ✅ Convert LF → CRLF for consistent printing
+                val safeText = text
+                    .replace("\n", "\r\n")
+                    .toByteArray(Charsets.UTF_8)
+
+                output.write(safeText)
+
+                // ✅ FEED 3 LINES + FULL CUT
+                val feedAndCut = byteArrayOf(
+                    0x1B, 0x64, 0x03, // feed 3 lines
+                    0x1D, 0x56, 0x01  // full cut
+                )
+                output.write(feedAndCut)
 
                 output.flush()
 
-                mainHandler.post {
-                    onResult(true)
-                }
+                mainHandler.post { onResult(true) }
 
             } catch (e: Exception) {
                 Log.e(TAG, "LAN print failed", e)
-                mainHandler.post {
-                    onResult(false)
-                }
+                mainHandler.post { onResult(false) }
             } finally {
                 try {
                     output?.close()
