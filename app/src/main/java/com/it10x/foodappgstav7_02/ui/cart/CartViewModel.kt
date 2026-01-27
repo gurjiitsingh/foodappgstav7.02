@@ -34,7 +34,7 @@ class CartViewModel(
     private val sessionId =
         savedStateHandle.getStateFlow<String?>("sessionId", null)
 
-    val sessionKey: StateFlow<String?> = sessionId
+    val  sessionKey: StateFlow<String?> = sessionId
     // ---------- CART ----------
     val cart: StateFlow<List<PosCartEntity>> = sessionId
         .filterNotNull()

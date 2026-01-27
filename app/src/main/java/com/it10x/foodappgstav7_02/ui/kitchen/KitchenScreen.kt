@@ -29,7 +29,7 @@ fun KitchenScreen(
     viewModel: KitchenViewModel,
     onKitchenEmpty: () -> Unit
 ) {
-    val items by viewModel.getPendingItems(tableNo).collectAsState(initial = null)
+    val items by viewModel.getPendingItems(tableNo, orderType).collectAsState(initial = null)
 
     // ✅ Only run close check AFTER we actually received a list from DB
     LaunchedEffect (items) {

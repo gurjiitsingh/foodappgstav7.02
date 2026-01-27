@@ -58,17 +58,7 @@ fun RightPanel(
     val printerManager = PrinterManager(context)
 
 
-    val billViewModel: BillViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
-        key = "BillVM_${tableNo ?: orderType}",
-        factory = BillViewModelFactory(
-            application = application,
-            tableId = tableNo ?: orderType,
-            orderType = orderType,
-
-        )
-    )
-
-    val kitchenViewModel: KitchenViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+   val kitchenViewModel: KitchenViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
         key = "KitchenVM_${tableNo ?: orderType}",
         factory = KitchenViewModelFactory(
             application,
@@ -77,6 +67,16 @@ fun RightPanel(
             repository = repository
         )
     )
+
+    //val orderRef = if (orderType == "DINE_IN") tableNo ?: "" else cartViewModel.sessionKey.value ?: ""
+    val orderRef = if (orderType == "DINE_IN") tableNo ?: "" else orderType
+
+    val kitchenItems by kitchenViewModel
+        .getPendingItems(orderRef = orderRef, orderType = orderType)
+        .collectAsState(initial = null)
+
+
+    val hasKitchenItems = kitchenItems?.isNotEmpty() == true
 
 
 
@@ -110,14 +110,19 @@ fun RightPanel(
             else -> false
         }
 
+//    val canOpenKitchen =
+//        when (orderType) {
+//            "DINE_IN" -> hasTable && (isRunning || isBillRequested)
+//            "TAKEAWAY", "DELIVERY" -> true
+//            else -> false
+//        }
+
     val canOpenKitchen =
-        when (orderType) {
+        hasKitchenItems && when (orderType) {
             "DINE_IN" -> hasTable && (isRunning || isBillRequested)
             "TAKEAWAY", "DELIVERY" -> true
             else -> false
         }
-
-
 
 
 
@@ -144,20 +149,7 @@ fun RightPanel(
             else -> orderType
         }
 
-//        Column(modifier = Modifier.padding(bottom = 12.dp)) {
-//            Text(
-//                text = "Order Type: $prettyOrderType",
-//                style = MaterialTheme.typography.bodyMedium,
-//                fontWeight = FontWeight.SemiBold
-//            )
-//            Text(
-//                text = if (hasTable) "Table: $tableNo" else "Table: —",
-//                style = MaterialTheme.typography.bodySmall,
-//                color = Color.Gray
-//            )
-//        }
 
-//        Divider()
 
         if (isMobile) {
             Row(
@@ -213,6 +205,9 @@ fun RightPanel(
                         Settings.Secure.ANDROID_ID
                     )
 
+                    // kitchenViewModel.deleteAllKotItems();
+                    kitchenViewModel.logAllKotItems()
+
                     kitchenViewModel.sendToKitchen(
                         orderType = orderType,
                         tableNo = tableNo,
@@ -237,6 +232,24 @@ fun RightPanel(
                 Text("Send to Kitchen")
             }
         }
+
+//        Button(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(top = 12.dp),
+//            onClick = {
+//
+//               // kitchenViewModel.deleteAllKotItems()
+//                kitchenViewModel.logAllKotItems()
+//            },
+//            colors = ButtonDefaults.buttonColors(
+//                containerColor = Color(0xFF16A34A),
+//                contentColor = Color.White
+//            )
+//        ) {
+//            Text("Show all items")
+//        }
+
 
         // ---------- REQUEST BILL ----------
         if (canRequestBill) {

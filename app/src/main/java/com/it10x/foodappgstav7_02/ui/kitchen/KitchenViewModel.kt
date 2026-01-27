@@ -16,10 +16,12 @@ import com.it10x.foodappgstav7_02.printer.PrintOrder
 import com.it10x.foodappgstav7_02.printer.PrinterManager
 import com.it10x.foodappgstav7_02.printer.ReceiptFormatter
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -121,8 +123,42 @@ class KitchenViewModel(
         }
     }
 
-    fun getPendingItems(tableNo: String) =
-        kotItemDao.getPendingItemsForTable(tableNo)
+
+    fun getPendingItems(orderRef: String, orderType: String): Flow<List<PosKotItemEntity>> {
+
+        Log.d("KITCHEN_DEBUG3", "orderRef = ${orderRef}  orderRef = ${orderType}")
+        return if (orderType == "DINE_IN") {
+            kotItemDao.getPendingItemsForTable(orderRef)
+        } else {
+            kotItemDao.getPendingItemsForTable(orderType)
+          //  kotItemDao.getPendingItemsForSession(orderRef)
+        }
+    }
+
+
+
+    fun logAllKotItems() {
+        viewModelScope.launch {
+            kotItemDao.getTotalKotItems()
+                .collect { items ->
+                    Log.d("KITCHEN_DEBUG2", "Total items = ${items.size}")
+
+                    items.forEach { item ->
+                        Log.d(
+                            "KITCHEN_DEBUG1",
+                            "ID=${item.id}, Name=${item.name}, Table=${item.tableNo}, Status=${item.status}"
+                        )
+                    }
+                }
+        }
+    }
+
+    fun deleteAllKotItems() {
+        viewModelScope.launch {
+            kotItemDao.deleteAllKotItems()
+            Log.d("KITCHEN_DEBUG", "All KOT items deleted")
+        }
+    }
 
 
     // ✅ POS signal: kitchen completed for table
@@ -155,21 +191,21 @@ class KitchenViewModel(
         deviceName: String?,
         appVersion: String?
     ) {
-        Log.d("KITCHEN_DEBUG", "Start placeOrder() | tableNo=$tableNo orderType=$orderType")
-
+        Log.d("KITCHEN_DEBUG4", " tableNo=$tableNo orderType=$orderType sessionId=$sessionId ")
+        logAllKotItems()
         viewModelScope.launch {
             _loading.value = true
 
             // ✅ use sessionId as the real key for cart & KOT
             val sessionKey = sessionId
-            Log.d("KITCHEN_DEBUG", "Resolved sessionKey=$sessionKey")
+       //     Log.d("KITCHEN_DEBUG", "Resolved sessionKey=$sessionKey")
 
             // ✅ FIX: Use sessionKey (for takeaway & delivery)
             val cartList = repository.getCartItems(sessionKey, orderType).first()
-            Log.d("KITCHEN_DEBUG", "Cart fetched for type=$orderType, sessionKey=$sessionKey, size=${cartList.size}")
+            //Log.d("KITCHEN_DEBUG", "Cart fetched for type=$orderType, sessionKey=$sessionKey, size=${cartList.size}")
 
             if (cartList.isEmpty()) {
-                Log.w("KITCHEN_DEBUG", "⚠️ No new items found for orderType=$orderType (sessionKey=$sessionKey)")
+              //  Log.w("KITCHEN_DEBUG", "⚠️ No new items found for orderType=$orderType (sessionKey=$sessionKey)")
                 _loading.value = false
                 return@launch
             }
@@ -182,7 +218,7 @@ class KitchenViewModel(
 
                 val kotSaved = saveKotOnly(
                     orderType = orderType,
-                    tableNo = sessionKey,
+                    tableNo = tableNo,
                     cartItems = cartList,
                     deviceId = deviceId,
                     deviceName = deviceName,
@@ -190,19 +226,19 @@ class KitchenViewModel(
                 )
 
                 if (!kotSaved) {
-                    Log.e("KITCHEN_DEBUG", "❌ saveKotOnly() failed for session=$sessionKey")
+                //    Log.e("KITCHEN_DEBUG", "❌ saveKotOnly() failed for session=$sessionKey")
                     return@launch
                 }
 
-                Log.d("KITCHEN_DEBUG", "✅ KOT saved successfully (${cartList.size} items)")
+              //  Log.d("KITCHEN_DEBUG", "✅ KOT saved successfully (${cartList.size} items)")
 
                 // ✅ FIX: clear by sessionKey (not tableNo)
-                Log.d("KITCHEN_DEBUG", "Clearing cart for sessionKey=$sessionKey")
+              //  Log.d("KITCHEN_DEBUG", "Clearing cart for sessionKey=$sessionKey")
                 repository.clearCart(orderType, sessionKey)
-                Log.d("KITCHEN_DEBUG", "✅ Cart cleared for sessionKey=$sessionKey")
+              //  Log.d("KITCHEN_DEBUG", "✅ Cart cleared for sessionKey=$sessionKey")
 
             } catch (e: Exception) {
-                Log.e("KITCHEN_DEBUG", "💥 Exception during placeOrder()", e)
+              //  Log.e("KITCHEN_DEBUG", "💥 Exception during placeOrder()", e)
             } finally {
                 _loading.value = false
             }
@@ -242,7 +278,7 @@ class KitchenViewModel(
 
             withContext(Dispatchers.IO) {
                 kotBatchDao.insert(batch)
-                Log.d("KOT_DEBUG", "Saved ${cartItems.size} KOT items for tableNo=${tableNo ?: orderType}")
+            //    Log.d("KOT_DEBUG", "Saved ${cartItems.size} KOT items for tableNo=${tableNo ?: orderType}")
                 val items = cartItems.map { cart ->
                     PosKotItemEntity(
                         id = UUID.randomUUID().toString(),

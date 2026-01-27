@@ -69,6 +69,22 @@ interface KotItemDao {
     fun getPendingItemsForTable(tableNo: String): Flow<List<PosKotItemEntity>>
 
 
+    @Query("DELETE FROM pos_kot_items")
+    suspend fun deleteAllKotItems()
+
+
+    @Query("SELECT * FROM pos_kot_items")
+    fun getTotalKotItems(): Flow<List<PosKotItemEntity>>
+
+
+
+    @Query("""
+SELECT * FROM pos_kot_items
+WHERE kotBatchId = :sessionKey
+AND status = 'PENDING'
+""")
+    fun getPendingItemsForSession(sessionKey: String): Flow<List<PosKotItemEntity>>
+
     @Query("SELECT * FROM pos_kot_items ORDER BY createdAt ASC")
     fun getAllKotItems(): Flow<List<PosKotItemEntity>>
 
