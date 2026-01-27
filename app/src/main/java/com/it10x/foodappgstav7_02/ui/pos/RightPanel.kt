@@ -26,6 +26,8 @@ import com.it10x.foodappgstav7_02.data.pos.repository.POSOrdersRepository
 import com.it10x.foodappgstav7_02.printer.PrinterManager
 import com.it10x.foodappgstav7_02.ui.bill.BillViewModel
 import com.it10x.foodappgstav7_02.ui.bill.BillViewModelFactory
+import com.it10x.foodappgstav7_02.ui.kitchen.KitchenViewModel
+import com.it10x.foodappgstav7_02.ui.kitchen.KitchenViewModelFactory
 import com.it10x.foodappgstav7_02.viewmodel.PosTableViewModel
 
 
@@ -43,6 +45,7 @@ fun RightPanel(
     onOpenKitchen: (String) -> Unit,
     onOpenBill: (String) -> Unit,
     isMobile: Boolean,
+    repository: POSOrdersRepository,
     onClose: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
@@ -54,6 +57,7 @@ fun RightPanel(
 
     val printerManager = PrinterManager(context)
 
+
     val billViewModel: BillViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
         key = "BillVM_${tableNo ?: orderType}",
         factory = BillViewModelFactory(
@@ -63,6 +67,17 @@ fun RightPanel(
 
         )
     )
+
+    val kitchenViewModel: KitchenViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+        key = "KitchenVM_${tableNo ?: orderType}",
+        factory = KitchenViewModelFactory(
+            application,
+            tableId = tableNo ?: orderType,
+            orderType = orderType,
+            repository = repository
+        )
+    )
+
 
 
 
@@ -198,7 +213,7 @@ fun RightPanel(
                         Settings.Secure.ANDROID_ID
                     )
 
-                    billViewModel.sendToKitchen(
+                    kitchenViewModel.sendToKitchen(
                         orderType = orderType,
                         tableNo = tableNo,
                         sessionId = cartViewModel.sessionKey.value!!,

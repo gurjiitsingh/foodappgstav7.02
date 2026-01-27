@@ -39,7 +39,9 @@ import com.it10x.foodappgstav7_02.ui.bill.BillScreenDialog
 import com.it10x.foodappgstav7_02.ui.kitchen.KitchenViewModel
 import android.widget.Toast
 import androidx.compose.runtime.saveable.rememberSaveable
+import com.it10x.foodappgstav7_02.data.pos.repository.POSOrdersRepository
 import com.it10x.foodappgstav7_02.ui.cart.CartUiEvent
+import com.it10x.foodappgstav7_02.ui.kitchen.KitchenViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,7 +63,13 @@ fun PosScreen(
     val isPhone = configuration.screenWidthDp < 600
     val tableId by posSessionViewModel.tableId.collectAsState()
     var orderType by remember { mutableStateOf("DINE_IN") }
-
+    val repository = POSOrdersRepository(
+        db = db,
+        orderMasterDao = db.orderMasterDao(),
+        orderProductDao = db.orderProductDao(),
+        cartDao = db.cartDao(),
+        tableDao = db.tableDao()
+    )
 
     LaunchedEffect(Unit) {
         cartViewModel.uiEvent.collect { event ->
@@ -376,7 +384,8 @@ fun PosScreen(
                         onOrderPlaced = { },
                         onOpenKitchen = { showKitchen = true },
                         onOpenBill = { showBill = true },
-                        isMobile = false
+                        isMobile = false,
+                        repository = repository
                     )
                 }
             }
@@ -420,7 +429,8 @@ fun PosScreen(
                 onOpenKitchen = { showKitchen = true },
                 onOpenBill = { showBill = true },
                 isMobile = true,
-                onClose = { showCartSheet = false }
+                onClose = { showCartSheet = false },
+                repository = repository
             )
         }
     }
@@ -428,7 +438,17 @@ fun PosScreen(
     // ================= KITCHEN POPUP =================
     if (showKitchen) {
         val kitchenKey by cartViewModel.sessionKey.collectAsState()
-        val kitchenViewModel: KitchenViewModel = viewModel()
+
+
+        val kitchenViewModel: KitchenViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+            key = "KitchenVM_${kitchenKey ?: orderType}",
+            factory = KitchenViewModelFactory(
+                app = LocalContext.current.applicationContext as android.app.Application,
+                tableId = kitchenKey ?: orderType,
+                orderType = orderType,
+                repository = repository
+            )
+        )
 
         AlertDialog(
             onDismissRequest = { showKitchen = false },

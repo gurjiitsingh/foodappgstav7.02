@@ -6,23 +6,34 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.it10x.foodappgstav7_02.data.PrinterRole
 import com.it10x.foodappgstav7_02.data.pos.AppDatabaseProvider
+import com.it10x.foodappgstav7_02.data.pos.entities.PosCartEntity
+import com.it10x.foodappgstav7_02.data.pos.entities.PosKotBatchEntity
 import com.it10x.foodappgstav7_02.data.pos.entities.PosKotItemEntity
+import com.it10x.foodappgstav7_02.data.pos.repository.POSOrdersRepository
 import com.it10x.foodappgstav7_02.data.pos.usecase.KotToBillUseCase
 import com.it10x.foodappgstav7_02.printer.PrintItem
 import com.it10x.foodappgstav7_02.printer.PrintOrder
 import com.it10x.foodappgstav7_02.printer.PrinterManager
 import com.it10x.foodappgstav7_02.printer.ReceiptFormatter
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.util.UUID
 
 class KitchenViewModel(
-    app: Application
+    app: Application,
+    private val tableId: String,
+    private val orderType: String,
+    private val repository: POSOrdersRepository
 ) : AndroidViewModel(app) {
 
+    private val _loading = MutableStateFlow(false)
+    val loading: StateFlow<Boolean> get() = _loading
     private val kotItemDao =
         AppDatabaseProvider.get(app).kotItemDao()
 
@@ -133,6 +144,136 @@ class KitchenViewModel(
             }
     }
 
+
+
+    fun sendToKitchen(
+        orderType: String,
+        tableNo: String?,
+        sessionId: String,
+        paymentType: String,
+        deviceId: String,
+        deviceName: String?,
+        appVersion: String?
+    ) {
+        Log.d("KITCHEN_DEBUG", "Start placeOrder() | tableNo=$tableNo orderType=$orderType")
+
+        viewModelScope.launch {
+            _loading.value = true
+
+            // ✅ use sessionId as the real key for cart & KOT
+            val sessionKey = sessionId
+            Log.d("KITCHEN_DEBUG", "Resolved sessionKey=$sessionKey")
+
+            // ✅ FIX: Use sessionKey (for takeaway & delivery)
+            val cartList = repository.getCartItems(sessionKey, orderType).first()
+            Log.d("KITCHEN_DEBUG", "Cart fetched for type=$orderType, sessionKey=$sessionKey, size=${cartList.size}")
+
+            if (cartList.isEmpty()) {
+                Log.w("KITCHEN_DEBUG", "⚠️ No new items found for orderType=$orderType (sessionKey=$sessionKey)")
+                _loading.value = false
+                return@launch
+            }
+
+            try {
+                val now = System.currentTimeMillis()
+                val orderId = UUID.randomUUID().toString()
+
+                Log.d("KOT_STEP", "Creating new KOT batchId=$orderId for $orderType")
+
+                val kotSaved = saveKotOnly(
+                    orderType = orderType,
+                    tableNo = sessionKey,
+                    cartItems = cartList,
+                    deviceId = deviceId,
+                    deviceName = deviceName,
+                    appVersion = appVersion
+                )
+
+                if (!kotSaved) {
+                    Log.e("KITCHEN_DEBUG", "❌ saveKotOnly() failed for session=$sessionKey")
+                    return@launch
+                }
+
+                Log.d("KITCHEN_DEBUG", "✅ KOT saved successfully (${cartList.size} items)")
+
+                // ✅ FIX: clear by sessionKey (not tableNo)
+                Log.d("KITCHEN_DEBUG", "Clearing cart for sessionKey=$sessionKey")
+                repository.clearCart(orderType, sessionKey)
+                Log.d("KITCHEN_DEBUG", "✅ Cart cleared for sessionKey=$sessionKey")
+
+            } catch (e: Exception) {
+                Log.e("KITCHEN_DEBUG", "💥 Exception during placeOrder()", e)
+            } finally {
+                _loading.value = false
+            }
+        }
+    }
+
+
+    private suspend fun saveKotOnly(
+        orderType: String,
+        tableNo: String?,
+        cartItems: List<PosCartEntity>,
+        deviceId: String,
+        deviceName: String?,
+        appVersion: String?
+    ): Boolean {
+        return try {
+            val db = AppDatabaseProvider.get(printerManager.appContext())
+            val kotBatchDao = db.kotBatchDao()
+            val kotItemDao = db.kotItemDao()
+
+            val batchId = UUID.randomUUID().toString()
+            val now = System.currentTimeMillis()
+            repository.markAllSent(tableNo ?: orderType)
+            //  Log.d("KOT_STEP", "Marked ${items.size} items as sent to kitchen")
+            val batch = PosKotBatchEntity(
+                id = batchId,
+                tableNo = tableNo ?: orderType,
+                orderType = orderType,
+                deviceId = deviceId,
+                deviceName = deviceName,
+                appVersion = appVersion,
+                createdAt = now,
+                sentBy = null,
+                syncStatus = "PENDING",
+                lastSyncedAt = null
+            )
+
+            withContext(Dispatchers.IO) {
+                kotBatchDao.insert(batch)
+                Log.d("KOT_DEBUG", "Saved ${cartItems.size} KOT items for tableNo=${tableNo ?: orderType}")
+                val items = cartItems.map { cart ->
+                    PosKotItemEntity(
+                        id = UUID.randomUUID().toString(),
+                        kotBatchId = batchId,
+                        tableNo = tableNo ?: orderType,
+                        productId = cart.productId,
+                        name = cart.name,
+                        categoryId = cart.categoryId,
+                        parentId = cart.parentId,
+                        isVariant = cart.isVariant,
+                        basePrice = cart.basePrice,
+                        quantity = cart.quantity,
+                        taxRate = cart.taxRate,
+                        taxType = cart.taxType,
+                        isPrinted = false,
+                        status = "PENDING",   // ✅ REQUIRED
+                        createdAt = now
+                    )
+                }
+
+                kotItemDao.insertAll(items)
+            }
+
+            Log.d("KOT", "✅ KOT SAVED: batch=$batchId items=${cartItems.size}")
+            true
+
+        } catch (e: Exception) {
+            Log.e("KOT", "❌ Failed to save KOT", e)
+            false
+        }
+    }
 
 
 }
