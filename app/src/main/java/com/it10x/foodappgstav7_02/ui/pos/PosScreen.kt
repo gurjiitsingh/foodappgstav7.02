@@ -121,7 +121,11 @@ fun PosScreen(
     }
 
     var selectedCatId by remember { mutableStateOf<String?>(null) }
-
+    LaunchedEffect(categories) {
+        if (selectedCatId == null && categories.isNotEmpty()) {
+            selectedCatId = categories.first().id
+        }
+    }
 
 
     val tableVm: PosTableViewModel = viewModel()

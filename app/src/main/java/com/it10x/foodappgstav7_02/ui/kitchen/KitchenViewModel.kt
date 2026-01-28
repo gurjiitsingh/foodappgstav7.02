@@ -127,7 +127,7 @@ class KitchenViewModel(
 
     fun getPendingItems(orderRef: String, orderType: String): Flow<List<PosKotItemEntity>> {
 
-        Log.d("KITCHEN_DEBUG3", "orderRef = ${orderRef}  orderRef = ${orderType}")
+
         return if (orderType == "DINE_IN") {
             kotItemDao.getPendingItemsForTable(orderRef)
         } else {
@@ -147,7 +147,7 @@ class KitchenViewModel(
                     items.forEach { item ->
                         Log.d(
                             "KITCHEN_DEBUG1",
-                            "ID=${item.id}, Name=${item.name}, Table=${item.tableNo}, Status=${item.status}"
+                            "Status=${item.status},Table=${item.tableNo}, session=${item.sessionId}, BatchId=${item.kotBatchId},Name=${item.name},ID=${item.id}"
                         )
                     }
                 }

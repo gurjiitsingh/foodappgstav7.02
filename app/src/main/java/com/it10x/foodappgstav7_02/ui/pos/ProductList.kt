@@ -98,7 +98,7 @@ private fun ProductInnerContent(
         }
     }
 
-    Column(Modifier.padding(5.dp)) {
+    Column(Modifier.padding(1.dp)) {
 
         LazyRow(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
 

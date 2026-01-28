@@ -30,6 +30,8 @@ import java.text.SimpleDateFormat
 import java.util.*
 import com.it10x.foodappgstav7_02.data.print.OutletInfo
 import com.it10x.foodappgstav7_02.data.print.OutletMapper
+import kotlinx.coroutines.flow.Flow
+
 class BillViewModel(
     private val kotItemDao: KotItemDao,
     private val orderMasterDao: OrderMasterDao,
@@ -226,7 +228,9 @@ class BillViewModel(
     }
 
 
-
+    fun getDoneItems(orderRef: String, orderType: String): Flow<List<PosKotItemEntity>> {
+        return kotItemDao.getDoneItemsForTable(orderRef)
+    }
 
 
 }

@@ -58,16 +58,6 @@ fun RightPanel(
     val printerManager = PrinterManager(context)
 
 
-//   val kitchenViewModel: KitchenViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
-//        key = "KitchenVM_${tableNo ?: orderType}",
-//        factory = KitchenViewModelFactory(
-//            application,
-//            tableId = tableNo ?: orderType,
-//            orderType = orderType,
-//            repository = repository
-//        )
-//    )
-
     val sessionId = cartViewModel.sessionKey.collectAsState().value ?: return
 
     val kitchenViewModel: KitchenViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
@@ -81,6 +71,15 @@ fun RightPanel(
         )
     )
 
+    val billViewModel: BillViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+        key = "BillVM_${tableNo ?: orderType}",
+        factory = BillViewModelFactory(
+            application = application,
+            tableId = tableNo ?: orderType,
+            orderType = orderType,
+
+            )
+    )
 
     //val orderRef = if (orderType == "DINE_IN") tableNo ?: "" else cartViewModel.sessionKey.value ?: ""
     val orderRef = if (orderType == "DINE_IN") tableNo ?: "" else orderType
@@ -89,10 +88,14 @@ fun RightPanel(
         .getPendingItems(orderRef = orderRef, orderType = orderType)
         .collectAsState(initial = null)
 
+    val BillItems by billViewModel
+        .getDoneItems(orderRef = orderRef, orderType = orderType)
+        .collectAsState(initial = null)
+
 
     val hasKitchenItems = kitchenItems?.isNotEmpty() == true
 
-
+    val hasBillItems = BillItems?.isNotEmpty() == true
 
 
     val cartItems: List<PosCartEntity> by
@@ -118,18 +121,13 @@ fun RightPanel(
         isDineIn && isRunning && cartItems.isEmpty()
 
     val canOpenBill =
-        when (orderType) {
+        hasBillItems && when (orderType) {
             "DINE_IN" -> isBillRequested
             "TAKEAWAY", "DELIVERY" -> true
             else -> false
         }
 
-//    val canOpenKitchen =
-//        when (orderType) {
-//            "DINE_IN" -> hasTable && (isRunning || isBillRequested)
-//            "TAKEAWAY", "DELIVERY" -> true
-//            else -> false
-//        }
+
 
     val canOpenKitchen =
         hasKitchenItems && when (orderType) {
@@ -156,13 +154,6 @@ fun RightPanel(
     ) {
 
         // ---------- ORDER INFO ----------
-        val prettyOrderType = when (orderType) {
-            "DINE_IN" -> "Dine In"
-            "DELIVERY" -> "Delivery"
-            "TAKEAWAY" -> "Takeaway"
-            else -> orderType
-        }
-
 
 
         if (isMobile) {
@@ -220,7 +211,7 @@ fun RightPanel(
                     )
 
                     // kitchenViewModel.deleteAllKotItems();
-                    //kitchenViewModel.logAllKotItems()
+                    kitchenViewModel.logAllKotItems()
 
                     kitchenViewModel.sendToKitchen(
                         orderType = orderType,
@@ -253,7 +244,7 @@ fun RightPanel(
 //                .padding(top = 12.dp),
 //            onClick = {
 //
-//               // kitchenViewModel.deleteAllKotItems()
+//              //  kitchenViewModel.deleteAllKotItems()
 //                kitchenViewModel.logAllKotItems()
 //            },
 //            colors = ButtonDefaults.buttonColors(

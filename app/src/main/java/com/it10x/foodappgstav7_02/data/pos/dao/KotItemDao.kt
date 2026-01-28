@@ -68,6 +68,13 @@ interface KotItemDao {
 """)
     fun getPendingItemsForTable(tableNo: String): Flow<List<PosKotItemEntity>>
 
+    @Query("""
+    SELECT * FROM pos_kot_items
+    WHERE tableNo = :tableNo
+      AND status = 'DONE'
+    ORDER BY createdAt ASC
+""")
+    fun getDoneItemsForTable(tableNo: String): Flow<List<PosKotItemEntity>>
 
     @Query("DELETE FROM pos_kot_items")
     suspend fun deleteAllKotItems()
@@ -157,6 +164,23 @@ AND status = 'PENDING'
     ORDER BY createdAt ASC
 """)
     suspend fun getUnprintedItems(tableNo: String): List<PosKotItemEntity>
+
+
+    @Query("""
+    SELECT COUNT(*) 
+    FROM pos_kot_items 
+    WHERE sessionId = :sessionId
+""")
+    suspend fun cartItemCount(sessionId: String): Int
+
+
+    @Query("""
+    SELECT EXISTS(
+        SELECT 1 FROM pos_kot_items WHERE sessionId = :sessionId
+    )
+""")
+    suspend fun hasCartItems(sessionId: String): Boolean
+
 
 
 }
