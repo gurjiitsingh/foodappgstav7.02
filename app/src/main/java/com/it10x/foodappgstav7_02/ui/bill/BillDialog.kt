@@ -15,6 +15,7 @@ import com.it10x.foodappgstav7_02.viewmodel.PosTableViewModel
 
 @Composable
 fun BillScreenDialog(
+    sessionId: String,
     tableId: String,
     orderType: String,
     tableViewModel: PosTableViewModel,
@@ -22,6 +23,13 @@ fun BillScreenDialog(
 
 ) {
     val context = LocalContext.current
+
+    val billingTitle = when (orderType) {
+        "DINE_IN" -> "Table ${tableId ?: ""}"
+        "TAKEAWAY" -> "Takeaway"
+        "DELIVERY" -> "Delivery"
+        else -> sessionId
+    }
 
     // ✅ Initialize dependencies
     val application = context.applicationContext as android.app.Application
@@ -31,7 +39,7 @@ fun BillScreenDialog(
 
     // ✅ Create ViewModel (stable per table)
     val viewModel: BillViewModel = viewModel(
-        key = "BillViewModel_$tableId",   // ensures unique VM per table
+        key = "BillViewModel_$sessionId",   // ensures unique VM per table
         factory = BillViewModelFactory(
             application = application,
             tableId = tableId,
@@ -48,7 +56,7 @@ fun BillScreenDialog(
                 Text("Close")
             }
         },
-        title = { Text(text = "Final Bill") },
+        title = { Text(text = "Final Bill: $billingTitle") },
         text = {
             BillScreen(
                 viewModel = viewModel,

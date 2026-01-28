@@ -30,6 +30,7 @@ import java.util.UUID
 class KitchenViewModel(
     app: Application,
     private val tableId: String,
+    private val sessionId: String,
     private val orderType: String,
     private val repository: POSOrdersRepository
 ) : AndroidViewModel(app) {
@@ -52,7 +53,7 @@ class KitchenViewModel(
 
     private val printerManager =
         PrinterManager(app.applicationContext)
-
+//USE SESSION ID TO FETCH DATA
     fun getKotItemsForTable(tableNo: String): StateFlow<List<PosKotItemEntity>> {
         val state = MutableStateFlow<List<PosKotItemEntity>>(emptyList())
 
@@ -191,7 +192,7 @@ class KitchenViewModel(
         deviceName: String?,
         appVersion: String?
     ) {
-        Log.d("KITCHEN_DEBUG4", " tableNo=$tableNo orderType=$orderType sessionId=$sessionId ")
+        Log.d("KITCHEN_DEBUG4", "sendToKitchen tableNo=$tableNo orderType=$orderType sessionId=$sessionId ")
         logAllKotItems()
         viewModelScope.launch {
             _loading.value = true
@@ -201,11 +202,12 @@ class KitchenViewModel(
        //     Log.d("KITCHEN_DEBUG", "Resolved sessionKey=$sessionKey")
 
             // ✅ FIX: Use sessionKey (for takeaway & delivery)
-            val cartList = repository.getCartItems(sessionKey, orderType).first()
+            //val cartList = repository.getCartItems(sessionKey, orderType).first()
+            val cartList = repository.getCartItems(sessionKey).first()
             //Log.d("KITCHEN_DEBUG", "Cart fetched for type=$orderType, sessionKey=$sessionKey, size=${cartList.size}")
 
             if (cartList.isEmpty()) {
-              //  Log.w("KITCHEN_DEBUG", "⚠️ No new items found for orderType=$orderType (sessionKey=$sessionKey)")
+                Log.w("KITCHEN_DEBUG4", "⚠️ No new items found for orderType=$orderType (sessionKey=$sessionKey)")
                 _loading.value = false
                 return@launch
             }
@@ -214,10 +216,11 @@ class KitchenViewModel(
                 val now = System.currentTimeMillis()
                 val orderId = UUID.randomUUID().toString()
 
-                Log.d("KOT_STEP", "Creating new KOT batchId=$orderId for $orderType")
+                Log.d("KITCHEN_DEBUG4", "Creating new KOT batchId=$orderId for $orderType")
 
                 val kotSaved = saveKotOnly(
                     orderType = orderType,
+                    sessionId = sessionId,
                     tableNo = tableNo,
                     cartItems = cartList,
                     deviceId = deviceId,
@@ -226,11 +229,11 @@ class KitchenViewModel(
                 )
 
                 if (!kotSaved) {
-                //    Log.e("KITCHEN_DEBUG", "❌ saveKotOnly() failed for session=$sessionKey")
+                   Log.e("KITCHEN_DEBUG4", "❌ saveKotOnly() failed for session=$sessionKey")
                     return@launch
                 }
 
-              //  Log.d("KITCHEN_DEBUG", "✅ KOT saved successfully (${cartList.size} items)")
+                Log.d("KITCHEN_DEBUG4", "✅ KOT saved successfully (${cartList.size} items)")
 
                 // ✅ FIX: clear by sessionKey (not tableNo)
               //  Log.d("KITCHEN_DEBUG", "Clearing cart for sessionKey=$sessionKey")
@@ -248,6 +251,7 @@ class KitchenViewModel(
 
     private suspend fun saveKotOnly(
         orderType: String,
+        sessionId: String,
         tableNo: String?,
         cartItems: List<PosCartEntity>,
         deviceId: String,
@@ -265,6 +269,7 @@ class KitchenViewModel(
             //  Log.d("KOT_STEP", "Marked ${items.size} items as sent to kitchen")
             val batch = PosKotBatchEntity(
                 id = batchId,
+                sessionId = sessionId,
                 tableNo = tableNo ?: orderType,
                 orderType = orderType,
                 deviceId = deviceId,
@@ -282,6 +287,7 @@ class KitchenViewModel(
                 val items = cartItems.map { cart ->
                     PosKotItemEntity(
                         id = UUID.randomUUID().toString(),
+                        sessionId = sessionId,
                         kotBatchId = batchId,
                         tableNo = tableNo ?: orderType,
                         productId = cart.productId,

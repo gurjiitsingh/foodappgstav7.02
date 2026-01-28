@@ -50,10 +50,11 @@ interface CartDao {
     suspend fun markAllSent(sessionId: String)
 
 
-    @Query("SELECT * FROM cart WHERE tableId = :tableId ORDER BY createdAt ASC")
-    fun getCartForTable(tableId: String?): Flow<List<PosCartEntity>>
+    @Query("SELECT * FROM cart WHERE sessionId = :sessionId ORDER BY createdAt ASC")
+    fun getCartForTable(sessionId: String?): Flow<List<PosCartEntity>>
 
-
+    @Query("SELECT * FROM cart WHERE sessionId = :sessionId")
+    fun getCartBySessionId(sessionId: String): Flow<List<PosCartEntity>>
 
     @Query("SELECT * FROM cart WHERE productId = :id AND tableId = :tableId LIMIT 1")
     suspend fun getByIdForTable(id: String, tableId: String): PosCartEntity?

@@ -24,11 +24,13 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun KitchenScreen(
+    sessionId: String,
     tableNo: String,
     orderType: String, // ✅ ADD THIS
     viewModel: KitchenViewModel,
     onKitchenEmpty: () -> Unit
 ) {
+    //MODIFY TO FIND BY SESSION ID
     val items by viewModel.getPendingItems(tableNo, orderType).collectAsState(initial = null)
 
     // ✅ Only run close check AFTER we actually received a list from DB

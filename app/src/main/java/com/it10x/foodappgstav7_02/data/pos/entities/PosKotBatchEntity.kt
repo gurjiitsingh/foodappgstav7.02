@@ -16,7 +16,7 @@ data class PosKotBatchEntity(
 
     @PrimaryKey
     val id: String,                // UUID (one per Send to Kitchen)
-
+    val sessionId: String,
     val tableNo: String?,          // DINE_IN
     val orderType: String,         // DINE_IN | TAKEAWAY | DELIVERY
 

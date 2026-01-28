@@ -61,8 +61,13 @@ fun PosScreen(
 
     val configuration = LocalConfiguration.current
     val isPhone = configuration.screenWidthDp < 600
-    val tableId by posSessionViewModel.tableId.collectAsState()
+
     var orderType by remember { mutableStateOf("DINE_IN") }
+
+    val sessionId by cartViewModel.sessionKey.collectAsState()
+    val tableId by posSessionViewModel.tableId.collectAsState()
+
+
     val repository = POSOrdersRepository(
         db = db,
         orderMasterDao = db.orderMasterDao(),
@@ -436,15 +441,21 @@ fun PosScreen(
     }
 
     // ================= KITCHEN POPUP =================
-    if (showKitchen) {
-        val kitchenKey by cartViewModel.sessionKey.collectAsState()
-
+    if (showKitchen && sessionId != null) {
+      //  val kitchenKey by cartViewModel.sessionKey.collectAsState()
+        val kitchenTitle = when (orderType) {
+            "DINE_IN" -> "Table ${tableId ?: ""}"
+            "TAKEAWAY" -> "Takeaway"
+            "DELIVERY" -> "Delivery"
+            else -> sessionId
+        }
 
         val kitchenViewModel: KitchenViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
-            key = "KitchenVM_${kitchenKey ?: orderType}",
+            key = "KitchenVM_${sessionId ?: orderType}",
             factory = KitchenViewModelFactory(
                 app = LocalContext.current.applicationContext as android.app.Application,
-                tableId = kitchenKey ?: orderType,
+                tableId = tableId ?: orderType,
+                sessionId = sessionId!!,
                 orderType = orderType,
                 repository = repository
             )
@@ -456,10 +467,13 @@ fun PosScreen(
             dismissButton = {
                 TextButton(onClick = { showKitchen = false }) { Text("Close") }
             },
-            title = { Text("Kitchen – $kitchenKey") },
+            title = {
+                Text("Kitchen – $kitchenTitle")
+            },
             text = {
                 KitchenScreen(
-                    tableNo = kitchenKey!!,
+                    sessionId = sessionId!!,   // for DB / logic
+                    tableNo = tableId ?: orderType, // for UI / print
                     viewModel = kitchenViewModel,
                     onKitchenEmpty = {
                         // ✅ Close popup automatically when no items
@@ -474,8 +488,10 @@ fun PosScreen(
 
 
 // ================= BILL POPUP =================
-    val billingKey by cartViewModel.sessionKey.collectAsState()
-    if (showBill && billingKey != null) {
+  //  val billingKey by cartViewModel.sessionKey.collectAsState()
+    if (showBill && sessionId != null) {
+
+
         AlertDialog(
             onDismissRequest = { showBill = false },
             confirmButton = {},
@@ -485,11 +501,12 @@ fun PosScreen(
                 }
             },
             title = {
-                Text("Billing – $billingKey")
+                Text("Billing")
             },
             text = {
                 BillScreenDialog(
-                    tableId = billingKey!!,   // 🔑 KEY FIX
+                    sessionId = sessionId!!,   // for DB / logic
+                    tableId = tableId ?: orderType, // for UI / print // 🔑 KEY FIX
                     tableViewModel = tableVm,
                     onClose = { showBill = false },
                     orderType = orderType,

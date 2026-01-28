@@ -58,15 +58,29 @@ fun RightPanel(
     val printerManager = PrinterManager(context)
 
 
-   val kitchenViewModel: KitchenViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
-        key = "KitchenVM_${tableNo ?: orderType}",
+//   val kitchenViewModel: KitchenViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+//        key = "KitchenVM_${tableNo ?: orderType}",
+//        factory = KitchenViewModelFactory(
+//            application,
+//            tableId = tableNo ?: orderType,
+//            orderType = orderType,
+//            repository = repository
+//        )
+//    )
+
+    val sessionId = cartViewModel.sessionKey.collectAsState().value ?: return
+
+    val kitchenViewModel: KitchenViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+        key = "KitchenVM_$sessionId",
         factory = KitchenViewModelFactory(
             application,
             tableId = tableNo ?: orderType,
+            sessionId = sessionId,
             orderType = orderType,
             repository = repository
         )
     )
+
 
     //val orderRef = if (orderType == "DINE_IN") tableNo ?: "" else cartViewModel.sessionKey.value ?: ""
     val orderRef = if (orderType == "DINE_IN") tableNo ?: "" else orderType
@@ -206,12 +220,12 @@ fun RightPanel(
                     )
 
                     // kitchenViewModel.deleteAllKotItems();
-                    kitchenViewModel.logAllKotItems()
+                    //kitchenViewModel.logAllKotItems()
 
                     kitchenViewModel.sendToKitchen(
                         orderType = orderType,
                         tableNo = tableNo,
-                        sessionId = cartViewModel.sessionKey.value!!,
+                        sessionId = sessionId,
                         paymentType = "UNPAID",
                         deviceId = deviceId,
                         deviceName = Build.MODEL ?: "Unknown Device",

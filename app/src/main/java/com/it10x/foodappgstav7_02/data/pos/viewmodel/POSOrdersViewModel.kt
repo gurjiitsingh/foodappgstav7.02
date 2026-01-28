@@ -125,7 +125,7 @@ if(role == "bill") {
 
             //KITCHEN PRINT ONLINE ORDER WHEN BUTTON PRESSED
             if(role == "kitchen") {
-                val kotItems = PosOrderToKotMapper.toKotItems(items)
+                val kotItems = PosOrderToKotMapper.toKotItems(items )
 
                 printerManager.printTextKitchen(
                     PrinterRole.KITCHEN,
@@ -227,84 +227,84 @@ if(role == "bill") {
 
 
 
-    private suspend fun saveKotOnly(
-        orderType: String,
-        tableNo: String?,
-        cartItems: List<PosCartEntity>,
-        deviceId: String,
-        deviceName: String?,
-        appVersion: String?
-    ): Boolean {
-        return try {
-            val db = AppDatabaseProvider.get(printerManager.appContext())
-            val kotBatchDao = db.kotBatchDao()
-            val kotItemDao = db.kotItemDao()
+//    private suspend fun saveKotOnly(
+//        orderType: String,
+//        tableNo: String?,
+//        cartItems: List<PosCartEntity>,
+//        deviceId: String,
+//        deviceName: String?,
+//        appVersion: String?
+//    ): Boolean {
+//        return try {
+//            val db = AppDatabaseProvider.get(printerManager.appContext())
+//            val kotBatchDao = db.kotBatchDao()
+//            val kotItemDao = db.kotItemDao()
+//
+//            val batchId = UUID.randomUUID().toString()
+//            val now = System.currentTimeMillis()
+//            repository.markAllSent(tableNo ?: orderType)
+//          //  Log.d("KOT_STEP", "Marked ${items.size} items as sent to kitchen")
+//            val batch = PosKotBatchEntity(
+//                id = batchId,
+//                tableNo = tableNo ?: orderType,
+//                orderType = orderType,
+//                deviceId = deviceId,
+//                deviceName = deviceName,
+//                appVersion = appVersion,
+//                createdAt = now,
+//                sentBy = null,
+//                syncStatus = "PENDING",
+//                lastSyncedAt = null
+//            )
+//
+//            withContext(Dispatchers.IO) {
+//                kotBatchDao.insert(batch)
+//                Log.d("KOT_DEBUG", "Saved ${cartItems.size} KOT items for tableNo=${tableNo ?: orderType}")
+//                val items = cartItems.map { cart ->
+//                    PosKotItemEntity(
+//                        id = UUID.randomUUID().toString(),
+//                        kotBatchId = batchId,
+//                        tableNo = tableNo ?: orderType,
+//                        productId = cart.productId,
+//                        name = cart.name,
+//                        categoryId = cart.categoryId,
+//                        parentId = cart.parentId,
+//                        isVariant = cart.isVariant,
+//                        basePrice = cart.basePrice,
+//                        quantity = cart.quantity,
+//                        taxRate = cart.taxRate,
+//                        taxType = cart.taxType,
+//                        isPrinted = false,
+//                        status = "PENDING",   // ✅ REQUIRED
+//                        createdAt = now
+//                    )
+//                }
+//
+//                kotItemDao.insertAll(items)
+//            }
+//
+//            Log.d("KOT", "✅ KOT SAVED: batch=$batchId items=${cartItems.size}")
+//            true
+//
+//        } catch (e: Exception) {
+//            Log.e("KOT", "❌ Failed to save KOT", e)
+//            false
+//        }
+//    }
 
-            val batchId = UUID.randomUUID().toString()
-            val now = System.currentTimeMillis()
-            repository.markAllSent(tableNo ?: orderType)
-          //  Log.d("KOT_STEP", "Marked ${items.size} items as sent to kitchen")
-            val batch = PosKotBatchEntity(
-                id = batchId,
-                tableNo = tableNo ?: orderType,
-                orderType = orderType,
-                deviceId = deviceId,
-                deviceName = deviceName,
-                appVersion = appVersion,
-                createdAt = now,
-                sentBy = null,
-                syncStatus = "PENDING",
-                lastSyncedAt = null
-            )
-
-            withContext(Dispatchers.IO) {
-                kotBatchDao.insert(batch)
-                Log.d("KOT_DEBUG", "Saved ${cartItems.size} KOT items for tableNo=${tableNo ?: orderType}")
-                val items = cartItems.map { cart ->
-                    PosKotItemEntity(
-                        id = UUID.randomUUID().toString(),
-                        kotBatchId = batchId,
-                        tableNo = tableNo ?: orderType,
-                        productId = cart.productId,
-                        name = cart.name,
-                        categoryId = cart.categoryId,
-                        parentId = cart.parentId,
-                        isVariant = cart.isVariant,
-                        basePrice = cart.basePrice,
-                        quantity = cart.quantity,
-                        taxRate = cart.taxRate,
-                        taxType = cart.taxType,
-                        isPrinted = false,
-                        status = "PENDING",   // ✅ REQUIRED
-                        createdAt = now
-                    )
-                }
-
-                kotItemDao.insertAll(items)
-            }
-
-            Log.d("KOT", "✅ KOT SAVED: batch=$batchId items=${cartItems.size}")
-            true
-
-        } catch (e: Exception) {
-            Log.e("KOT", "❌ Failed to save KOT", e)
-            false
-        }
-    }
-
-    fun debugReadKot(tableNo: String) {
-        viewModelScope.launch {
-            val db = AppDatabaseProvider.get(printerManager.appContext())
-            val batches = db.kotBatchDao().getBatchesForTable(tableNo).first()
-            val items = db.kotItemDao().getItemsForTable(tableNo).first()
-
-            Log.d("KOT_READ", "Batches=${batches.size}")
-            Log.d("KOT_READ", "Items=${items.size}")
-
-            items.forEach {
-                Log.d("KOT_ITEM", "${it.name} x${it.quantity}")
-            }
-        }
-    }
+//    fun debugReadKot(tableNo: String) {
+//        viewModelScope.launch {
+//            val db = AppDatabaseProvider.get(printerManager.appContext())
+//            val batches = db.kotBatchDao().getBatchesForTable(tableNo).first()
+//            val items = db.kotItemDao().getItemsForTable(tableNo).first()
+//
+//            Log.d("KOT_READ", "Batches=${batches.size}")
+//            Log.d("KOT_READ", "Items=${items.size}")
+//
+//            items.forEach {
+//                Log.d("KOT_ITEM", "${it.name} x${it.quantity}")
+//            }
+//        }
+//    }
 
 }

@@ -8,6 +8,7 @@ import androidx.room.PrimaryKey
     tableName = "pos_kot_items",
     indices = [
         Index(value = ["kotBatchId"]),
+        Index(value = ["sessionId"]),   // ✅ MOST IMPORTANT
         Index(value = ["tableNo"]),
         Index(value = ["productId"])
     ]
@@ -16,8 +17,10 @@ data class PosKotItemEntity(
     @PrimaryKey
     val id: String,
 
+    val sessionId: String?,             // ✅ ADD THIS
     val kotBatchId: String,
-    val tableNo: String?,
+
+    val tableNo: String?,              // UI / print only
 
     val productId: String,
     val name: String,
@@ -32,9 +35,8 @@ data class PosKotItemEntity(
     val taxRate: Double,
     val taxType: String,
 
-    val status: String,
-
-    val isPrinted: Boolean,   // ✅ ADD ONLY THIS
+    val status: String,                // PENDING / DONE
+    val isPrinted: Boolean,
 
     val createdAt: Long
 )

@@ -39,15 +39,19 @@ class POSOrdersRepository(
     // -------------------------
     // CART (per table/session)
     // -------------------------
-    fun getCartItems(tableId: String?, orderType: String): Flow<List<PosCartEntity>> {
-        return if (orderType == "DINE_IN" && tableId != null) {
-            cartDao.getCartForTable(tableId)
-        } else {
-            // Takeaway or Delivery uses sessionId prefix
-            val prefix = "${orderType}-"
-            cartDao.getCartForSessionPrefix(prefix)
-        }
+
+    fun getCartItems(sessionId: String): Flow<List<PosCartEntity>> {
+        return cartDao.getCartBySessionId(sessionId)
     }
+//    fun getCartItems(sessionId: String?, orderType: String): Flow<List<PosCartEntity>> {
+//        return if (orderType == "DINE_IN" && sessionId != null) {
+//            cartDao.getCartForTable(sessionId)
+//        } else {
+//            // Takeaway or Delivery uses sessionId prefix
+//            val prefix = "${orderType}-"
+//            cartDao.getCartForSessionPrefix(prefix)
+//        }
+//    }
 
     fun getUnsentItems(tableId: String): Flow<List<PosCartEntity>> =
         cartDao.getUnsentItems(tableId)

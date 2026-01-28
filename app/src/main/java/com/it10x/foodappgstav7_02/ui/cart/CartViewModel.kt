@@ -76,7 +76,7 @@ class CartViewModel(
         viewModelScope.launch {
 
             if (sessionId.value.isNullOrBlank()) {
-                // 🔑 auto-create fallback session
+                _uiEvent.emit(CartUiEvent.SessionRequired)
                 initSession(currentOrderType.value, currentTableId.value)
             }
 
@@ -98,10 +98,12 @@ class CartViewModel(
     fun increase(item: PosCartEntity) {
         if (!canMutateCart()) return
 
+        val sid = sessionId.value ?: return
+
         viewModelScope.launch {
             repository.addToCart(
                 item.copy(
-                    sessionId = sessionId.value!!,
+                    sessionId = sid,
                     tableId = currentTableId.value
                 )
             )
@@ -119,14 +121,25 @@ class CartViewModel(
     }
 
 
+//    fun clear() {
+//        sessionId.value?.let { sid ->
+//            viewModelScope.launch {
+//                repository.clear(sid)
+//            }
+//        }
+//    }
+
     fun clear() {
-        sessionId.value?.let { sid ->
-            viewModelScope.launch {
-                repository.clear(sid)
-            }
+        val sid = sessionId.value ?: return
+
+        viewModelScope.launch {
+            // 🧹 clear cart items
+            repository.clear(sid)
+
+            // 🔑 reset session
+            savedStateHandle["sessionId"] = null
         }
     }
-
     fun initSession(orderType: String, tableId: String? = null) {
 
         // ✅ Keep existing session if orderType/table didn't change
@@ -139,16 +152,21 @@ class CartViewModel(
         }
 
         val sid = when (orderType) {
-            "DINE_IN" -> tableId  // sessionKey = tableId
-            "TAKEAWAY" -> "TAKEAWAY-${System.currentTimeMillis()}" // always new session
-            "DELIVERY" -> "DELIVERY-${System.currentTimeMillis()}" // always new session
-            else -> null
+            "DINE_IN" -> {
+                if (tableId.isNullOrBlank()) return
+                "DINEIN-${tableId}-${System.currentTimeMillis()}"
+            }
+            "TAKEAWAY" -> "TAKEAWAY-${System.currentTimeMillis()}"
+            "DELIVERY" -> "DELIVERY-${System.currentTimeMillis()}"
+            else -> return
         }
 
         // ✅ save sessionKey
         savedStateHandle["orderType"] = orderType
         savedStateHandle["tableId"] = tableId
         savedStateHandle["sessionId"] = sid
+
+
     }
 
 

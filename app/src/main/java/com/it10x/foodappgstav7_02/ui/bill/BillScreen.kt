@@ -61,8 +61,7 @@ fun BillScreen(
             .padding(16.dp)
     ) {
 
-        Text("Final Bill", style = MaterialTheme.typography.headlineSmall)
-        Spacer(Modifier.height(12.dp))
+
 
         // ---------------- ITEMS ----------------
         LazyColumn(modifier = Modifier.weight(1f)) {
