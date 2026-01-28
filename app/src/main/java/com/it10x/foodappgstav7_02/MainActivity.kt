@@ -237,6 +237,27 @@ class MainActivity : ComponentActivity() {
                                 .padding(bottom = 4.dp),
                             thickness = 0.5.dp
                         )
+                        NavigationDrawerItem(
+                            label = { Text("Advanced Settings") },
+                            selected = false,
+                            onClick = {
+                                scope.launch { drawerState.close() }
+                                navController.navigate("advanced_settings")
+                            }
+                        )
+
+                        Divider(
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp)
+                                .padding(bottom = 4.dp),
+                            thickness = 0.5.dp
+                        )
+
+
+
+
+
+
                     }
 
 

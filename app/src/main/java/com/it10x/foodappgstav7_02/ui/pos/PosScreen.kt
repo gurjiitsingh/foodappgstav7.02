@@ -403,7 +403,8 @@ fun PosScreen(
         }
 
         // ---------- MOBILE CART FAB ----------
-        if (isPhone && cartCount > 0) {
+//        if (isPhone && cartCount > 0) {
+        if (isPhone) {
             FloatingCartButton(
                 count = cartCount,
                 onClick = { showCartSheet = true },

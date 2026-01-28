@@ -297,7 +297,9 @@ fun NavigationHost(
             )
         }
 
-        // ---------------- FINAL BILL ----------------
+        composable("advanced_settings") {
+            AdvancedSettingsScreen()
+        }
 
 
 

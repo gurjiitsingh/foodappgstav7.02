@@ -22,4 +22,10 @@ object ClientIdStore {
     fun get(context: Context): String? = runBlocking {
         context.dataStore.data.first()[KEY_CLIENT_ID]
     }
+
+    fun clear(context: Context) = runBlocking {
+        context.dataStore.edit {
+            it.remove(KEY_CLIENT_ID)
+        }
+    }
 }
