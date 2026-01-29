@@ -229,19 +229,19 @@ class KitchenViewModel(
                 )
 
                 if (!kotSaved) {
-                   Log.e("KITCHEN_DEBUG4", "❌ saveKotOnly() failed for session=$sessionKey")
+                   Log.e("KITCHEN_DEBUG4", " saveKotOnly() failed for session=$sessionKey")
                     return@launch
                 }
 
-                Log.d("KITCHEN_DEBUG4", "✅ KOT saved successfully (${cartList.size} items)")
+                Log.d("KITCHEN_DEBUG4", " KOT saved successfully (${cartList.size} items)")
 
-                // ✅ FIX: clear by sessionKey (not tableNo)
+                //  FIX: clear by sessionKey (not tableNo)
               //  Log.d("KITCHEN_DEBUG", "Clearing cart for sessionKey=$sessionKey")
                 repository.clearCart(orderType, sessionKey)
-              //  Log.d("KITCHEN_DEBUG", "✅ Cart cleared for sessionKey=$sessionKey")
+              //  Log.d("KITCHEN_DEBUG", " Cart cleared for sessionKey=$sessionKey")
 
             } catch (e: Exception) {
-              //  Log.e("KITCHEN_DEBUG", "💥 Exception during placeOrder()", e)
+              //  Log.e("KITCHEN_DEBUG", " Exception during placeOrder()", e)
             } finally {
                 _loading.value = false
             }

@@ -66,12 +66,14 @@ fun BillScreen(
         // ---------------- ITEMS ----------------
         LazyColumn(modifier = Modifier.weight(1f)) {
             items(state.items) { item ->
+           //     val totalItem = item.quantity * item.
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text("${item.quantity} x ${item.name}")
-                    Text("₹%.2f".format(item.finalTotal))
+                    Text("₹%.2f".format(item.itemtotal)) // ONLY qty × price
+                    //Text("₹%.2f".format(item.finalTotal))
                 }
             }
         }

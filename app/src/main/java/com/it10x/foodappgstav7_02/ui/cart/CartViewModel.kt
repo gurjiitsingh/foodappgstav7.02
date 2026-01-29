@@ -121,13 +121,6 @@ class CartViewModel(
     }
 
 
-//    fun clear() {
-//        sessionId.value?.let { sid ->
-//            viewModelScope.launch {
-//                repository.clear(sid)
-//            }
-//        }
-//    }
 
     fun clear() {
         val sid = sessionId.value ?: return

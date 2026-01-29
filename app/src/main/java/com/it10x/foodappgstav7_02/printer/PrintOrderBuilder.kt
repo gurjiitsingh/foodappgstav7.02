@@ -20,8 +20,8 @@ object PrintOrderBuilder {
             PrintItem(
                 name = item.name,
                 quantity = item.quantity,
-                price = item.finalPricePerItem,
-                subtotal = item.finalTotal
+                price = item.basePrice,
+                subtotal = item.itemSubtotal
             )
         }
 

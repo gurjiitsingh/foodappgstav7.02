@@ -67,6 +67,7 @@ class BillViewModel(
     // --------------------------------------------------------
     // Observe Bill (Live billing snapshot)
     // --------------------------------------------------------
+
     private fun observeBill() {
         viewModelScope.launch {
             kotItemDao.getItemsForTable(tableId).collectLatest { kotItems ->
@@ -76,24 +77,29 @@ class BillViewModel(
                     .groupBy { it.productId }
                     .map { (_, group) ->
                         val first = group.first()
+
                         val quantity = group.sumOf { it.quantity }
-                        val subtotal = group.sumOf { it.basePrice * it.quantity }
+
+                        val itemTotal = first.basePrice * quantity
+
                         val taxTotal = group.sumOf {
                             if (it.taxType == "exclusive")
                                 it.basePrice * it.quantity * (it.taxRate / 100)
                             else 0.0
                         }
+
                         BillingItemUi(
                             id = first.productId,
                             name = first.name,
+                            basePrice = first.basePrice,   // ✅ ONE item price
                             quantity = quantity,
-                            subtotal = subtotal,
-                            taxTotal = taxTotal,
-                            finalTotal = subtotal + taxTotal
+                            itemtotal = itemTotal,         // ✅ qty × price
+                            taxTotal = taxTotal,           // ✅ per-item tax
+                            finalTotal = itemTotal + taxTotal
                         )
                     }
 
-                val subtotal = billingItems.sumOf { it.subtotal }
+                val subtotal = billingItems.sumOf { it.itemtotal }
                 val tax = billingItems.sumOf { it.taxTotal }
 
                 _uiState.value = BillUiState(
@@ -107,6 +113,51 @@ class BillViewModel(
         }
     }
 
+
+
+
+    //    private fun observeBill() {
+//        viewModelScope.launch {
+//            kotItemDao.getItemsForTable(tableId).collectLatest { kotItems ->
+//                val doneItems = kotItems.filter { it.status == "DONE" }
+//
+//                val billingItems = doneItems
+//                    .groupBy { it.productId }
+//                    .map { (_, group) ->
+//                        val first = group.first()
+//                        val quantity = group.sumOf { it.quantity }
+//                        val basePrice = group.sumOf { it.basePrice }
+//                        val itemtotal = group.sumOf { it.basePrice * it.quantity }
+//                        val taxTotal = group.sumOf {
+//                            if (it.taxType == "exclusive")
+//                                it.basePrice * it.quantity * (it.taxRate / 100)
+//                            else 0.0
+//                        }
+//                        BillingItemUi(
+//                            id = first.productId,
+//                            name = first.name,
+//                            basePrice = basePrice,
+//                            quantity = quantity,
+//                            itemtotal = itemtotal,
+//                            taxTotal = taxTotal,
+//                            finalTotal = itemtotal + taxTotal
+//                        )
+//                    }
+//
+//                val subtotal = billingItems.sumOf { it.itemtotal }
+//                val tax = billingItems.sumOf { it.taxTotal }
+//
+//                _uiState.value = BillUiState(
+//                    loading = false,
+//                    items = billingItems,
+//                    subtotal = subtotal,
+//                    tax = tax,
+//                    total = subtotal + tax
+//                )
+//            }
+//        }
+//    }
+//
     // --------------------------------------------------------
     // Payment + Order Creation
     // --------------------------------------------------------

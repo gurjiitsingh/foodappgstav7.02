@@ -94,7 +94,7 @@ fun KitchenScreen(
                         .padding(12.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("${item.name} x${item.quantity}")
+                    Text("${item.quantity} ${item.name}  ${item.basePrice}")
 
                     Row {
                         Button(
