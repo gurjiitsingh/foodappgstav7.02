@@ -439,13 +439,17 @@ Thank You!
     private fun buildOutletHeader(info: OutletInfo, width: Int): String {
         val lines = mutableListOf<String>()
         if (info.name.isNotBlank()) lines += centerText(info.name, width)
-        if (info.addressLine1.isNotBlank()) lines += info.addressLine1.take(width)
+        info.addressLine1
+            ?.takeIf { it.isNotBlank() }
+            ?.let { address ->
+                lines += address.take(width)
+            }
        if(width==32){
             info.addressLine2?.let { lines += it.take(width) }
             info.addressLine3?.let { lines += it.take(width) }
             info.city?.let { lines += it.take(width) }
             info.phone?.let { lines += "Phone: $it" }
-           info.phone2?.let { lines += ", $it" }
+           info.phone2?.let { lines += " $it" }
             info.email?.let { lines += "Email: $it" }
             info.web?.let { lines += "Web: $it" }
             info.gst?.let { lines += "GST: $it" }

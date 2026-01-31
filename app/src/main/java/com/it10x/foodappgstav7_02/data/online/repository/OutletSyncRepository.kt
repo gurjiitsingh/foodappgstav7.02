@@ -69,7 +69,9 @@ class OutletSyncRepository(
             footerNote = data["footerNote"] as? String,
 
             // ---------- STATUS ----------
-            isActive = data["isActive"] as? Boolean ?: true
+            isActive = data["isActive"] as? Boolean ?: true,
+            // ---------- NEW: DEFAULT CURRENCY ----------
+            defaultCurrency = data["defaultCurrency"] as? String ?: "₹"
         )
 
         Log.d(

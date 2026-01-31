@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.it10x.foodappgstav7_02.data.pos.AppDatabaseProvider
 import com.it10x.foodappgstav7_02.data.pos.repository.OrderSequenceRepository
+import com.it10x.foodappgstav7_02.data.pos.repository.OutletRepository
 import com.it10x.foodappgstav7_02.data.pos.repository.POSOrdersRepository
 import com.it10x.foodappgstav7_02.printer.PrinterManager
 
@@ -45,8 +46,9 @@ class BillViewModelFactory(
                 tableId = tableId,
                 orderType = orderType,
                 repository = repository,              // ✅ Proper repository instance
-                printerManager = printerManager       // ✅ Printer manager instance
-            ) as T
+                printerManager = printerManager,       // ✅ Printer manager instance
+                outletRepository = OutletRepository(db.outletDao())
+                ) as T
         }
 
         throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")

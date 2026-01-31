@@ -184,7 +184,7 @@ class PrinterManager(
 
         Log.d(
             "PRINT_NEW",
-            "Printer type=${config.type}, size=$pageSize, bluetooth=${config.bluetoothAddress}, ip=${config.ip}"
+            "${info.defaultCurrency} Printer type=${config.type}, size=$pageSize, bluetooth=${config.bluetoothAddress}, ip=${config.ip}, "
         )
 
         // ✅ Printing logic (kept same as before)

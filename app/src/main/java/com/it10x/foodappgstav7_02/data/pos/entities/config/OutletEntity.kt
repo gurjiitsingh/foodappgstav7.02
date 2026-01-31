@@ -21,6 +21,7 @@ data class OutletEntity(
     val country: String?,
 
     // ---------- TAX ----------
+    val defaultCurrency: String?,
     val taxType: String?,
     val gstVatNumber: String?,
 

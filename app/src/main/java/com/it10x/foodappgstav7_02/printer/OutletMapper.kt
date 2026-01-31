@@ -21,6 +21,7 @@ object OutletMapper {
                 email = it.email?.takeIf { it.isNotBlank() },
                 web = it.web?.takeIf { it.isNotBlank() },
                 gst = it.gstVatNumber?.takeIf { it.isNotBlank() },
+                defaultCurrency = it.defaultCurrency?.takeIf { it.isNotBlank() } ?: "₹",
                 footerNote = it.footerNote?.takeIf { it.isNotBlank() }
             )
         } ?: OutletInfo(name = "FOOD APP")

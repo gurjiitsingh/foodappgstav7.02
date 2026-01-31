@@ -94,8 +94,8 @@ fun KitchenScreen(
                         .padding(12.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("${item.quantity} ${item.name}  ${item.basePrice}")
-
+                 //  Text("${item.quantity} ${item.name}  ${item.basePrice}")
+                    Text("${item.quantity} ${item.name}")
                     Row {
                         Button(
                             onClick = { viewModel.markCancelled(item.id) },

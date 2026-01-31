@@ -15,6 +15,7 @@ import com.it10x.foodappgstav7_02.data.pos.entities.PosKotItemEntity
 import com.it10x.foodappgstav7_02.data.pos.entities.PosOrderItemEntity
 import com.it10x.foodappgstav7_02.data.pos.entities.PosOrderMasterEntity
 import com.it10x.foodappgstav7_02.data.pos.repository.OrderSequenceRepository
+import com.it10x.foodappgstav7_02.data.pos.repository.OutletRepository
 import com.it10x.foodappgstav7_02.data.pos.repository.POSOrdersRepository
 import com.it10x.foodappgstav7_02.printer.PrintOrderBuilder
 import com.it10x.foodappgstav7_02.printer.PrinterManager
@@ -41,7 +42,8 @@ class BillViewModel(
     private val tableId: String,
     private val orderType: String,
     private val repository: POSOrdersRepository,
-    private val printerManager: PrinterManager
+    private val printerManager: PrinterManager,
+    private val outletRepository: OutletRepository
 ) : ViewModel() {
 
     // --------------------------------------------------------
@@ -55,6 +57,10 @@ class BillViewModel(
     private val _uiState = MutableStateFlow(BillUiState(loading = true))
     val uiState: StateFlow<BillUiState> = _uiState
 
+    private val _currencySymbol = MutableStateFlow("₹") // fallback
+    val currencySymbol: StateFlow<String> = _currencySymbol
+
+  //  val outletInfo: StateFlow<OutletInfo> = outletRepository.outletInfo
     // ✅ Expose orderType safely for Compose UI
     val orderTypePublic: String
         get() = orderType
@@ -62,6 +68,7 @@ class BillViewModel(
     init {
         Log.d("BILL_INIT", "Initialized | table=$tableId")
         observeBill()
+        loadCurrency()
     }
 
     // --------------------------------------------------------
@@ -114,7 +121,12 @@ class BillViewModel(
     }
 
 
-
+    private fun loadCurrency() {
+        viewModelScope.launch {
+            val outletInfo = outletRepository.getOutletInfo()
+            _currencySymbol.value = outletInfo.defaultCurrency
+        }
+    }
 
     //    private fun observeBill() {
 //        viewModelScope.launch {

@@ -37,7 +37,7 @@ fun BillScreen(
     onPayClick: (PaymentType) -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
-
+    val currency by viewModel.currencySymbol.collectAsState()
     val deliveryAddressState = remember {
         mutableStateOf(DeliveryAddressUiState())
     }
@@ -72,7 +72,8 @@ fun BillScreen(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text("${item.quantity} x ${item.name}")
-                    Text("₹%.2f".format(item.itemtotal)) // ONLY qty × price
+
+                    Text("$currency%.2f ".format(item.itemtotal))// ONLY qty × price
                     //Text("₹%.2f".format(item.finalTotal))
                 }
             }
@@ -80,9 +81,12 @@ fun BillScreen(
 
         Divider()
 
-        BillRow("Sub Total", state.subtotal)
-        BillRow("Tax", state.tax)
-        BillRow("Grand Total", state.total, bold = true)
+//        BillRow("Sub Total", state.subtotal)
+//        BillRow("Tax", state.tax)
+//        BillRow("Grand Total", state.total, bold = true)
+        BillRow("Sub Total", state.subtotal, currency)
+        BillRow("Tax", state.tax, currency)
+        BillRow("Grand Total", state.total, currency, bold = true)
 
         Spacer(Modifier.height(12.dp))
 
@@ -185,14 +189,14 @@ private fun isAddressValid(
 // UI COMPONENTS
 // =====================================================
 @Composable
-private fun BillRow(label: String, value: Double, bold: Boolean = false) {
+private fun BillRow(label: String, value: Double,currency: String, bold: Boolean = false) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(label)
         Text(
-            "₹%.2f".format(value),
+            "$currency%.2f ".format(value),
             fontWeight = if (bold) androidx.compose.ui.text.font.FontWeight.Bold else null
         )
     }
