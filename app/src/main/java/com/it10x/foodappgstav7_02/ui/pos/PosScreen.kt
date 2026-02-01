@@ -67,7 +67,7 @@ fun PosScreen(
 
     val sessionId by cartViewModel.sessionKey.collectAsState()
     val tableId by posSessionViewModel.tableId.collectAsState()
-
+    var searchQuery by rememberSaveable { mutableStateOf("") }
 
     val repository = POSOrdersRepository(
         db = db,
@@ -134,13 +134,36 @@ fun PosScreen(
     LaunchedEffect(Unit) { tableVm.loadTables() }
 
 
-    val filteredProducts = remember(parentProducts, selectedCatId) {
-        if (selectedCatId == null) {
-            emptyList()
+//    val filteredProducts = remember(parentProducts, selectedCatId) {
+//        if (selectedCatId == null) {
+//            emptyList()
+//        } else {
+//            parentProducts.filter { it.categoryId == selectedCatId }
+//        }
+//    }
+
+    val filteredProducts = remember(
+        parentProducts,
+        selectedCatId,
+        searchQuery
+    ) {
+        if (searchQuery.isNotBlank()) {
+            // 🔍 GLOBAL SEARCH (ignores category)
+            parentProducts.filter { product ->
+                product.name.contains(searchQuery, ignoreCase = true) ||
+                        (product.searchCode?.contains(searchQuery, ignoreCase = true) == true)
+            }
         } else {
-            parentProducts.filter { it.categoryId == selectedCatId }
+            // 📂 CATEGORY BROWSING
+            if (selectedCatId == null) {
+                emptyList()
+            } else {
+                parentProducts.filter { it.categoryId == selectedCatId }
+            }
         }
     }
+
+
 
     val variants = remember(allProducts) {
         allProducts.filter {
@@ -336,6 +359,21 @@ fun PosScreen(
 
             }
 
+
+
+                // ---------- SEARCH BOX ----------
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    placeholder = {
+                        Text("Search by name or code")
+                    },
+                    singleLine = true,
+                    shape = MaterialTheme.shapes.small
+                )
 
                 ProductList(
                     filteredProducts = filteredProducts,

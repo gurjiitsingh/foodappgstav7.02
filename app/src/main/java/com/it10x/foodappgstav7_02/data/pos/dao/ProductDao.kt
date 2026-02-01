@@ -7,8 +7,40 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ProductDao {
 
-    @Query("SELECT * FROM products ORDER BY name")
+//    @Query("SELECT * FROM products ORDER BY name")
+//    fun getAll(): Flow<List<ProductEntity>>
+
+    @Query("""
+    SELECT * FROM products
+    ORDER BY sortOrder ASC, name ASC
+""")
     fun getAll(): Flow<List<ProductEntity>>
+
+
+    @Query("""
+    SELECT * FROM products
+    WHERE 
+        (:foodType IS NULL OR foodType = :foodType)
+        AND (
+            name LIKE '%' || :query || '%'
+            OR searchCode LIKE '%' || :query || '%'
+        )
+    ORDER BY sortOrder ASC, name ASC
+""")
+    fun searchWithFoodType(
+        query: String,
+        foodType: String?
+    ): Flow<List<ProductEntity>>
+
+
+    @Query("""
+    SELECT * FROM products
+    WHERE categoryId = :categoryId
+    ORDER BY sortOrder ASC, name ASC
+""")
+    fun getByCategory(categoryId: String): Flow<List<ProductEntity>>
+
+
 
     @Query("SELECT COUNT(*) FROM products")
     fun getCount(): Flow<Int>
