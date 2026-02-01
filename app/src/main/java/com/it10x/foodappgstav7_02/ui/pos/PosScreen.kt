@@ -39,6 +39,7 @@ import com.it10x.foodappgstav7_02.ui.bill.BillScreenDialog
 import com.it10x.foodappgstav7_02.ui.kitchen.KitchenViewModel
 import android.widget.Toast
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.unit.sp
 import com.it10x.foodappgstav7_02.data.pos.repository.POSOrdersRepository
 import com.it10x.foodappgstav7_02.ui.cart.CartUiEvent
 import com.it10x.foodappgstav7_02.ui.kitchen.KitchenViewModelFactory
@@ -550,9 +551,10 @@ fun CategoryButton(
             Text(
                 text = label,
                 color = if (selected) Color.White else Color.Black,
-                minLines = 2,
-                maxLines = 2,
+                minLines = 3,
+                maxLines = 3,
                 overflow = TextOverflow.Ellipsis,
+                fontSize = 11.sp,
                 style = MaterialTheme.typography.bodyMedium
             )
         }

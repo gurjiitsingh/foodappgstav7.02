@@ -76,6 +76,12 @@ class ProductSyncRepository(
                 discountPrice = (data["discountPrice"] as? Number)?.toDouble(),
                 image = data["image"] as? String,
 
+                // ------------ FOOD TYPE ⭐ NEW ------------
+                foodType = data["foodType"] as? String,
+
+                // ------------ SORT ORDER ⭐ NEW ------------
+                sortOrder = (data["sortOrder"] as? Number)?.toInt() ?: 0,
+
                 // ------------ CATEGORY ------------
 
                 categoryId = data["categoryId"] as? String ?: "",

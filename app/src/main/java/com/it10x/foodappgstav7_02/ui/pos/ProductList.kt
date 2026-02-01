@@ -38,6 +38,12 @@ fun ProductList(
     ) {
     val sessionId by posSessionViewModel.sessionId.collectAsState()
 
+
+    // ✅ Sort the products before displaying
+    val sortedProducts = remember(filteredProducts) {
+        filteredProducts.sortedBy { it.sortOrder }
+    }
+
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 160.dp),
         modifier = Modifier.fillMaxSize(),
@@ -47,9 +53,9 @@ fun ProductList(
     ) {
 
         items(
-            count = filteredProducts.size,
+            count = sortedProducts.size,
             span = { index ->
-                val product = filteredProducts[index]
+                val product = sortedProducts[index]
                 if (product.hasVariants == true) {
                     GridItemSpan(maxLineSpan) // ✅ FULL WIDTH
                 } else {
@@ -58,7 +64,7 @@ fun ProductList(
             }
         ) { index ->
 
-            val product = filteredProducts[index]
+            val product = sortedProducts[index]
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -145,6 +151,13 @@ private fun ParentProductCard(
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
 
+            var price: Double = 0.0
+
+            price = when {
+                product.discountPrice == null || product.discountPrice == 0.0 -> product.price
+                else -> product.discountPrice
+            }
+
             // ⭐ PRODUCT NAME
             Text(
                 text = product.name,
@@ -155,7 +168,7 @@ private fun ParentProductCard(
 
             // ⭐ PRODUCT PRICE
             Text(
-                "₹${product.price}",
+                "₹${price}",
                 color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.bodySmall
             )
@@ -191,7 +204,7 @@ private fun ParentProductCard(
                             PosCartEntity(
                                 productId = product.id,
                                 name = product.name,
-                                basePrice = product.price,
+                                basePrice = price,
                                 quantity = 1,
                                 taxRate = product.taxRate ?: 0.0,
                                 taxType = product.taxType ?: "inclusive",
@@ -241,6 +254,13 @@ private fun VariantCard(
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
 
+            var price: Double = 0.0
+
+            price = when {
+                product.discountPrice == null || product.discountPrice == 0.0 -> product.price
+                else -> product.discountPrice
+            }
+
             Text(
                 text = product.name,
                 minLines = 2,      // ⭐ always reserve 2 lines height
@@ -249,7 +269,7 @@ private fun VariantCard(
             )
 
             Text(
-                "₹${product.price}",
+                "₹${price}",
                 color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.bodySmall
             )
@@ -279,7 +299,7 @@ private fun VariantCard(
                             PosCartEntity(
                                 productId = product.id,
                                 name = product.name,
-                                basePrice = product.price,
+                                basePrice = price,
                                 quantity = 1,
                                 taxRate = product.taxRate ?: 0.0,
                                 taxType = product.taxType ?: "inclusive",

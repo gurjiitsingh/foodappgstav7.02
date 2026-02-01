@@ -7,7 +7,13 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ProductDao {
 
-    @Query("SELECT * FROM products ORDER BY name")
+//    @Query("SELECT * FROM products ORDER BY name")
+//    fun getAll(): Flow<List<ProductEntity>>
+
+    @Query("""
+    SELECT * FROM products
+    ORDER BY sortOrder ASC, name ASC
+""")
     fun getAll(): Flow<List<ProductEntity>>
 
     @Query("SELECT COUNT(*) FROM products")
