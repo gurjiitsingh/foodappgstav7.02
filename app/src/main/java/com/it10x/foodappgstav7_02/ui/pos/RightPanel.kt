@@ -31,7 +31,9 @@ import com.it10x.foodappgstav7_02.ui.kitchen.KitchenViewModel
 import com.it10x.foodappgstav7_02.ui.kitchen.KitchenViewModelFactory
 import com.it10x.foodappgstav7_02.viewmodel.PosTableViewModel
 
-
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Print
+import androidx.compose.material.icons.filled.Restaurant
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RightPanel(
@@ -451,7 +453,25 @@ fun CartRow(
                         contentColor = Color.White
                     )
                 ) {
-                    Text("Bill + Print", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        "Bill +",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Icon(
+                        imageVector = Icons.Default.Restaurant,
+                        contentDescription = "Kitchen",
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        imageVector = Icons.Default.Print,
+                        contentDescription = "Print",
+                        modifier = Modifier.size(16.dp)
+                    )
+
+
                 }
 
                 // 🔶 Bill Only (SECONDARY / OUTLINED)
@@ -465,7 +485,17 @@ fun CartRow(
                         contentColor = Color(0xFFF97316)
                     )
                 ) {
-                    Text("Bill Only", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+//                    Icon(
+//                        imageVector = Icons.Default.Restaurant,
+//                        contentDescription = "Kitchen",
+//                        modifier = Modifier.size(16.dp)
+//                    )
+//                    Spacer(modifier = Modifier.width(6.dp))
+                   Text(
+                        "Bill",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
 
             }
