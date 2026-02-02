@@ -19,6 +19,11 @@ interface KotItemDao {
 
 
     // -------------------------
+    // INSERT SINGLE ITEM (NEW)
+    // -------------------------
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(item: PosKotItemEntity)
+    // -------------------------
     // FETCH (LIVE BILL)
     // -------------------------
     @Query("""

@@ -42,7 +42,7 @@ fun RightPanel(
     tableNo: String?,
     paymentType: String,
     onPaymentChange: (String) -> Unit,
-    onOrderPlaced: () -> Unit,
+     onOrderPlaced: () -> Unit,
     onOpenKitchen: (String) -> Unit,
     onOpenBill: (String) -> Unit,
     isMobile: Boolean,
@@ -68,7 +68,8 @@ fun RightPanel(
             tableId = tableNo ?: orderType,
             sessionId = sessionId,
             orderType = orderType,
-            repository = repository
+            repository = repository,
+            cartViewModel = cartViewModel
         )
     )
 
@@ -121,13 +122,18 @@ fun RightPanel(
     val canRequestBill =
         isDineIn && isRunning && cartItems.isEmpty()
 
+//    val canOpenBill =
+//        hasBillItems && when (orderType) {
+//            "DINE_IN" -> isBillRequested
+//            "TAKEAWAY", "DELIVERY" -> true
+//            else -> false
+//        }
     val canOpenBill =
         hasBillItems && when (orderType) {
-            "DINE_IN" -> isBillRequested
+            "DINE_IN" -> true
             "TAKEAWAY", "DELIVERY" -> true
             else -> false
         }
-
 
 
     val canOpenKitchen =
@@ -187,7 +193,23 @@ fun RightPanel(
                 .padding(vertical = 6.dp)
         ) {
             items(cartItems, key = { it.productId }) { item ->
-                CartRow(item, cartViewModel)
+                CartRow(
+                    item = item,
+                    cartViewModel = cartViewModel,
+                    onBillAction = { cartItem, print ->
+
+                        kitchenViewModel.sendSingleItemDirectlyToBill(
+                            cart = cartItem,
+                            orderType = orderType,
+                            tableNo = tableNo,
+                            sessionId = sessionId,
+                            print = print
+                        )
+
+                        // OPTIONAL (recommended later)
+                        // cartViewModel.decrease(cartItem.productId)
+                    }
+                )
             }
         }
 
@@ -258,23 +280,23 @@ fun RightPanel(
 
 
         // ---------- REQUEST BILL ----------
-        if (canRequestBill) {
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-                onClick = {
-                    tableViewModel.requestBill(tableNo!!)
-                    onOrderPlaced()
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFACC15),
-                    contentColor = Color.Black
-                )
-            ) {
-                Text("Request Bill")
-            }
-        }
+//        if (canRequestBill) {
+//            Button(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(top = 8.dp),
+//                onClick = {
+//                    tableViewModel.requestBill(tableNo!!)
+//                    onOrderPlaced()
+//                },
+//                colors = ButtonDefaults.buttonColors(
+//                    containerColor = Color(0xFFFACC15),
+//                    contentColor = Color.Black
+//                )
+//            ) {
+//                Text("Request Bill")
+//            }
+//        }
 
         // ---------- OPEN BILL ----------
         if (canOpenBill) {
@@ -325,7 +347,8 @@ fun RightPanel(
 @Composable
 fun CartRow(
     item: PosCartEntity,
-    cartViewModel: CartViewModel
+    cartViewModel: CartViewModel,
+    onBillAction: (item: PosCartEntity, print: Boolean) -> Unit
 ) {
     val DarkGray = Color(0xFF111827)  // near-black POS background
     Card(
@@ -421,37 +444,30 @@ fun CartRow(
                 Button(
                     modifier = Modifier.weight(1f),
                     onClick = {
-                        // TODO: Direct → Bill + KOT print
+                        onBillAction(item, true)
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFF97316), // 🔶 POS Orange
+                        containerColor = Color(0xFFF97316),
                         contentColor = Color.White
                     )
                 ) {
-                    Text(
-                        "Bill + Print",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Text("Bill + Print", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 }
 
                 // 🔶 Bill Only (SECONDARY / OUTLINED)
                 OutlinedButton(
                     modifier = Modifier.weight(1f),
                     onClick = {
-                        // TODO: Direct → Bill only (NO KOT)
+                        onBillAction(item, false)
                     },
                     border = BorderStroke(1.5.dp, Color(0xFFF97316)),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = Color(0xFFF97316)
                     )
                 ) {
-                    Text(
-                        "Bill Only",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Text("Bill Only", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 }
+
             }
 
         }

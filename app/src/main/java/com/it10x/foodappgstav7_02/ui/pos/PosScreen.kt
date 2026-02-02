@@ -501,7 +501,8 @@ fun PosScreen(
                 tableId = tableId ?: orderType,
                 sessionId = sessionId!!,
                 orderType = orderType,
-                repository = repository
+                repository = repository,
+                cartViewModel = cartViewModel
             )
         )
 

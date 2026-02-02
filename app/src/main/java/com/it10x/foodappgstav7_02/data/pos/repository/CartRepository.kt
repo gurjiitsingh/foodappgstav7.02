@@ -49,5 +49,9 @@ suspend fun decrease(productId: String, sessionId: String) {
     }
 }
 
+    suspend fun remove(productId: String, sessionId: String) {
+        dao.deleteItem(productId, sessionId)
+    }
+
 
 }

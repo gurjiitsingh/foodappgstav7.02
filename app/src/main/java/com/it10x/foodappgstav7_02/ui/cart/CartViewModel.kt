@@ -120,7 +120,15 @@ class CartViewModel(
         }
     }
 
+    fun removeFromCart(productId: String) {
+        if (!canMutateCart()) return
 
+        val sid = sessionId.value ?: return
+
+        viewModelScope.launch {
+            repository.remove(productId, sid)  // <-- repository should have a remove function
+        }
+    }
 
     fun clear() {
         val sid = sessionId.value ?: return

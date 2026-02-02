@@ -15,6 +15,7 @@ import com.it10x.foodappgstav7_02.printer.PrintItem
 import com.it10x.foodappgstav7_02.printer.PrintOrder
 import com.it10x.foodappgstav7_02.printer.PrinterManager
 import com.it10x.foodappgstav7_02.printer.ReceiptFormatter
+import com.it10x.foodappgstav7_02.ui.cart.CartViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,7 +33,8 @@ class KitchenViewModel(
     private val tableId: String,
     private val sessionId: String,
     private val orderType: String,
-    private val repository: POSOrdersRepository
+    private val repository: POSOrdersRepository,
+    private val cartViewModel: CartViewModel,
 ) : AndroidViewModel(app) {
 
     private val _loading = MutableStateFlow(false)
@@ -314,6 +316,87 @@ class KitchenViewModel(
         } catch (e: Exception) {
             Log.e("KOT", "❌ Failed to save KOT", e)
             false
+        }
+    }
+
+
+
+    fun sendSingleItemDirectlyToBill(
+        cart: PosCartEntity,
+        orderType: String,
+        tableNo: String?,
+        sessionId: String,
+        print: Boolean
+    ) {
+
+//        val deviceId = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
+//        val deviceName = Build.MODEL ?: "Unknown Device"
+//        val appVersion = BuildConfig.VERSION_NAME
+
+        viewModelScope.launch(Dispatchers.IO) {
+
+            val db = AppDatabaseProvider.get(getApplication())
+            val kotBatchDao = db.kotBatchDao()
+            val kotItemDao = db.kotItemDao()
+
+            val now = System.currentTimeMillis()
+            val batchId = UUID.randomUUID().toString()
+
+            // 🔹 Create batch (required for consistency)
+            val batch = PosKotBatchEntity(
+                id = batchId,
+                sessionId = sessionId,
+                tableNo = tableNo ?: orderType,
+                orderType = orderType,
+                deviceId = "dummy",
+                deviceName = "dummy",
+                appVersion = "dummy",
+                createdAt = now,
+                sentBy = "dummy",
+                syncStatus = "DONE",
+                lastSyncedAt = null
+            )
+
+            kotBatchDao.insert(batch)
+
+            // 🔹 Create SINGLE KOT item → DONE
+            val kotItem = PosKotItemEntity(
+                id = UUID.randomUUID().toString(),
+                sessionId = sessionId,
+                kotBatchId = batchId,
+                tableNo = tableNo ?: orderType,
+                productId = cart.productId,
+                name = cart.name,
+                categoryId = cart.categoryId,
+                parentId = cart.parentId,
+                isVariant = cart.isVariant,
+                basePrice = cart.basePrice,
+                quantity = cart.quantity,
+                taxRate = cart.taxRate,
+                taxType = cart.taxType,
+                status = "DONE",
+                isPrinted = false,
+                createdAt = now
+            )
+
+            kotItemDao.insert(kotItem)
+
+            // 🔹 Print if required
+            if (print) {
+                printerManager.printTextKitchen(
+                    PrinterRole.KITCHEN,
+                    sessionKey = kotItem.tableNo ?: batchId,
+                    orderType = orderType,
+                    items = listOf(kotItem)
+                )
+                kotItemDao.markPrinted(kotItem.id)
+            }
+
+
+            // 🔹 Remove from cart after sending to bill
+            cartViewModel.removeFromCart(cart.productId)
+
+
         }
     }
 

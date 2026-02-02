@@ -64,6 +64,9 @@ interface CartDao {
     @Update
     suspend fun update(product: PosCartEntity)
 
+    @Query("DELETE FROM cart WHERE productId = :productId AND sessionId = :sessionId")
+    suspend fun deleteItem(productId: String, sessionId: String)
+
     @Delete
     suspend fun delete(product: PosCartEntity)
 
