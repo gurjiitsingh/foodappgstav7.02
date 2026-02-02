@@ -32,47 +32,77 @@ fun CartScreen(
         LazyColumn {
             items(cartItems) { item ->
 
-                Row(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 6.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(vertical = 6.dp)
                 ) {
 
-                    Column {
-                        Text(item.name)
-                        Text(
-                            "₹${item.basePrice} x ${item.quantity}",
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
+                    // ---------- MAIN ROW: PRODUCT INFO + QUANTITY ----------
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
 
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-
-                        IconButton(
-                            onClick = {
-                                cartViewModel.decrease(item.productId)
-                            }
+                        // PRODUCT INFO
+                        Column(
+                            modifier = Modifier.weight(1f)
                         ) {
-                            Text("−")
+                            Text(item.name)
+                            Text(
+                                "₹${item.basePrice} x ${item.quantity}",
+                                style = MaterialTheme.typography.bodySmall
+                            )
                         }
 
-                        Text(
-                            text = item.quantity.toString(),
-                            modifier = Modifier.padding(horizontal = 6.dp)
-                        )
-
-                        IconButton(
-                            onClick = {
-                                cartViewModel.increase(item)
-                            }
+                        // QUANTITY CONTROLS
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("+")
+                            IconButton(onClick = { cartViewModel.decrease(item.productId) }) {
+                                Text("−")
+                            }
+
+                            Text(
+                                text = item.quantity.toString(),
+                                modifier = Modifier.padding(horizontal = 6.dp)
+                            )
+
+                            IconButton(onClick = { cartViewModel.increase(item) }) {
+                                Text("+")
+                            }
                         }
                     }
+
+                    // ---------- DIRECT TO BILL BUTTONS ROW ----------
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = { /* TODO: Add to bill + KOT Print */ },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("→ Bill + KOT Print")
+                        }
+
+                        Button(
+                            onClick = { /* TODO: Add to bill only */ },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("→ Bill")
+                        }
+                    }
+
+                    Divider(modifier = Modifier.padding(top = 8.dp))
                 }
             }
         }
+
+
+
+
     }
 }

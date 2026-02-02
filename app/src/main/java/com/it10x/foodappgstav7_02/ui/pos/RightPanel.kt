@@ -18,6 +18,7 @@ import com.it10x.foodappgstav7_02.data.pos.viewmodel.POSOrdersViewModel
 import android.provider.Settings
 import android.os.Build
 import android.util.Log
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.it10x.foodappgstav7_02.BuildConfig
@@ -148,7 +149,7 @@ fun RightPanel(
                     Modifier.widthIn(max = 320.dp).fillMaxHeight()
                 }
             )
-            .background(Color(0xFFF7F7F7))
+        //    .background(Color(0xFFF7F7F7))
             .padding(12.dp)
             .padding(bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding())
     ) {
@@ -326,84 +327,129 @@ fun CartRow(
     item: PosCartEntity,
     cartViewModel: CartViewModel
 ) {
+    val DarkGray = Color(0xFF111827)  // near-black POS background
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White   // ✅ WHITE CARD
+            containerColor = Color.DarkGray
         ),
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .padding(10.dp)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
 
-            // ---------- ITEM INFO ----------
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = item.name,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Text(
-                    text = "₹${item.basePrice}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
-                )
-            }
+        Column(modifier = Modifier.padding(10.dp)) {
 
-
-// ---------- QUANTITY CONTROLS ----------
+            // ================= TOP ROW (UNCHANGED) =================
             Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
-                // ➖ MINUS BUTTON
-                IconButton(
-                    onClick = { cartViewModel.decrease(item.productId) },
-                    modifier = Modifier
-                        .size(36.dp)
-                        .background(
-                            color = Color(0xFFDC2626), // 🔴 red-600
-                            shape = MaterialTheme.shapes.small
-                        )
+                // ---------- ITEM INFO ----------
+                Column(
+                    modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        text = "−",
-                        color = Color.White,
-                        fontSize = 20.sp,              // ⬆ bigger
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.offset(y = (-1).dp)
+                        text = item.name,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White
+                    )
+                    Text(
+                        text = "₹${item.basePrice}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White
                     )
                 }
 
-                Text(
-                    text = item.quantity.toString(),
-                    modifier = Modifier.padding(horizontal = 12.dp),
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                // ---------- QUANTITY CONTROLS ----------
+                Row(verticalAlignment = Alignment.CenterVertically) {
 
-                // ➕ PLUS BUTTON
-                IconButton(
-                    onClick = { cartViewModel.addToCart(item) },
-                    modifier = Modifier
-                        .size(36.dp)
-                        .background(
-                            color = Color(0xFF16A34A), // 🟢 green-600
-                            shape = MaterialTheme.shapes.small
+                    IconButton(
+                        onClick = { cartViewModel.decrease(item.productId) },
+                        modifier = Modifier
+                            .size(36.dp)
+                            .background(
+                                color = Color(0xFFDC2626),
+                                shape = MaterialTheme.shapes.small
+                            )
+                    ) {
+                        Text(
+                            text = "−",
+                            color = Color.White,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
                         )
+                    }
+
+                    Text(
+                        text = item.quantity.toString(),
+                        modifier = Modifier.padding(horizontal = 12.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White
+                    )
+
+                    IconButton(
+                        onClick = { cartViewModel.addToCart(item) },
+                        modifier = Modifier
+                            .size(36.dp)
+                            .background(
+                                color = Color(0xFF16A34A),
+                                shape = MaterialTheme.shapes.small
+                            )
+                    ) {
+                        Text(
+                            text = "+",
+                            color = Color.White,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+
+// ================= BILL ACTION ROW =================
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+
+                // 🔶 Bill + KOT (PRIMARY)
+                Button(
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        // TODO: Direct → Bill + KOT print
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFF97316), // 🔶 POS Orange
+                        contentColor = Color.White
+                    )
                 ) {
                     Text(
-                        text = "+",
-                        color = Color.White,
-                        fontSize = 20.sp,              // ⬆ bigger
-                        fontWeight = FontWeight.Bold
+                        "Bill + Print",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                // 🔶 Bill Only (SECONDARY / OUTLINED)
+                OutlinedButton(
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        // TODO: Direct → Bill only (NO KOT)
+                    },
+                    border = BorderStroke(1.5.dp, Color(0xFFF97316)),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = Color(0xFFF97316)
+                    )
+                ) {
+                    Text(
+                        "Bill Only",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
             }
@@ -411,6 +457,7 @@ fun CartRow(
         }
     }
 }
+
 
 
 
