@@ -34,6 +34,10 @@ import com.it10x.foodappgstav7_02.viewmodel.PosTableViewModel
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Print
 import androidx.compose.material.icons.filled.Restaurant
+import com.it10x.foodappgstav7_02.ui.theme.PosError
+import com.it10x.foodappgstav7_02.ui.theme.PosSuccess
+import com.it10x.foodappgstav7_02.ui.theme.PosWarning
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RightPanel(
@@ -51,6 +55,7 @@ fun RightPanel(
     repository: POSOrdersRepository,
     onClose: (() -> Unit)? = null
 ) {
+
     val context = LocalContext.current
 
 
@@ -256,7 +261,7 @@ fun RightPanel(
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF16A34A),
-                    contentColor = Color.White
+                    contentColor = MaterialTheme.colorScheme.onSurface
                 )
             ) {
                 Text("Send to Kitchen")
@@ -274,7 +279,7 @@ fun RightPanel(
 //            },
 //            colors = ButtonDefaults.buttonColors(
 //                containerColor = Color(0xFF16A34A),
-//                contentColor = Color.White
+//                contentColor = MaterialTheme.colorScheme.onSurface
 //            )
 //        ) {
 //            Text("Show all items")
@@ -310,8 +315,8 @@ fun RightPanel(
                     tableNo?.let { onOpenBill(it) }
                 },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF2563EB),
-                    contentColor = Color.White
+                    containerColor = PosWarning,           // yellow
+                    contentColor = Color(0xFF1A1A1A)      // dark gray text
                 )
             ) {
                 Text("Open Bill")
@@ -329,8 +334,8 @@ fun RightPanel(
                     onOpenKitchen(tableNo ?: orderType)
                 },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF16A34A),
-                    contentColor = Color.White
+                    containerColor = PosSuccess,
+                    contentColor = MaterialTheme.colorScheme.onSurface
                 )
             ) {
                 Text("Open Kitchen")
@@ -358,10 +363,10 @@ fun CartRow(
             .fillMaxWidth()
             .padding(vertical = 6.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.DarkGray
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(2.dp)
-    ) {
+    ){
 
         Column(modifier = Modifier.padding(10.dp)) {
 
@@ -379,12 +384,12 @@ fun CartRow(
                     Text(
                         text = item.name,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = "₹${item.basePrice}",
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
 
@@ -402,7 +407,7 @@ fun CartRow(
                     ) {
                         Text(
                             text = "−",
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onSurface,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -412,7 +417,7 @@ fun CartRow(
                         text = item.quantity.toString(),
                         modifier = Modifier.padding(horizontal = 12.dp),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     IconButton(
@@ -426,7 +431,7 @@ fun CartRow(
                     ) {
                         Text(
                             text = "+",
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onSurface,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -449,8 +454,8 @@ fun CartRow(
                         onBillAction(item, true)
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFF97316),
-                        contentColor = Color.White
+                        containerColor = PosError,
+                        contentColor = MaterialTheme.colorScheme.onSurface
                     )
                 ) {
                     Text(
@@ -480,9 +485,9 @@ fun CartRow(
                     onClick = {
                         onBillAction(item, false)
                     },
-                    border = BorderStroke(1.5.dp, Color(0xFFF97316)),
+                    border = BorderStroke(1.5.dp, PosError),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = Color(0xFFF97316)
+                        contentColor = PosError
                     )
                 ) {
 //                    Icon(

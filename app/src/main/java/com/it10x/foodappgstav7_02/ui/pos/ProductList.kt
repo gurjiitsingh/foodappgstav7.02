@@ -44,13 +44,24 @@ fun ProductList(
         filteredProducts.sortedBy { it.sortOrder }
     }
 
+//    LazyVerticalGrid(
+//        columns = GridCells.Adaptive(minSize = 160.dp),
+//        modifier = Modifier.fillMaxSize(),
+//        horizontalArrangement = Arrangement.spacedBy(8.dp),
+//        verticalArrangement = Arrangement.spacedBy(8.dp),
+//        contentPadding = PaddingValues(4.dp)
+//    )
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 160.dp),
         modifier = Modifier.fillMaxSize(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(
+            8.dp,
+            alignment = Alignment.CenterHorizontally // ⭐ FIX
+        ),
         verticalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(4.dp)
-    ) {
+        contentPadding = PaddingValues(8.dp) // optional cleaner edge
+    )
+    {
 
         items(
             count = sortedProducts.size,
@@ -68,8 +79,10 @@ fun ProductList(
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
-               // border = BorderStroke(1.dp, Color(0xFFE0E0E0)),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
+       //         border = BorderStroke(1.dp, Color(0xFFE0E0E0)),
+//                colors = CardDefaults.cardColors(
+//                    containerColor = MaterialTheme.colorScheme.surface
+//                ),
                 elevation = CardDefaults.cardElevation(0.dp)
             ) {
                 ProductInnerContent(
@@ -135,12 +148,15 @@ private fun ParentProductCard(
     Card(
         modifier = Modifier
             .width(160.dp)
-            .border(
-                1.dp,
-                Color(0xFFE0E0E0),
-                shape = MaterialTheme.shapes.small
-            ),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+            .border(1.dp, MaterialTheme.colorScheme.outline),
+//            .border(
+//                1.dp,
+//                Color(0xFFE0E0E0),
+//                shape = MaterialTheme.shapes.small
+//            ),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
 
@@ -160,7 +176,7 @@ private fun ParentProductCard(
 
             // ⭐ PRODUCT NAME
             Text(
-                text = product.name,
+                text = toTitleCase(product.name),
                 minLines = 2,      // ⭐ always reserve 2 lines height
                 maxLines = 2,      // ⭐ never exceed 2 lines
                 lineHeight = 18.sp // ⭐ optional but recommended for consistency
@@ -186,7 +202,7 @@ private fun ParentProductCard(
                     onClick = { cartViewModel.decrease(product.id) },
                     modifier = Modifier
                         .size(32.dp)
-                        .background(Color.White, MaterialTheme.shapes.small) // ✅ white background
+                        .background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.small)
                         .border(1.5.dp, Color(0xFFD32F2F), MaterialTheme.shapes.small) // ✅ red border
                 ) {
                     Text(
@@ -203,7 +219,7 @@ private fun ParentProductCard(
                         cartViewModel.addToCart(
                             PosCartEntity(
                                 productId = product.id,
-                                name = product.name,
+                                name = toTitleCase(product.name),
                                 basePrice = price,
                                 quantity = 1,
                                 taxRate = product.taxRate ?: 0.0,
@@ -240,10 +256,12 @@ private fun VariantCard(
             .width(160.dp)
             .border(
                 1.dp,
-                Color(0xFFE0E0E0),
+                MaterialTheme.colorScheme.outline,
                 shape = MaterialTheme.shapes.small
             ),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
 
@@ -262,7 +280,7 @@ private fun VariantCard(
             }
 
             Text(
-                text = product.name,
+                text = toTitleCase(product.name),
                 minLines = 2,      // ⭐ always reserve 2 lines height
                 maxLines = 2,      // ⭐ never exceed 2 lines
                 lineHeight = 18.sp // ⭐ optional but recommended for consistency
@@ -287,9 +305,10 @@ private fun VariantCard(
                     onClick = { cartViewModel.decrease(product.id) },
                     modifier = Modifier
                         .size(32.dp)
-                        .background(Color(0xFFD32F2F), MaterialTheme.shapes.small)
+                        //.background(Color(0xFFD32F2F), MaterialTheme.shapes.small)
+                        .background(MaterialTheme.colorScheme.error)
                 ) {
-                    Text("−", color = Color.White, fontSize = 18.sp)
+                    Text("-", color = MaterialTheme.colorScheme.onError)
                 }
 
                 // ➕
@@ -298,7 +317,7 @@ private fun VariantCard(
                         cartViewModel.addToCart(
                             PosCartEntity(
                                 productId = product.id,
-                                name = product.name,
+                                name = toTitleCase(product.name),
                                 basePrice = price,
                                 quantity = 1,
                                 taxRate = product.taxRate ?: 0.0,
@@ -315,11 +334,14 @@ private fun VariantCard(
                     },
                     modifier = Modifier
                         .size(32.dp)
-                        .background(Color(0xFFD32F2F), MaterialTheme.shapes.small)
+                       // .background(Color(0xFFD32F2F), MaterialTheme.shapes.small)
+                        .background(MaterialTheme.colorScheme.error)
                 ) {
-                    Text("+", color = Color.White, fontSize = 18.sp)
+                   // Text("+", color = Color.White, fontSize = 18.sp)
+                    Text("+", color = MaterialTheme.colorScheme.onError)
                 }
             }
         }
     }
 }
+

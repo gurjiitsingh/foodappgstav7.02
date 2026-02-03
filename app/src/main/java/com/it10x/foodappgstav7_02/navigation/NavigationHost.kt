@@ -1,5 +1,6 @@
 package com.it10x.foodappgstav7_02.navigation
 
+import ThemeSettingsScreen
 import android.app.Application
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
@@ -304,7 +305,9 @@ fun NavigationHost(
 
 
 
-
+        composable("theme_settings") {
+            ThemeSettingsScreen()
+        }
 
 
 

@@ -147,14 +147,15 @@ fun PosScreen(
         selectedCatId,
         searchQuery
     ) {
-        if (searchQuery.isNotBlank()) {
-            // 🔍 GLOBAL SEARCH (ignores category)
+        val query = searchQuery.trim()
+
+        if (query.isNotEmpty()) {
             parentProducts.filter { product ->
-                product.name.contains(searchQuery, ignoreCase = true) ||
-                        (product.searchCode?.contains(searchQuery, ignoreCase = true) == true)
+                product.searchCode
+                    ?.trim()
+                    ?.equals(query, ignoreCase = true) == true
             }
         } else {
-            // 📂 CATEGORY BROWSING
             if (selectedCatId == null) {
                 emptyList()
             } else {
@@ -162,6 +163,7 @@ fun PosScreen(
             }
         }
     }
+
 
 
 
@@ -210,7 +212,7 @@ fun PosScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(PosBackground) // ✅ ONLY COLOR
+            .background(MaterialTheme.colorScheme.background)
     ) {
 
         Row(modifier = Modifier.fillMaxSize()) {
@@ -220,7 +222,7 @@ fun PosScreen(
                 modifier = Modifier
                     .width(140.dp)
                     .fillMaxHeight()
-                    .background(PosSidebarBackground)
+                    .background(MaterialTheme.colorScheme.surface)
                     .padding(15.dp)   // ✅ SAME AS PRODUCTS
             ) {
 
@@ -231,7 +233,7 @@ fun PosScreen(
                 LazyColumn {
                     items(categories) { c ->
                         CategoryButton(
-                            label = c.name,
+                            label = toTitleCase(c.name),
                             selected = selectedCatId == c.id
                         ) {
                             selectedCatId = c.id
@@ -418,7 +420,7 @@ fun PosScreen(
                     modifier = Modifier
                         .width(360.dp) // 🟢 fixed width for right side (adjust as needed)
                         .fillMaxHeight()
-                        .background(Color(0xFFF9FAFB)) // optional light background
+                        .background(MaterialTheme.colorScheme.surface)
                         .padding(8.dp)
                 ) {
                     RightPanel(
@@ -574,12 +576,18 @@ fun CategoryButton(
     onClick: () -> Unit
 ) {
     Surface(
-        color = if (selected) PosGreen else Color.White,
+        color = if (selected)
+            MaterialTheme.colorScheme.primary
+        else
+            MaterialTheme.colorScheme.surface,
         shape = MaterialTheme.shapes.small,
         shadowElevation = 2.dp,
+        border = if (!selected)
+            BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+        else null,
         modifier = Modifier
             .fillMaxWidth()
-            .wrapContentHeight()   // ✅ prevents full-height bug
+            .wrapContentHeight()
             .clickable { onClick() }
     ) {
         Box(
@@ -589,7 +597,10 @@ fun CategoryButton(
         ) {
             Text(
                 text = label,
-                color = if (selected) Color.White else Color.Black,
+                color = if (selected)
+                    MaterialTheme.colorScheme.onPrimary
+                else
+                    MaterialTheme.colorScheme.onSurface,
                 minLines = 3,
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis,
@@ -613,12 +624,12 @@ fun FloatingCartButton(
 
         FloatingActionButton(
             onClick = onClick,
-            containerColor = PosGreen // ✅ ONLY COLOR
+            containerColor = MaterialTheme.colorScheme.primary
         ) {
             Icon(
                 imageVector = Icons.Default.ShoppingCart,
                 contentDescription = "Cart",
-                tint = Color.White
+                tint = MaterialTheme.colorScheme.onPrimary
             )
         }
 
@@ -633,7 +644,7 @@ fun FloatingCartButton(
             ) {
                 Text(
                     text = count.toString(),
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     style = MaterialTheme.typography.labelSmall
                 )
             }
@@ -649,14 +660,17 @@ fun OrderChip(
     onClick: () -> Unit
 ) {
     Surface(
-        color = if (selected) PosGreen else Color.White,
+        color = if (selected)
+            MaterialTheme.colorScheme.primary
+        else
+            MaterialTheme.colorScheme.surface,
         shape = MaterialTheme.shapes.small,
         tonalElevation = 2.dp,
         modifier = Modifier.clickable { onClick() }
     ) {
         Text(
             text = label,
-            color = if (selected) Color.White else Color.Black,
+            color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
             style = MaterialTheme.typography.bodyMedium
         )
@@ -687,14 +701,16 @@ fun TableSelectorGrid(
                     val isSelected = selectedTable == table.id
 
                     val bgColor = when (ui.color) {
-                        PosTableViewModel.TableColor.GREEN -> Color(0xFFDCFCE7)   // 🟢 running
-                        PosTableViewModel.TableColor.YELLOW -> Color(0xFFFEF9C3)  // 🟡 bill requested
-                        PosTableViewModel.TableColor.RED -> Color(0xFFFEE2E2)     // 🔴 ready to bill
-                        PosTableViewModel.TableColor.GRAY -> Color(0xFFF3F4F6)    // ⚪ available
+                        PosTableViewModel.TableColor.GREEN -> MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)   // 🟢 running
+                        PosTableViewModel.TableColor.YELLOW -> MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)  // 🟡 bill requested
+                        PosTableViewModel.TableColor.RED -> MaterialTheme.colorScheme.error.copy(alpha = 0.15f)     // 🔴 ready to bill
+                        PosTableViewModel.TableColor.GRAY -> MaterialTheme.colorScheme.surfaceVariant    // ⚪ available
                     }
 
+
+
                     Surface(
-                        color = if (isSelected) Color(0xFF16A34A) else bgColor,
+                        color = if (isSelected) MaterialTheme.colorScheme.primary else bgColor,
                         shape = MaterialTheme.shapes.medium,
                         tonalElevation = 2.dp,
                         modifier = Modifier
@@ -713,7 +729,7 @@ fun TableSelectorGrid(
                             Text(
                                 text = table.tableName,
                                 style = MaterialTheme.typography.titleMedium,
-                                color = if (isSelected) Color.White else Color.Black
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
                             )
 
                             // RUNNING AMOUNT
@@ -721,7 +737,7 @@ fun TableSelectorGrid(
                                 Text(
                                     text = "₹${ui.runningAmount.toInt()}",
                                     style = MaterialTheme.typography.labelMedium,
-                                    color = if (isSelected) Color.White else Color.DarkGray
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
@@ -745,10 +761,13 @@ fun PosOrderTypeButton(
     onClick: () -> Unit
 ) {
     Surface(
-        color = if (selected) PosGreen else Color.White,
+        color = if (selected)
+            MaterialTheme.colorScheme.primary
+        else
+            MaterialTheme.colorScheme.surface,
         shape = MaterialTheme.shapes.small,
         tonalElevation = 2.dp,
-        border = if (!selected) BorderStroke(1.dp, Color.LightGray) else null,
+        border = if (!selected) BorderStroke(1.dp, MaterialTheme.colorScheme.outline) else null,
         modifier = Modifier
             .height(36.dp)
             .clickable { onClick() }
@@ -759,7 +778,7 @@ fun PosOrderTypeButton(
         ) {
             Text(
                 text = label,
-                color = if (selected) Color.White else Color.Black,
+                color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.labelLarge
             )
         }
@@ -772,4 +791,12 @@ fun PosOrderTypeButton(
 
 
 
+}
+fun toTitleCase(text: String): String {
+    return text
+        .lowercase()
+        .split(" ")
+        .joinToString(" ") { word ->
+            word.replaceFirstChar { it.uppercase() }
+        }
 }

@@ -28,6 +28,7 @@ import com.it10x.foodappgstav7_02.printer.AutoPrintManager
 import com.it10x.foodappgstav7_02.service.OrderListenerService
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
@@ -38,12 +39,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 
 import com.it10x.foodappgstav7_02.firebase.ClientIdStore
 import com.it10x.foodappgstav7_02.ui.settings.ClientSetupScreen
+import com.it10x.foodappgstav7_02.ui.theme.FoodPosTheme
+import com.it10x.foodappgstav7_02.ui.theme.PosDarkStyle
+import com.it10x.foodappgstav7_02.viewmodel.ThemeViewModel
 
 
 class MainActivity : ComponentActivity() {
@@ -60,14 +66,32 @@ class MainActivity : ComponentActivity() {
 
         setContent {
 
+
+            val themeVM: ThemeViewModel = viewModel()
+            val darkMode by themeVM.darkMode.collectAsState()
+            val style by themeVM.style.collectAsState()
+
+            val mode = darkMode
+
+            val darkStyle =
+                if (style == "PREMIUM")
+                    PosDarkStyle.PREMIUM
+                else
+                    PosDarkStyle.FAST_POS
+
+            FoodPosTheme(
+                mode = mode,
+                darkStyle = darkStyle
+            ) {
+
             val context = LocalContext.current
             val clientId = remember { ClientIdStore.get(context) }
 
             if (clientId == null) {
-                MaterialTheme {
+                FoodPosTheme {
                     ClientSetupScreen()
                 }
-                return@setContent
+                return@FoodPosTheme
             }
 
 
@@ -120,151 +144,153 @@ class MainActivity : ComponentActivity() {
             val drawerState = rememberDrawerState(DrawerValue.Closed)
             val scope = rememberCoroutineScope()
 
-            ModalNavigationDrawer(
-                drawerState = drawerState,
-                drawerContent = {
-                    ModalDrawerSheet {
+                ModalNavigationDrawer(
+                    drawerState = drawerState,
+                    drawerContent = {
+                        ModalDrawerSheet {
 
-                        // ===== HEADER =====
-                        Text(
-                            "Menu",
-                            style = MaterialTheme.typography.titleLarge,
-                            modifier = Modifier.padding(16.dp)
-                        )
+                            // ✅ Make drawer scrollable
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxHeight()
+                                    .verticalScroll(rememberScrollState())
+                                    .padding(bottom = 16.dp) // optional spacing at bottom
+                            ) {
 
-                        // ===============================
-                        // OPERATIONS
-                        // ===============================
-                        SidebarSectionHeader("OPERATIONS")
+                                // ===== HEADER =====
+                                Text(
+                                    "Menu",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    modifier = Modifier.padding(16.dp)
+                                )
 
+                                // ===============================
+                                // OPERATIONS
+                                // ===============================
+                                SidebarSectionHeader("OPERATIONS")
 
-                        NavigationDrawerItem(
-                            label = { Text("POS") },
-                            selected = false,
-                            onClick = {
-                                scope.launch { drawerState.close() }
-                                navController.navigate("pos") {
-                                    popUpTo("pos") { inclusive = true }
-                                }
+                                NavigationDrawerItem(
+                                    label = { Text("POS") },
+                                    selected = false,
+                                    onClick = {
+                                        scope.launch { drawerState.close() }
+                                        navController.navigate("pos") {
+                                            popUpTo("pos") { inclusive = true }
+                                        }
+                                    }
+                                )
+
+                                Divider(
+                                    modifier = Modifier
+                                        .padding(horizontal = 16.dp)
+                                        .padding(bottom = 4.dp),
+                                    thickness = 0.5.dp
+                                )
+                                NavigationDrawerItem(
+                                    label = { Text("Online Orders") },
+                                    selected = false,
+                                    onClick = {
+                                        scope.launch { drawerState.close() }
+                                        navController.navigate("orders")
+                                    }
+                                )
+                                Divider(
+                                    modifier = Modifier
+                                        .padding(horizontal = 16.dp)
+                                        .padding(bottom = 4.dp),
+                                    thickness = 0.5.dp
+                                )
+                                NavigationDrawerItem(
+                                    label = { Text("Local Orders") },
+                                    selected = false,
+                                    onClick = {
+                                        scope.launch { drawerState.close() }
+                                        navController.navigate("local_orders")
+                                    }
+                                )
+
+                                // ===============================
+                                // SALES / Z-REPORT
+                                // ===============================
+                                SidebarSectionHeader("REPORTS")
+
+                                NavigationDrawerItem(
+                                    label = { Text("Sales / Z-Report") },
+                                    selected = false,
+                                    onClick = {
+                                        scope.launch { drawerState.close() }
+                                        navController.navigate("sales") // opens SalesScreen
+                                    }
+                                )
+                                Divider(
+                                    modifier = Modifier
+                                        .padding(horizontal = 16.dp)
+                                        .padding(bottom = 4.dp),
+                                    thickness = 0.5.dp
+                                )
+
+                                // ===============================
+                                // SYNC & DATA
+                                // ===============================
+                                SidebarSectionHeader("SYNC & DATA")
+
+                                NavigationDrawerItem(
+                                    label = { Text("Sync") },
+                                    selected = false,
+                                    onClick = {
+                                        scope.launch { drawerState.close() }
+                                        navController.navigate("sync_data")
+                                    }
+                                )
+
+                                // ===============================
+                                // SETTINGS
+                                // ===============================
+                                SidebarSectionHeader("SETTINGS")
+
+                                NavigationDrawerItem(
+                                    label = { Text("Printer Settings") },
+                                    selected = false,
+                                    onClick = {
+                                        scope.launch { drawerState.close() }
+                                        navController.navigate("printer_role_selection")
+                                    }
+                                )
+
+                                Divider(
+                                    modifier = Modifier
+                                        .padding(horizontal = 16.dp)
+                                        .padding(bottom = 4.dp),
+                                    thickness = 0.5.dp
+                                )
+                                NavigationDrawerItem(
+                                    label = { Text("Advanced Settings") },
+                                    selected = false,
+                                    onClick = {
+                                        scope.launch { drawerState.close() }
+                                        navController.navigate("advanced_settings")
+                                    }
+                                )
+
+                                Divider(
+                                    modifier = Modifier
+                                        .padding(horizontal = 16.dp)
+                                        .padding(bottom = 4.dp),
+                                    thickness = 0.5.dp
+                                )
+
+                                NavigationDrawerItem(
+                                    label = { Text("Theme Settings") },
+                                    selected = false,
+                                    onClick = {
+                                        scope.launch { drawerState.close() }
+                                        navController.navigate("theme_settings")
+                                    }
+                                )
                             }
-                        )
-
-
-                        Divider(
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp)
-                                .padding(bottom = 4.dp),
-                            thickness = 0.5.dp
-                        )
-                        NavigationDrawerItem(
-                            label = { Text("Online Orders") },
-                            selected = false,
-                            onClick = {
-                                scope.launch { drawerState.close() }
-                                navController.navigate("orders")
-                            }
-                        )
-                        Divider(
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp)
-                                .padding(bottom = 4.dp),
-                            thickness = 0.5.dp
-                        )
-                        NavigationDrawerItem(
-                            label = { Text("Local Orders") },
-                            selected = false,
-                            onClick = {
-                                scope.launch { drawerState.close() }
-                                navController.navigate("local_orders")
-                            }
-                        )
-// ===============================
-// SALES / Z-REPORT
-// ===============================
-                        SidebarSectionHeader("REPORTS")
-
-                        NavigationDrawerItem(
-                            label = { Text("Sales / Z-Report") },
-                            selected = false,
-                            onClick = {
-                                scope.launch { drawerState.close() }
-                                navController.navigate("sales") // opens SalesScreen
-                            }
-                        )
-                        Divider(
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp)
-                                .padding(bottom = 4.dp),
-                            thickness = 0.5.dp
-                        )
-
-
-                        // ===============================
-                        // SYNC & DATA
-                        // ===============================
-
-
-                        SidebarSectionHeader("SYNC & DATA")
-
-                        NavigationDrawerItem(
-                            label = { Text("Sync") },
-                            selected = false,
-                            onClick = {
-                                scope.launch { drawerState.close() }
-                                navController.navigate("sync_data")
-                            }
-                        )
-
-
-
-                        // ===============================
-                        // SETTINGS
-                        // ===============================
-                        SidebarSectionHeader("SETTINGS")
-
-                        NavigationDrawerItem(
-                            label = { Text("Printer Settings") },
-                            selected = false,
-                            onClick = {
-                                scope.launch { drawerState.close() }
-                                navController.navigate("printer_role_selection")
-                            }
-                        )
-
-                        Divider(
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp)
-                                .padding(bottom = 4.dp),
-                            thickness = 0.5.dp
-                        )
-                        NavigationDrawerItem(
-                            label = { Text("Advanced Settings") },
-                            selected = false,
-                            onClick = {
-                                scope.launch { drawerState.close() }
-                                navController.navigate("advanced_settings")
-                            }
-                        )
-
-                        Divider(
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp)
-                                .padding(bottom = 4.dp),
-                            thickness = 0.5.dp
-                        )
-
-
-
-
-
-
+                        }
                     }
-
-
-
-
-                }
-            ) {
+                ) {
                 Scaffold(
                     topBar = {
                         CenterAlignedTopAppBar(
@@ -320,7 +346,7 @@ class MainActivity : ComponentActivity() {
                 }
 
             }
-        }
+        }}
     }
 
     @Composable
@@ -341,11 +367,13 @@ class MainActivity : ComponentActivity() {
 
             },
             colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.error
+                containerColor = MaterialTheme.colorScheme.error,
+                contentColor = Color.White // ✅ force text to white
             )
         ) {
             Text("STOP SOUND")
         }
+
     }
 
 
@@ -380,12 +408,15 @@ fun SidebarSectionHeader(title: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFF16A34A)) // Tailwind green-600
+            .background(MaterialTheme.colorScheme.primary)
+
+
             .padding(horizontal = 16.dp, vertical = 10.dp)
     ) {
+
         Text(
             text = title,
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onPrimary,
             fontWeight = FontWeight.SemiBold,
             style = MaterialTheme.typography.labelLarge
         )
