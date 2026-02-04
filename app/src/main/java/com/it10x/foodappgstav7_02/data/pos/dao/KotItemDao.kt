@@ -148,6 +148,13 @@ AND status = 'PENDING'
 
     @Query("""
     UPDATE pos_kot_items
+    SET isPrinted = 1
+    WHERE id IN (:itemIds)
+""")
+    suspend fun markPrintedBatch(itemIds: List<String>)
+
+    @Query("""
+    UPDATE pos_kot_items
     SET status = 'DONE'
     WHERE tableNo = :tableNo
       AND status = 'PENDING'

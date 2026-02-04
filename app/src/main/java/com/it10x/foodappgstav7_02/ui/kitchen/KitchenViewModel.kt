@@ -17,6 +17,8 @@ import com.it10x.foodappgstav7_02.printer.PrinterManager
 import com.it10x.foodappgstav7_02.printer.ReceiptFormatter
 import com.it10x.foodappgstav7_02.ui.cart.CartViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -37,10 +39,14 @@ class KitchenViewModel(
     private val cartViewModel: CartViewModel,
 ) : AndroidViewModel(app) {
 
+    private var kotPrintJob: Job? = null
+    private val pendingKotItems = mutableListOf<PosKotItemEntity>()
+    private var pendingBatchId: String? = null
     private val _loading = MutableStateFlow(false)
     val loading: StateFlow<Boolean> get() = _loading
     private val kotItemDao =
         AppDatabaseProvider.get(app).kotItemDao()
+
 
     private val kotToBillUseCase =
         KotToBillUseCase(kotItemDao)
@@ -383,12 +389,7 @@ class KitchenViewModel(
 
             // 🔹 Print if required
             if (print) {
-                printerManager.printTextKitchen(
-                    PrinterRole.KITCHEN,
-                    sessionKey = kotItem.tableNo ?: batchId,
-                    orderType = orderType,
-                    items = listOf(kotItem)
-                )
+                addItemToDebouncedKitchenPrint(kotItem, orderType)
                 kotItemDao.markPrinted(kotItem.id)
             }
 
@@ -399,6 +400,51 @@ class KitchenViewModel(
 
         }
     }
+
+
+    private fun addItemToDebouncedKitchenPrint(
+        item: PosKotItemEntity,
+        orderType: String
+    ) {
+        synchronized(this) {
+            pendingKotItems.add(item)
+            if (pendingBatchId == null) {
+                pendingBatchId = item.kotBatchId
+            }
+        }
+
+        // Cancel previous timer
+        kotPrintJob?.cancel()
+
+        // Start / restart 10s timer
+        kotPrintJob = viewModelScope.launch {
+            delay(10_000) // ⏱️ 10 seconds
+
+            val itemsToPrint: List<PosKotItemEntity>
+            val batchId: String?
+
+            synchronized(this@KitchenViewModel) {
+                itemsToPrint = pendingKotItems.toList()
+                batchId = pendingBatchId
+                pendingKotItems.clear()
+                pendingBatchId = null
+            }
+
+            if (itemsToPrint.isNotEmpty()) {
+                printerManager.printTextKitchen(
+                    PrinterRole.KITCHEN,
+                    sessionKey = itemsToPrint.first().tableNo ?: batchId!!,
+                    orderType = orderType,
+                    items = itemsToPrint
+                )
+
+                // mark all printed
+                val db = AppDatabaseProvider.get(getApplication())
+                db.kotItemDao().markPrintedBatch(itemsToPrint.map { it.id })
+            }
+        }
+    }
+
 
 
 }
