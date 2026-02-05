@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.it10x.foodappgstav7_02.firebase.ClientIdStore
@@ -33,8 +34,19 @@ fun ClientSetupScreen() {
         OutlinedTextField(
             value = clientId,
             onValueChange = { clientId = it },
-            label = { Text("Client ID / License Key") },
-            modifier = Modifier.fillMaxWidth()
+            label = { Text("Client ID / License Key", color = Color.White) },
+            modifier = Modifier.fillMaxWidth(),
+            colors = TextFieldDefaults.colors(
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
+                cursorColor = Color.White,
+
+                focusedContainerColor = Color(0xFF1A1A1A),
+                unfocusedContainerColor = Color(0xFF1A1A1A),
+
+                focusedLabelColor = Color.White,
+                unfocusedLabelColor = Color.White
+            )
         )
 
         Spacer(Modifier.height(16.dp))

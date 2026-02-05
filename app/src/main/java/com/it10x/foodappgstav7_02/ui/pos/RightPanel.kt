@@ -225,22 +225,28 @@ fun RightPanel(
         OrderSummaryScreen(cartViewModel)
 
         // =========================================================
-        // =================== POS ACTION BUTTONS ==================
-        // =========================================================
+// =================== POS ACTION BUTTONS ==================
+// =========================================================
 
-        // ---------- SEND TO KITCHEN ----------
-        if (canSendToKitchen) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+
+            // SEND TO KITCHEN
             Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 12.dp),
+                modifier = Modifier.weight(1f),
+                enabled = canSendToKitchen,
                 onClick = {
+                    if (!canSendToKitchen) return@Button
+
                     val deviceId = Settings.Secure.getString(
                         context.contentResolver,
                         Settings.Secure.ANDROID_ID
                     )
 
-                    // kitchenViewModel.deleteAllKotItems();
                     kitchenViewModel.logAllKotItems()
 
                     kitchenViewModel.sendToKitchen(
@@ -253,94 +259,70 @@ fun RightPanel(
                         appVersion = BuildConfig.VERSION_NAME
                     )
 
-// ✅ OCCUPY TABLE ONLY WHEN FIRST ORDER IS SENT
                     if (orderType == "DINE_IN" && tableNo != null) {
                         tableViewModel.occupyTable(tableNo)
                     }
+
                     onOrderPlaced()
                 },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF16A34A),
-                    contentColor = MaterialTheme.colorScheme.onSurface
+                    containerColor = PosSuccess
                 )
             ) {
-                Text("Send to Kitchen")
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Restaurant,
+                        contentDescription = "Send to Kitchen",
+
+                    )
+                    Spacer(Modifier.width(6.dp))
+
+                    Text(
+                        "->",
+                        color = MaterialTheme.colorScheme.onSurface
+                    ) // or "KOT"
+                }
             }
-        }
-
-//        Button(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(top = 12.dp),
-//            onClick = {
-//
-//              //  kitchenViewModel.deleteAllKotItems()
-//                kitchenViewModel.logAllKotItems()
-//            },
-//            colors = ButtonDefaults.buttonColors(
-//                containerColor = Color(0xFF16A34A),
-//                contentColor = MaterialTheme.colorScheme.onSurface
-//            )
-//        ) {
-//            Text("Show all items")
-//        }
 
 
-        // ---------- REQUEST BILL ----------
-//        if (canRequestBill) {
-//            Button(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(top = 8.dp),
-//                onClick = {
-//                    tableViewModel.requestBill(tableNo!!)
-//                    onOrderPlaced()
-//                },
-//                colors = ButtonDefaults.buttonColors(
-//                    containerColor = Color(0xFFFACC15),
-//                    contentColor = Color.Black
-//                )
-//            ) {
-//                Text("Request Bill")
-//            }
-//        }
 
-        // ---------- OPEN BILL ----------
-        if (canOpenBill) {
+            // OPEN KITCHEN VIEW
             Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
+                modifier = Modifier.weight(1f),
+                enabled = canOpenKitchen,
                 onClick = {
-                    tableNo?.let { onOpenBill(it) }
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = PosWarning,           // yellow
-                    contentColor = Color(0xFF1A1A1A)      // dark gray text
-                )
-            ) {
-                Text("Open Bill")
-            }
-        }
-
-        // ---------- OPEN KITCHEN ----------
-        if (canOpenKitchen) {
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-                onClick = {
-//                    tableNo?.let { onOpenKitchen(it) }
+                    if (!canOpenKitchen) return@Button
                     onOpenKitchen(tableNo ?: orderType)
                 },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = PosSuccess,
-                    contentColor = MaterialTheme.colorScheme.onSurface
+                    containerColor = PosSuccess
                 )
             ) {
-                Text("Open Kitchen")
+                Text("Open")
             }
+
+            // OPEN BILL
+            Button(
+                modifier = Modifier.weight(1f),
+                enabled = canOpenBill,
+                onClick = {
+                    if (!canOpenBill) return@Button
+                    tableNo?.let { onOpenBill(it) }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = PosWarning,
+                    contentColor = Color(0xFF1A1A1A)
+                )
+            ) {
+                Text("Bill")
+            }
+
+
+
         }
+
+
+
     }
 }
 

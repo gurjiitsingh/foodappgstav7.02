@@ -2,6 +2,7 @@ package com.it10x.foodappgstav7_02.ui.kitchen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,7 +22,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 
+import androidx.compose.material.icons.filled.Print
+import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddCircle
 @Composable
 fun KitchenScreen(
     sessionId: String,
@@ -76,10 +87,40 @@ fun KitchenScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
             onClick = { viewModel.markDoneAll(orderType,tableNo) }
         ) {
-            Text("Done All", color = Color.White)
+            Text("Send All", color = Color.White)
+            Spacer(Modifier.width(4.dp))
+            // 🍽️ KOT
+            Icon(
+                imageVector = Icons.Default.Restaurant,
+                contentDescription = "KOT",
+                tint = Color.White
+            )
+
+
+            Spacer(Modifier.width(4.dp))
+
+            // 🖨️ PRINT
+            Icon(
+                imageVector = Icons.Default.Print,
+                contentDescription = "Print",
+                tint = Color.White
+            )
+            Spacer(Modifier.width(6.dp))
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Add",
+                tint = Color.White
+            )
+            Spacer(Modifier.width(6.dp))
+            // 🧾 BILL
+            Icon(
+                imageVector = Icons.Default.Receipt,
+                contentDescription = "Bill",
+                tint = Color.White
+            )
         }
 
         LazyColumn(
@@ -95,27 +136,76 @@ fun KitchenScreen(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                  //  Text("${item.quantity} ${item.name}  ${item.basePrice}")
+
+                    IconButton(
+                        onClick = { viewModel.markCancelled(item.id) }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Cancel item",
+                            tint = Color(0xFFDC2626) // red
+                        )
+                    }
+
                     Text("${item.quantity} ${item.name}")
                     Row {
-                        Button(
-                            onClick = { viewModel.markCancelled(item.id) },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFDC2626)
-                            )
-                        ) {
-                            Text("Cancel")
-                        }
 
+
+                        Button(
+                            onClick = { viewModel.markDoneNoKotPrint(item.id, orderType) },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF16A34A)
+                            ),
+                            contentPadding = PaddingValues(horizontal = 12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Receipt,
+                                contentDescription = "Move to Bill",
+                                tint = Color.White
+                            )
+                        }
                         Spacer(Modifier.width(8.dp))
 
                         Button(
                             onClick = { viewModel.markDone(item.id, orderType) },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFF16A34A)
-                            )
+                            ),
+                            contentPadding = PaddingValues(horizontal = 10.dp)
                         ) {
-                            Text("Done")
+                            // 🍽️ KOT
+                            Icon(
+                                imageVector = Icons.Default.Restaurant,
+                                contentDescription = "KOT",
+                                tint = Color.White
+                            )
+
+                            Spacer(Modifier.width(4.dp))
+
+
+
+                            Spacer(Modifier.width(4.dp))
+
+                            // 🖨️ PRINT
+                            Icon(
+                                imageVector = Icons.Default.Print,
+                                contentDescription = "Print",
+                                tint = Color.White
+                            )
+
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Add",
+                                tint = Color.White
+                            )
+                            // 🧾 BILL
+                            Icon(
+                                imageVector = Icons.Default.Receipt,
+                                contentDescription = "Bill",
+                                tint = Color.White
+                            )
                         }
+
                     }
                 }
             }

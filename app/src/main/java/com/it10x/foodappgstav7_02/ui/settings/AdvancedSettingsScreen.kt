@@ -7,6 +7,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.it10x.foodappgstav7_02.firebase.ClientIdStore
 
@@ -65,6 +66,8 @@ fun AdvancedSettingsScreen() {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Enter admin password to continue")
 
+                    var passwordVisible by remember { mutableStateOf(false) }
+
                     OutlinedTextField(
                         value = password,
                         onValueChange = {
@@ -72,10 +75,19 @@ fun AdvancedSettingsScreen() {
                             error = null
                         },
                         label = { Text("Password") },
-                        visualTransformation = PasswordVisualTransformation(),
+                        visualTransformation = if (passwordVisible)
+                            VisualTransformation.None
+                        else
+                            PasswordVisualTransformation(),
                         singleLine = true,
-                        isError = error != null
+                        isError = error != null,
+                        trailingIcon = {
+                            TextButton(onClick = { passwordVisible = !passwordVisible }) {
+                                Text(if (passwordVisible) "Hide" else "Show")
+                            }
+                        }
                     )
+
 
                     if (error != null) {
                         Text(

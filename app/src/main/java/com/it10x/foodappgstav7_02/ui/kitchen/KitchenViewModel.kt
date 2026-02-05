@@ -99,6 +99,23 @@ class KitchenViewModel(
         }
     }
 
+    fun markDoneNoKotPrint(itemId: String,orderType: String,  print: Boolean = true) {
+        viewModelScope.launch {
+
+            kotToBillUseCase.markDoneAndMerge(itemId)
+
+            val item = kotItemDao.getItemByIdSync(itemId) ?: return@launch
+
+            // ❌ If already printed → DO NOT PRINT AGAIN
+            if (item.isPrinted || !print) return@launch
+
+
+
+            kotItemDao.markPrinted(item.id)
+
+
+        }
+    }
 
 
     fun markDoneAll(orderType: String, tableNo: String) {

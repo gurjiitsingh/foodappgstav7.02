@@ -38,8 +38,10 @@ import com.it10x.foodappgstav7_02.ui.bill.BillScreenDialog
 
 import com.it10x.foodappgstav7_02.ui.kitchen.KitchenViewModel
 import android.widget.Toast
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import com.it10x.foodappgstav7_02.data.pos.repository.POSOrdersRepository
 import com.it10x.foodappgstav7_02.ui.cart.CartUiEvent
 import com.it10x.foodappgstav7_02.ui.kitchen.KitchenViewModelFactory
@@ -57,6 +59,7 @@ fun PosScreen(
         mutableStateOf(false)
     }
 
+    var showSearchKeyboard by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
     val db = AppDatabaseProvider.get(context)
 
@@ -147,13 +150,12 @@ fun PosScreen(
         selectedCatId,
         searchQuery
     ) {
-        val query = searchQuery.trim()
+        val query = searchQuery.trim().lowercase()
 
         if (query.isNotEmpty()) {
             parentProducts.filter { product ->
-                product.searchCode
-                    ?.trim()
-                    ?.equals(query, ignoreCase = true) == true
+                product.name.lowercase().contains(query) ||
+                        product.searchCode?.lowercase()?.contains(query) == true
             }
         } else {
             if (selectedCatId == null) {
@@ -163,6 +165,7 @@ fun PosScreen(
             }
         }
     }
+
 
 
 
@@ -234,7 +237,8 @@ fun PosScreen(
                     items(categories) { c ->
                         CategoryButton(
                             label = toTitleCase(c.name),
-                            selected = selectedCatId == c.id
+                            selected = selectedCatId == c.id,
+                          //  showSearchKeyboard = false
                         ) {
                             selectedCatId = c.id
                         }
@@ -364,18 +368,29 @@ fun PosScreen(
 
 
                 // ---------- SEARCH BOX ----------
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 8.dp),
-                    placeholder = {
-                        Text("Search by name or code")
-                    },
-                    singleLine = true,
-                    shape = MaterialTheme.shapes.small
-                )
+                        .padding(bottom = 8.dp)
+                        .clickable {
+                            showSearchKeyboard = true   // ✅ THIS WILL FIRE
+                        }
+                ) {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = {}, // keyboard controls input
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("Search by name or code") },
+                        singleLine = true,
+                        shape = MaterialTheme.shapes.small,
+                        readOnly = true,
+                        enabled = false // 🔑 important: prevents TextField from consuming clicks
+                    )
+                }
+
+
+
+
 
                 ProductList(
                     filteredProducts = filteredProducts,
@@ -416,13 +431,13 @@ fun PosScreen(
             // ---------- CART (TABLET ONLY) ----------
 
             if (!isPhone) {
-                Column(
+                Box(
                     modifier = Modifier
-                        .width(360.dp) // 🟢 fixed width for right side (adjust as needed)
+                        .width(360.dp)
                         .fillMaxHeight()
-                        .background(MaterialTheme.colorScheme.surface)
-                        .padding(8.dp)
                 ) {
+
+                    // ---------- CART (ALWAYS VISIBLE) ----------
                     RightPanel(
                         cartViewModel = cartViewModel,
                         ordersViewModel = ordersViewModel,
@@ -431,14 +446,55 @@ fun PosScreen(
                         tableNo = tableId ?: orderType,
                         paymentType = paymentType,
                         onPaymentChange = { paymentType = it },
-                        onOrderPlaced = { },
+                        onOrderPlaced = {
+                            showSearchKeyboard = false
+                        },
                         onOpenKitchen = { showKitchen = true },
                         onOpenBill = { showBill = true },
                         isMobile = false,
                         repository = repository
                     )
+
+                    // ---------- FLOATING KEYBOARD ----------
+                    if (showSearchKeyboard) {
+
+                        // 1️⃣ Click-outside dismiss layer
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .zIndex(10f)
+                                .clickable(
+                                    indication = null,
+                                    interactionSource = remember { MutableInteractionSource() }
+                                ) {
+                                    showSearchKeyboard = false
+                                }
+                        )
+
+                        // 2️⃣ Keyboard panel
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .fillMaxWidth()
+                                .height(LocalConfiguration.current.screenHeightDp.dp * 0.65f) // 🔥 taller
+                                .background(MaterialTheme.colorScheme.surface)
+                                .zIndex(11f)
+                        ) {
+                            PosSearchKeyboardRight(
+                                onKeyPress = { searchQuery += it },
+                                onBackspace = {
+                                    if (searchQuery.isNotEmpty())
+                                        searchQuery = searchQuery.dropLast(1)
+                                },
+                                onClear = { searchQuery = "" },
+                                onClose = { showSearchKeyboard = false }
+                            )
+                        }
+
+                    }
                 }
             }
+
 
 
         }
