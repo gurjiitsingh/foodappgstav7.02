@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.it10x.foodappgstav7_02.data.pos.entities.PosCartEntity
 import com.it10x.foodappgstav7_02.data.pos.repository.CartRepository
+import com.it10x.foodappgstav7_02.domain.usecase.TableReleaseUseCase
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -16,17 +17,18 @@ sealed class CartUiEvent {
 
 class CartViewModel(
     private val repository: CartRepository,
+    private val tableReleaseUseCase: TableReleaseUseCase,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
 
 // TO CHECK INIT DATA
-    init {
-        Log.d(
-            "CART_VM",
-            "CartViewModel CREATED hash=${this.hashCode()}"
-        )
-    }
+//    init {
+//        Log.d(
+//            "CART_VM",
+//            "CartViewModel CREATED hash=${this.hashCode()}"
+//        )
+//    }
     // ---------- ORDER CONTEXT ----------
     private val currentTableId =
         savedStateHandle.getStateFlow<String?>("tableId", null)
@@ -73,10 +75,10 @@ class CartViewModel(
 //    }
     private fun canMutateCart(): Boolean {
 
-    Log.d(
-        "CART_DEBUG",
-        "canMutateCart (In CartViewModel:canMutateCart)  currentOrderType.value=${currentOrderType.value} currentTableId.value=${currentTableId.value} "
-    )
+//    Log.d(
+//        "CART_DEBUG",
+//        "canMutateCart (In CartViewModel:canMutateCart)  currentOrderType.value=${currentOrderType.value} currentTableId.value=${currentTableId.value} "
+//    )
 
 
         return when (currentOrderType.value) {
@@ -133,70 +135,70 @@ class CartViewModel(
         }
     }
 
+//    fun decrease(productId: String, tableNo: String) {
+//
+//        if (!canMutateCart()) return
+//
+//        viewModelScope.launch {
+//            repository.decrease(productId, tableNo)
+//
+//            // ✅ auto-release table if cart becomes empty
+//            releaseTableIfCartEmpty(tableNo)
+//        }
+//    }
+
     fun decrease(productId: String, tableNo: String) {
-
-
         if (!canMutateCart()) return
-
-        val sid = sessionId.value ?: return
 
         viewModelScope.launch {
             repository.decrease(productId, tableNo)
+
+            // ✅ single source of truth
+            tableReleaseUseCase.releaseIfOrderingAndCartEmpty(tableNo)
         }
     }
 
-    fun removeFromCart(productId: String,tableNo : String) {
+
+
+    fun removeFromCart(productId: String, tableNo: String) {
         if (!canMutateCart()) return
 
-        val sid = sessionId.value ?: return
-
         viewModelScope.launch {
-            repository.remove(productId, tableNo)  // <-- repository should have a remove function
+            repository.remove(productId, tableNo)
+            tableReleaseUseCase.releaseIfOrderingAndCartEmpty(tableNo)
         }
     }
 
-    fun clear() {
-        val sid = sessionId.value ?: return
-
+    fun clearCart(tableNo: String) {
         viewModelScope.launch {
-            // 🧹 clear cart items
-            repository.clear(sid)
-
-            // 🔑 reset session
-            savedStateHandle["sessionId"] = null
+            repository.clear(tableNo)
+            tableReleaseUseCase.releaseIfOrderingAndCartEmpty(tableNo)
         }
     }
-    fun initSession_OLD(orderType: String, tableId: String? = null) {
 
-        Log.d(
-            "CART_DEBUG",
-            "initSession (In CartViewModel) orderType=${orderType}  tableId=${tableId}"
-        )
 
-        // ✅ Keep existing session if orderType/table didn't change
-        if (
-            sessionId.value != null &&
-            currentOrderType.value == orderType &&
-            currentTableId.value == tableId
-        ) {
-            return
-        }
+    //    fun removeFromCart(productId: String,tableNo : String) {
+//        if (!canMutateCart()) return
+//
+//        val sid = sessionId.value ?: return
+//
+//        viewModelScope.launch {
+//            repository.remove(productId, tableNo)  // <-- repository should have a remove function
+//        }
+//    }
 
-        val sid = when (orderType) {
-            "DINE_IN" -> {
-                if (tableId.isNullOrBlank()) return
-                "DINEIN-${tableId}-${System.currentTimeMillis()}"
-            }
-            "TAKEAWAY" -> "TAKEAWAY-${System.currentTimeMillis()}"
-            "DELIVERY" -> "DELIVERY-${System.currentTimeMillis()}"
-            else -> return
-        }
+//    fun clear() {
+//        val sid = sessionId.value ?: return
+//
+//        viewModelScope.launch {
+//            // 🧹 clear cart items
+//            repository.clear(sid)
+//
+//            // 🔑 reset session
+//            savedStateHandle["sessionId"] = null
+//        }
+//    }
 
-        // ✅ save sessionKey
-        savedStateHandle["orderType"] = orderType
-        savedStateHandle["tableId"] = tableId
-        savedStateHandle["sessionId"] = sid
-    }
     fun initSession(orderType: String, tableId: String? = null) {
 
         val resolvedTableId = when (orderType) {
@@ -214,7 +216,7 @@ class CartViewModel(
             currentOrderType.value == orderType &&
             currentTableId.value == resolvedTableId
         ) {
-            Log.d("CART_DEBUG", "initSession skipped (already active)")
+           // Log.d("CART_DEBUG", "initSession skipped (already active)")
             return
         }
 

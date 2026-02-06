@@ -1,5 +1,6 @@
 package com.it10x.foodappgstav7_02.ui.pos
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -24,6 +25,7 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import com.it10x.foodappgstav7_02.viewmodel.PosTableViewModel
 
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -33,6 +35,7 @@ fun ProductList(
     filteredProducts: List<ProductEntity>,
     variants: List<ProductEntity>,
     cartViewModel: CartViewModel,
+    tableViewModel: PosTableViewModel,
     tableNo: String?,  // add this
     posSessionViewModel: PosSessionViewModel  // 🔑 add this
     ) {
@@ -89,6 +92,7 @@ fun ProductList(
                     product = product,
                     variants = variants,
                     cartViewModel = cartViewModel,
+                    tableViewModel = tableViewModel,
                     tableNo = tableNo ?: "T0",  // fallback if null
                     sessionId = sessionId  // 🔑 pass here
                 )
@@ -108,6 +112,7 @@ private fun ProductInnerContent(
     product: ProductEntity,
     variants: List<ProductEntity>,
     cartViewModel: CartViewModel,
+    tableViewModel: PosTableViewModel,
     tableNo : String,
     sessionId: String   // 🔑 add this
 ) {
@@ -123,13 +128,13 @@ private fun ProductInnerContent(
 
             if (variants.isNotEmpty()) {
                 items(variants, key = { it.id }) { v ->
-                    VariantCard(v, cartViewModel, tableNo,sessionId)
+                    VariantCard(v, cartViewModel, tableViewModel, tableNo,sessionId)
                 }
             }
 
             if (product.parentId == null && product.hasVariants == false ) {
                 item {
-                    ParentProductCard(product, cartViewModel,tableNo,  sessionId)
+                    ParentProductCard(product, cartViewModel, tableViewModel,tableNo,  sessionId)
                 }
             }
         }
@@ -141,6 +146,7 @@ private fun ProductInnerContent(
 private fun ParentProductCard(
     product: ProductEntity,
     cartViewModel: CartViewModel,
+    tableViewModel: PosTableViewModel,
     tableNo: String,
     sessionId: String   // 🔑 add this
 ) {
@@ -216,6 +222,12 @@ private fun ParentProductCard(
                 // ➕ add to cart
                 IconButton(
                     onClick = {
+
+                        Log.d(
+                            "CART_DEBUG",
+                            "In Productlist:markOrdering:   "
+                        )
+
                         cartViewModel.addToCart(
                             PosCartEntity(
                                 productId = product.id,
@@ -231,6 +243,10 @@ private fun ParentProductCard(
                                 tableId = tableNo  // still optional
                             )
                         )
+
+                        tableNo?.let {
+                            tableViewModel.markOrdering(it)
+                        }
                     },
                     modifier = Modifier
                         .size(32.dp)
@@ -247,8 +263,10 @@ private fun ParentProductCard(
 private fun VariantCard(
     product: ProductEntity,
     cartViewModel: CartViewModel,
+    tableViewModel: PosTableViewModel,
     tableNo: String,
-    sessionId: String   // 🔑 add this
+    sessionId: String,   // 🔑 add this
+
 ) {
 
     Card(
@@ -314,6 +332,8 @@ private fun VariantCard(
                 // ➕
                 IconButton(
                     onClick = {
+
+
                         cartViewModel.addToCart(
                             PosCartEntity(
                                 productId = product.id,
@@ -331,6 +351,15 @@ private fun VariantCard(
                                 tableId = tableNo  // ✅ pass selected table
                             )
                         )
+
+
+
+                        tableNo?.let {
+
+                            tableViewModel.markOrdering(it)
+                        }
+
+
                     },
                     modifier = Modifier
                         .size(32.dp)

@@ -61,6 +61,9 @@ interface CartDao {
     fun getCartByScope(scopeKey: String): Flow<List<PosCartEntity>>
 
 
+    @Query("SELECT COUNT(*) FROM cart WHERE tableId = :tableId")
+    suspend fun getCartCount(tableId: String): Int
+
     @Query("""
     SELECT * FROM cart
     WHERE sessionId = :sessionId

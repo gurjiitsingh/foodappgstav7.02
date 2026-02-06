@@ -33,7 +33,10 @@ import com.it10x.foodappgstav7_02.viewmodel.PosTableViewModel
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Print
+import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.Send
+import com.it10x.foodappgstav7_02.ui.cart.CartRow
 import com.it10x.foodappgstav7_02.ui.theme.PosError
 import com.it10x.foodappgstav7_02.ui.theme.PosSuccess
 import com.it10x.foodappgstav7_02.ui.theme.PosWarning
@@ -274,14 +277,16 @@ fun RightPanel(
                     Icon(
                         imageVector = Icons.Default.Restaurant,
                         contentDescription = "Send to Kitchen",
-
+                        tint = Color.White
                     )
                     Spacer(Modifier.width(6.dp))
 
-                    Text(
-                        "->",
-                        color = MaterialTheme.colorScheme.onSurface
-                    ) // or "KOT"
+                    Icon(
+                        imageVector = Icons.Default.Send,
+                        contentDescription = "Send",
+                        modifier = Modifier.size(14.dp),
+                        tint = Color.White
+                    )
                 }
             }
 
@@ -299,7 +304,11 @@ fun RightPanel(
                     containerColor = PosSuccess
                 )
             ) {
-                Text("Open")
+                Icon(
+                    imageVector = Icons.Default.Restaurant,
+                    contentDescription = "Open Kitchen",
+                    tint = Color.White
+                )
             }
 
             // OPEN BILL
@@ -315,7 +324,11 @@ fun RightPanel(
                     contentColor = Color(0xFF1A1A1A)
                 )
             ) {
-                Text("Bill")
+                Icon(
+                    imageVector = Icons.Default.Receipt,
+                    contentDescription = "Bill",
+                    tint = Color.White
+                )
             }
 
 
@@ -335,7 +348,7 @@ fun RightPanel(
 
 
 @Composable
-fun CartRow(
+fun CartRow1(
     item: PosCartEntity,
     tableNo: String,
     cartViewModel: CartViewModel,

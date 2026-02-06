@@ -40,6 +40,7 @@ import com.it10x.foodappgstav7_02.data.pos.repository.POSOrdersRepository
 
 
 import com.it10x.foodappgstav7_02.data.pos.repository.CartRepository
+import com.it10x.foodappgstav7_02.domain.usecase.TableReleaseUseCase
 import com.it10x.foodappgstav7_02.ui.cart.CartViewModel
 import com.it10x.foodappgstav7_02.ui.cart.CartViewModelFactory
 import com.it10x.foodappgstav7_02.ui.pos.PosSessionViewModel
@@ -73,6 +74,7 @@ fun NavigationHost(
     )
 
 
+
     val application = context.applicationContext as Application
 
     val ordersViewModel: OnlineOrdersViewModel = viewModel(
@@ -85,6 +87,18 @@ fun NavigationHost(
         )
     )
     val posSessionViewModel: PosSessionViewModel = viewModel()
+
+
+    val cartRepository = remember {
+        CartRepository(db.cartDao())
+    }
+
+    val tableReleaseUseCase = remember {
+        TableReleaseUseCase(
+            cartRepository = cartRepository,
+            tableDao = db.tableDao()
+        )
+    }
 
     // -----------------------------
     // NAV HOST
@@ -187,6 +201,8 @@ fun NavigationHost(
 
         // ---------------- POS ----------------
 
+
+
         composable("pos") {
 
             val context = LocalContext.current
@@ -194,7 +210,8 @@ fun NavigationHost(
 
             val cartViewModel: CartViewModel = viewModel(
                 factory = CartViewModelFactory(
-                    repository = CartRepository(db.cartDao())
+                    repository = CartRepository(db.cartDao()),
+                    tableReleaseUseCase = tableReleaseUseCase
                 )
             )
 

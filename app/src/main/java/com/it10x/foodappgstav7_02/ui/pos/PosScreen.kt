@@ -87,11 +87,11 @@ fun PosScreen(
                 CartUiEvent.SessionRequired -> {
                     if (orderType == "DINE_IN") {
                         showTableSelector = true
-                        Toast.makeText(
-                            context,
-                            "Select table to continue Dine-In order",
-                            Toast.LENGTH_SHORT
-                        ).show()
+//                        Toast.makeText(
+//                            context,
+//                            "Select table to continue Dine-In order",
+//                            Toast.LENGTH_SHORT
+//                        ).show()
                     } else {
                         Toast.makeText(
                             context,
@@ -103,11 +103,6 @@ fun PosScreen(
 
                 CartUiEvent.TableRequired -> {
                     showTableSelector = true
-                    Toast.makeText(
-                        context,
-                        "Please select a table first",
-                        Toast.LENGTH_SHORT
-                    ).show()
                 }
             }
         }
@@ -396,6 +391,7 @@ fun PosScreen(
                     filteredProducts = filteredProducts,
                     variants = variants,
                     cartViewModel = cartViewModel,
+                    tableViewModel = tableVm,
                     tableNo = tableId,  // fallback if null
                     posSessionViewModel = posSessionViewModel  // 🔑 pass it
                 )
@@ -734,80 +730,112 @@ fun OrderChip(
 }
 
 
-@Composable
-fun TableSelectorGrid(
-    tables: List<PosTableViewModel.TableUiState>,
-    selectedTable: String?,
-    onTableSelected: (String) -> Unit,
-    onDismiss: () -> Unit
-){
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Select Table") },
-        text = {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(4),
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(tables) { ui ->
-
-                    val table = ui.table
-                    val isSelected = selectedTable == table.id
-
-                    val bgColor = when (ui.color) {
-                        PosTableViewModel.TableColor.GREEN -> MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)   // 🟢 running
-                        PosTableViewModel.TableColor.YELLOW -> MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)  // 🟡 bill requested
-                        PosTableViewModel.TableColor.RED -> MaterialTheme.colorScheme.error.copy(alpha = 0.15f)     // 🔴 ready to bill
-                        PosTableViewModel.TableColor.GRAY -> MaterialTheme.colorScheme.surfaceVariant    // ⚪ available
-                    }
-
-
-
-                    Surface(
-                        color = if (isSelected) MaterialTheme.colorScheme.primary else bgColor,
-                        shape = MaterialTheme.shapes.medium,
-                        tonalElevation = 2.dp,
-                        modifier = Modifier
-                            .aspectRatio(1f)
-                            .clickable {
-                                onTableSelected(table.id)
-                            }
-                    ) {
-                        Column(
-                            modifier = Modifier.fillMaxSize().padding(8.dp),
-                            verticalArrangement = Arrangement.SpaceBetween,
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-
-                            // TABLE NAME
-                            Text(
-                                text = table.tableName,
-                                style = MaterialTheme.typography.titleMedium,
-                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
-                            )
-
-                            // RUNNING AMOUNT
-                            if (ui.runningAmount > 0) {
-                                Text(
-                                    text = "₹${ui.runningAmount.toInt()}",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    }
-                }
-
-            }
-        },
-        confirmButton = {},
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
-        }
-    )
-}
+//@Composable
+//fun TableSelectorGrid(
+//    tables: List<PosTableViewModel.TableUiState>,
+//    selectedTable: String?,
+//    onTableSelected: (String) -> Unit,
+//    onDismiss: () -> Unit
+//){
+//    AlertDialog(
+//        onDismissRequest = onDismiss,
+//        title = { Text("Select Table") },
+//        text = {
+//            LazyVerticalGrid(
+//                columns = GridCells.Fixed(4),
+//                modifier = Modifier.fillMaxWidth(),
+//                horizontalArrangement = Arrangement.spacedBy(12.dp),
+//                verticalArrangement = Arrangement.spacedBy(12.dp)
+//            ) {
+//                items(tables) { ui ->
+//
+//                    val table = ui.table
+//                    val isSelected = selectedTable == table.id
+//
+////                    val bgColor = when (ui.color) {
+////                        PosTableViewModel.TableColor.GREEN ->
+////                            MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)   // 🟢 kitchen
+////
+////                        PosTableViewModel.TableColor.BLUE ->
+////                            MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)   // 🔵 ordering (cart)
+////
+////                        PosTableViewModel.TableColor.RED ->
+////                            MaterialTheme.colorScheme.error.copy(alpha = 0.15f)     // 🔴 bill
+////
+////                        PosTableViewModel.TableColor.GRAY ->
+////                            MaterialTheme.colorScheme.surfaceVariant                // ⚪ available
+////                    }
+//
+//                    val bgColor = when (ui.color) {
+//                        PosTableViewModel.TableColor.GREEN ->
+//                            Color(0xFF4CAF50).copy(alpha = 0.20f)   // 🟢 kitchen
+//
+//                        PosTableViewModel.TableColor.BLUE ->
+//                            Color(0xFF2196F3).copy(alpha = 0.20f)   // 🔵 ordering (cart)
+//
+//                        PosTableViewModel.TableColor.RED ->
+//                            Color(0xFFF44336).copy(alpha = 0.20f)   // 🔴 bill
+//
+//                        PosTableViewModel.TableColor.GRAY ->
+//                            Color(0xFFBDBDBD).copy(alpha = 0.20f)   // ⚪ available
+//                    }
+//
+//
+//                    Surface(
+//                        color = bgColor, // 🔑 NEVER override status color
+//                        shape = MaterialTheme.shapes.medium,
+//                        tonalElevation = 2.dp,
+//                        border = if (isSelected)
+//                            BorderStroke(3.dp, Color(0xFFFF9800)) // 🟠 orange selection
+//                        else null,
+//                        modifier = Modifier
+//                            .aspectRatio(1f)
+//                            .clickable { onTableSelected(table.id) }
+//                    ) {
+//                        Column(
+//                            modifier = Modifier.fillMaxSize().padding(8.dp),
+//                            verticalArrangement = Arrangement.SpaceBetween,
+//                            horizontalAlignment = Alignment.CenterHorizontally
+//                        ) {
+//
+//                            // TABLE NAME
+////                            Text(
+////                                text = table.tableName,
+////                                style = MaterialTheme.typography.titleMedium,
+////                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+////                            )
+//
+//                            Text(
+//                                text = table.tableName,
+//                                style = MaterialTheme.typography.titleMedium,
+//                                color = MaterialTheme.colorScheme.onSurface
+//                            )
+//
+//                            // RUNNING AMOUNT
+//                            if (ui.runningAmount > 0) {
+//                                Text(
+//                                    text = "₹${ui.runningAmount.toInt()}",
+//                                    style = MaterialTheme.typography.labelMedium,
+//                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+//                                )
+////                                Text(
+////                                    text = "₹${ui.runningAmount.toInt()}",
+////                                    style = MaterialTheme.typography.labelMedium,
+////                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+////                                )
+//                            }
+//                        }
+//                    }
+//                }
+//
+//            }
+//        },
+//        confirmButton = {},
+//        dismissButton = {
+//            TextButton(onClick = onDismiss) { Text("Cancel") }
+//        }
+//    )
+//}
 
 
 @Composable

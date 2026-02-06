@@ -18,6 +18,12 @@ class CartRepository(
 
 
 
+
+    suspend fun isCartEmpty(tableNo: String): Boolean {
+        val count = dao.getCartCount(tableNo)
+       // Log.d("CART_DEBUG", "Cart count for table $tableNo = $count")
+        return count == 0
+    }
     // ---------- ADD ----------
     suspend fun addToCart(product: PosCartEntity, tableNo: String) {
         val existing = dao.getItemByIdForTable(product.productId, tableId = tableNo)
@@ -27,24 +33,19 @@ class CartRepository(
             dao.update(existing.copy(quantity = existing.quantity + 1))
         }
 
-//        val cartItems = dao.getCartOnce()
-//
-//        Log.d("POS_CART", "------ CART SNAPSHOT START ------")
-//        cartItems.forEachIndexed { index, item ->
-//            Log.d(
-//                "POS_CART",
-//                "${index + 1}. table=${item.tableId} ${item.name} | qty=${item.quantity} | price=${item.basePrice} "
-//            )
-//        }
-//        Log.d("POS_CART", "------ CART SNAPSHOT END ------")
+
     }
 
-
+    suspend fun getCartCountForTable(tableId: String): Int {
+        return dao.getCartCount(tableId)
+    }
 
     // ---------- REMOVE SINGLE ITEM ----------
     suspend fun remove(item: PosCartEntity) {
         dao.delete(item)
     }
+
+
 
     // ---------- CLEAR CART (per table) ----------
     suspend fun clear(tableId: String) {
@@ -54,15 +55,15 @@ class CartRepository(
 
 // ---------- DECREASE (SESSION BASED – FIXED) ----------
 suspend fun decrease(productId: String, tableNo: String) {
-    Log.d(
-        "CART_DEBUG",
-        "DECREASE_CLICK (In CartRepository)  tableId=${tableNo}"
-    )
+//    Log.d(
+//        "CART_DEBUG",
+//        "DECREASE_CLICK (In CartRepository)  tableId=${tableNo}"
+//    )
     val existing = dao.getItemByIdForTable(productId, tableNo) ?: return
-    Log.d(
-        "CART_DEBUG",
-        "DECREASE_CLICK (In CartRepository)  tableId=${tableNo} Product: ${existing}"
-    )
+//    Log.d(
+//        "CART_DEBUG",
+//        "DECREASE_CLICK (In CartRepository)  tableId=${tableNo} Product: ${existing}"
+//    )
     if (existing.quantity > 1) {
         dao.update(existing.copy(quantity = existing.quantity - 1))
     } else {

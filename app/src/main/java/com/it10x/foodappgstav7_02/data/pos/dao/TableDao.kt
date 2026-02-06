@@ -1,5 +1,6 @@
 package com.it10x.foodappgstav7_02.data.pos.dao
 
+import android.util.Log
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -10,18 +11,41 @@ import com.it10x.foodappgstav7_02.data.pos.entities.TableEntity
 @Dao
 interface TableDao {
 
+
+
+    @Query("SELECT * FROM tables WHERE tableName = :tableName LIMIT 1")
+    suspend fun getTable(tableName: String): TableEntity?
+    @Query("SELECT * FROM tables WHERE id = :tableId LIMIT 1")
+    suspend fun getById(tableId: String): TableEntity?
+    @Query("SELECT * FROM tables ORDER BY id ASC")
+    suspend fun getAll(): List<TableEntity>
+
     @Query("DELETE FROM tables")
     suspend fun clear()
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(list: List<TableEntity>)
 
-    @Query("SELECT * FROM tables ORDER BY id ASC")
-    suspend fun getAll(): List<TableEntity>
+
 
     @Query("UPDATE tables SET status = :status WHERE id = :tableId")
-    suspend fun updateStatus(tableId: String, status: String)
+    suspend fun updateStatus1(tableId: String, status: String)
 
+    suspend fun updateStatus(tableId: String, status: String) {
+        Log.d(
+            "TABLE_TEST",
+            "updateStatus called → tableId=$tableId status=$status"
+        )
+        updateStatus1(tableId, status)
+    }
+
+
+
+    @Query("UPDATE tables SET status = :status WHERE tableName = :tableName")
+    suspend fun updateStatusByName(tableName: String, status: String)
+
+    @Query("SELECT * FROM tables ORDER BY id ASC")
+    suspend fun getAllTables(): List<TableEntity>
     // ✅ when order starts
     @Query("""
         UPDATE tables
@@ -42,8 +66,6 @@ interface TableDao {
 
 
 
-    @Query("SELECT * FROM tables WHERE tableName = :tableName LIMIT 1")
-    suspend fun getTable(tableName: String): TableEntity?
 
     @Query("UPDATE tables SET status = 'AVAILABLE' WHERE tableName = :tableName")
     suspend fun closeTable(tableName: String)
