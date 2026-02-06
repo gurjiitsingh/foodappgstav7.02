@@ -1,5 +1,6 @@
 package com.it10x.foodappgstav7_02.data.pos.repository
 
+import android.util.Log
 import com.it10x.foodappgstav7_02.data.pos.AppDatabase
 import com.it10x.foodappgstav7_02.data.pos.dao.CartDao
 import com.it10x.foodappgstav7_02.data.pos.dao.KotBatchDao
@@ -43,6 +44,9 @@ class POSOrdersRepository(
     fun getCartItems(sessionId: String): Flow<List<PosCartEntity>> {
         return cartDao.getCartBySessionId(sessionId)
     }
+    fun getCartItemsByTableId(tableId: String): Flow<List<PosCartEntity>> {
+        return cartDao.getCartItemsByTableId(tableId)
+    }
 //    fun getCartItems(sessionId: String?, orderType: String): Flow<List<PosCartEntity>> {
 //        return if (orderType == "DINE_IN" && sessionId != null) {
 //            cartDao.getCartForTable(sessionId)
@@ -61,21 +65,25 @@ class POSOrdersRepository(
     }
 
     // ✅ Clears cart safely depending on order type
-    suspend fun clearCart(orderType: String, tableId: String?) {
-        when (orderType) {
-            "DINE_IN" -> {
-                if (!tableId.isNullOrBlank()) {
-                    cartDao.clearCart(tableId)      // Table-based session
-                }
-            }
-            "TAKEAWAY", "DELIVERY" -> {
-                cartDao.clearCartByPrefix("$orderType-")
-            }
-            else -> {
-                // fallback just in case
-                cartDao.clearCartByPrefix("$orderType-")
-            }
+    suspend fun clearCart(orderType: String, tableId: String) {
+        Log.d("CART_DEBUG", " empty cart for table NO.  (${tableId} items)")
+        if (!tableId.isNullOrBlank()) {
+            cartDao.clearCartByTableId(tableId)      // Table-based session
         }
+//        when (orderType) {
+//            "DINE_IN" -> {
+//                if (!tableId.isNullOrBlank()) {
+//                    cartDao.clearCartByTableId(tableId)      // Table-based session
+//                }
+//            }
+//            "TAKEAWAY", "DELIVERY" -> {
+//                cartDao.clearCartByPrefix("$orderType-")
+//            }
+//            else -> {
+//                // fallback just in case
+//                cartDao.clearCartByPrefix("$orderType-")
+//           }
+//        }
     }
 
     // -------------------------

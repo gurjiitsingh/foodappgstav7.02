@@ -199,7 +199,7 @@ private fun ParentProductCard(
 
                 // ➖ decrease
                 IconButton(
-                    onClick = { cartViewModel.decrease(product.id) },
+                    onClick = { cartViewModel.decrease(product.id, tableNo) },
                     modifier = Modifier
                         .size(32.dp)
                         .background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.small)
@@ -302,7 +302,7 @@ private fun VariantCard(
 
                 // ➖
                 IconButton(
-                    onClick = { cartViewModel.decrease(product.id) },
+                    onClick = { cartViewModel.decrease(product.id, tableNo) },
                     modifier = Modifier
                         .size(32.dp)
                         //.background(Color(0xFFD32F2F), MaterialTheme.shapes.small)

@@ -224,11 +224,12 @@ class KitchenViewModel(
 
             // ✅ use sessionId as the real key for cart & KOT
             val sessionKey = sessionId
+            val tableId = tableNo!!
        //     Log.d("KITCHEN_DEBUG", "Resolved sessionKey=$sessionKey")
 
             // ✅ FIX: Use sessionKey (for takeaway & delivery)
             //val cartList = repository.getCartItems(sessionKey, orderType).first()
-            val cartList = repository.getCartItems(sessionKey).first()
+            val cartList = repository.getCartItemsByTableId(tableId).first()
             //Log.d("KITCHEN_DEBUG", "Cart fetched for type=$orderType, sessionKey=$sessionKey, size=${cartList.size}")
 
             if (cartList.isEmpty()) {
@@ -260,10 +261,8 @@ class KitchenViewModel(
 
                 Log.d("KITCHEN_DEBUG4", " KOT saved successfully (${cartList.size} items)")
 
-                //  FIX: clear by sessionKey (not tableNo)
-              //  Log.d("KITCHEN_DEBUG", "Clearing cart for sessionKey=$sessionKey")
-                repository.clearCart(orderType, sessionKey)
-              //  Log.d("KITCHEN_DEBUG", " Cart cleared for sessionKey=$sessionKey")
+
+                repository.clearCart(orderType, tableId)
 
             } catch (e: Exception) {
               //  Log.e("KITCHEN_DEBUG", " Exception during placeOrder()", e)
@@ -347,7 +346,7 @@ class KitchenViewModel(
     fun sendSingleItemDirectlyToBill(
         cart: PosCartEntity,
         orderType: String,
-        tableNo: String?,
+        tableNo: String,
         sessionId: String,
         print: Boolean
     ) {
@@ -412,7 +411,7 @@ class KitchenViewModel(
 
 
             // 🔹 Remove from cart after sending to bill
-            cartViewModel.removeFromCart(cart.productId)
+            cartViewModel.removeFromCart(cart.productId, tableNo)
 
 
         }

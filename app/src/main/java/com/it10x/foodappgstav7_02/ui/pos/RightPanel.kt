@@ -45,7 +45,7 @@ fun RightPanel(
     ordersViewModel: POSOrdersViewModel,
     tableViewModel: PosTableViewModel,
     orderType: String,
-    tableNo: String?,
+    tableNo: String,
     paymentType: String,
     onPaymentChange: (String) -> Unit,
      onOrderPlaced: () -> Unit,
@@ -203,6 +203,7 @@ fun RightPanel(
                 CartRow(
                     item = item,
                     cartViewModel = cartViewModel,
+                    tableNo = tableNo,
                     onBillAction = { cartItem, print ->
 
                         kitchenViewModel.sendSingleItemDirectlyToBill(
@@ -336,6 +337,7 @@ fun RightPanel(
 @Composable
 fun CartRow(
     item: PosCartEntity,
+    tableNo: String,
     cartViewModel: CartViewModel,
     onBillAction: (item: PosCartEntity, print: Boolean) -> Unit
 ) {
@@ -379,7 +381,7 @@ fun CartRow(
                 Row(verticalAlignment = Alignment.CenterVertically) {
 
                     IconButton(
-                        onClick = { cartViewModel.decrease(item.productId) },
+                        onClick = { cartViewModel.decrease(item.productId, tableNo) },
                         modifier = Modifier
                             .size(36.dp)
                             .background(

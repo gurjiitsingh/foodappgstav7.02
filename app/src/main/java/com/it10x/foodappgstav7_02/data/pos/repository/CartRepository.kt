@@ -1,5 +1,6 @@
 package com.it10x.foodappgstav7_02.data.pos.repository
 
+import android.util.Log
 import com.it10x.foodappgstav7_02.data.pos.dao.CartDao
 import com.it10x.foodappgstav7_02.data.pos.entities.PosCartEntity
 import kotlinx.coroutines.flow.Flow
@@ -9,23 +10,33 @@ class CartRepository(
 ) {
 
     // ---------- OBSERVE CART (per table) ----------
-    fun observeCart(sessionId: String): Flow<List<PosCartEntity>> =
-        dao.getCartForSession(sessionId)
+//    fun observeCart(sessionId: String): Flow<List<PosCartEntity>> =
+//        dao.getCartForSession(sessionId)
 
-
+    fun observeCart(scopeKey: String): Flow<List<PosCartEntity>> =
+        dao.getCartByScope(scopeKey)
 
 
 
     // ---------- ADD ----------
-    suspend fun addToCart(product: PosCartEntity) {
-        val existing = dao.getByIdForSession(product.productId, product.sessionId)
+    suspend fun addToCart(product: PosCartEntity, tableNo: String) {
+        val existing = dao.getItemByIdForTable(product.productId, tableId = tableNo)
         if (existing == null) {
             dao.insert(product.copy(quantity = 1))
         } else {
             dao.update(existing.copy(quantity = existing.quantity + 1))
         }
 
-
+//        val cartItems = dao.getCartOnce()
+//
+//        Log.d("POS_CART", "------ CART SNAPSHOT START ------")
+//        cartItems.forEachIndexed { index, item ->
+//            Log.d(
+//                "POS_CART",
+//                "${index + 1}. table=${item.tableId} ${item.name} | qty=${item.quantity} | price=${item.basePrice} "
+//            )
+//        }
+//        Log.d("POS_CART", "------ CART SNAPSHOT END ------")
     }
 
 
@@ -42,8 +53,16 @@ class CartRepository(
 
 
 // ---------- DECREASE (SESSION BASED – FIXED) ----------
-suspend fun decrease(productId: String, sessionId: String) {
-    val existing = dao.getByIdForSession(productId, sessionId) ?: return
+suspend fun decrease(productId: String, tableNo: String) {
+    Log.d(
+        "CART_DEBUG",
+        "DECREASE_CLICK (In CartRepository)  tableId=${tableNo}"
+    )
+    val existing = dao.getItemByIdForTable(productId, tableNo) ?: return
+    Log.d(
+        "CART_DEBUG",
+        "DECREASE_CLICK (In CartRepository)  tableId=${tableNo} Product: ${existing}"
+    )
     if (existing.quantity > 1) {
         dao.update(existing.copy(quantity = existing.quantity - 1))
     } else {
@@ -51,8 +70,8 @@ suspend fun decrease(productId: String, sessionId: String) {
     }
 }
 
-    suspend fun remove(productId: String, sessionId: String) {
-        dao.deleteItem(productId, sessionId)
+    suspend fun remove(productId: String, tableNo: String) {
+        dao.deleteItem(productId, tableNo)
     }
 
 
