@@ -65,7 +65,7 @@ fun TableSelectorGrid(
 
                     // 🔹 Grid for each area — userScroll disabled (static height)
                     val rows = (areaTables.size + 4) / 5
-                    val gridHeight = (rows * 110).dp
+                    val gridHeight = (rows * 105).dp
 
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(5),
