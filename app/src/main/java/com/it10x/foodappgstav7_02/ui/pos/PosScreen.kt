@@ -87,11 +87,6 @@ fun PosScreen(
                 CartUiEvent.SessionRequired -> {
                     if (orderType == "DINE_IN") {
                         showTableSelector = true
-//                        Toast.makeText(
-//                            context,
-//                            "Select table to continue Dine-In order",
-//                            Toast.LENGTH_SHORT
-//                        ).show()
                     } else {
                         Toast.makeText(
                             context,
@@ -132,13 +127,7 @@ fun PosScreen(
     LaunchedEffect(Unit) { tableVm.loadTables() }
 
 
-//    val filteredProducts = remember(parentProducts, selectedCatId) {
-//        if (selectedCatId == null) {
-//            emptyList()
-//        } else {
-//            parentProducts.filter { it.categoryId == selectedCatId }
-//        }
-//    }
+
 
     val filteredProducts = remember(
         parentProducts,

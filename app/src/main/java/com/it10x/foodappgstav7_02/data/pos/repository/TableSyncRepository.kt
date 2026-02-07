@@ -18,6 +18,7 @@ class TableSyncRepository(
 
         val list = snapshot.documents.mapNotNull { doc ->
             val data = doc.data ?: return@mapNotNull null
+
             TableEntity(
                 id = data["id"] as? String ?: doc.id,
                 tableName = data["tableName"] as? String ?: doc.id,
@@ -26,8 +27,17 @@ class TableSyncRepository(
                 waiterId = data["waiterId"] as? String,
                 activeOrderId = data["activeOrderId"] as? String,
                 guestsCount = (data["guestsCount"] as? Number)?.toInt(),
-                updatedAt = (data["updatedAt"] as? com.google.firebase.Timestamp)?.toDate()?.time,
-                createdAt = (data["createdAt"] as? com.google.firebase.Timestamp)?.toDate()?.time,
+
+                // ✅ NEW FIELDS ADDED
+                area = data["area"] as? String ?: "General",
+                sortOrder = (data["sortOrder"] as? Number)?.toInt(),
+
+                updatedAt = (data["updatedAt"] as? com.google.firebase.Timestamp)
+                    ?.toDate()
+                    ?.time,
+                createdAt = (data["createdAt"] as? com.google.firebase.Timestamp)
+                    ?.toDate()
+                    ?.time,
                 notes = data["notes"] as? String,
                 synced = data["synced"] as? Boolean
             )

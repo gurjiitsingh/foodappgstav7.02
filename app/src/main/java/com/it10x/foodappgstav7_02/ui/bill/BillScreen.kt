@@ -1,5 +1,6 @@
 package com.it10x.foodappgstav7_02.ui.bill
 
+import android.content.Context
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,7 +14,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.it10x.foodappgstav7_02.ui.payment.PaymentType
-
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
 // =====================================================
 // DELIVERY ADDRESS UI STATE (UI ONLY)
 // =====================================================
@@ -45,6 +49,8 @@ fun BillScreen(
     var showAddressDialog by remember { mutableStateOf(false) }
     var pendingPaymentType by remember { mutableStateOf<PaymentType?>(null) }
 
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     if (state.loading) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -98,12 +104,20 @@ fun BillScreen(
             PaymentButton("Cash") {
                 onPaymentClick(
                     viewModel,
+                    context,
                     PaymentType.CASH,
                     deliveryAddressState.value,
                     onRequireAddress = {
                         pendingPaymentType = PaymentType.CASH
                         showAddressDialog = true
                     },
+
+
+
+
+
+
+
                     onProceed = onPayClick
                 )
             }
@@ -111,6 +125,7 @@ fun BillScreen(
             PaymentButton("Card") {
                 onPaymentClick(
                     viewModel,
+                    context,
                     PaymentType.CARD,
                     deliveryAddressState.value,
                     onRequireAddress = {
@@ -124,6 +139,7 @@ fun BillScreen(
             PaymentButton("UPI") {
                 onPaymentClick(
                     viewModel,
+                    context,
                     PaymentType.UPI,
                     deliveryAddressState.value,
                     onRequireAddress = {
@@ -156,8 +172,24 @@ fun BillScreen(
 // =====================================================
 // PAYMENT HANDLER
 // =====================================================
+//private fun onPaymentClick(
+//    viewModel: BillViewModel,
+//    paymentType: PaymentType,
+//    address: DeliveryAddressUiState,
+//    onRequireAddress: () -> Unit,
+//    onProceed: (PaymentType) -> Unit
+//) {
+//    if (viewModel.orderTypePublic == "DELIVERY" && !isAddressValid(address)) {
+//        onRequireAddress()
+//    } else {
+//        onProceed(paymentType)
+//    }
+//}
+
 private fun onPaymentClick(
+
     viewModel: BillViewModel,
+    context: Context,
     paymentType: PaymentType,
     address: DeliveryAddressUiState,
     onRequireAddress: () -> Unit,
@@ -165,10 +197,27 @@ private fun onPaymentClick(
 ) {
     if (viewModel.orderTypePublic == "DELIVERY" && !isAddressValid(address)) {
         onRequireAddress()
-    } else {
+        return
+    }
+
+    viewModel.viewModelScope.launch {
+
+        val hasPending = viewModel.hasPendingKitchenItems()
+
+        if (hasPending) {
+            Toast.makeText(
+                context,
+                "Kitchen items pending. Clear before billing.",
+                Toast.LENGTH_LONG
+            ).show()
+            return@launch
+        }
+
         onProceed(paymentType)
     }
 }
+
+
 
 // =====================================================
 // VALIDATION

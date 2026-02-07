@@ -145,15 +145,8 @@ fun RightPanel(
             else -> false
         }
 
-
-    val canOpenKitchen =
-        hasKitchenItems && when (orderType) {
-            "DINE_IN" -> hasTable && (isRunning || isBillRequested)
-            "TAKEAWAY", "DELIVERY" -> true
-            else -> false
-        }
-
-
+    val canOpenKitchen = hasKitchenItems
+  //  val canOpenBill = hasBillItems
 
     Column(
         modifier = Modifier
@@ -251,7 +244,7 @@ fun RightPanel(
                         Settings.Secure.ANDROID_ID
                     )
 
-                    kitchenViewModel.logAllKotItems()
+                   // kitchenViewModel.logAllKotItems()
 
                     kitchenViewModel.sendToKitchen(
                         orderType = orderType,

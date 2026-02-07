@@ -12,9 +12,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.it10x.foodappgstav7_02.viewmodel.PosTableViewModel
 
+import androidx.compose.ui.text.TextStyle
 
 @Composable
 fun TableSelectorGrid(
@@ -28,10 +30,10 @@ fun TableSelectorGrid(
         title = { Text("Select Table") },
         text = {
             LazyVerticalGrid(
-                columns = GridCells.Fixed(4),
+                columns = GridCells.Fixed(5),
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(tables) { ui ->
 
@@ -55,7 +57,7 @@ fun TableSelectorGrid(
                     Surface(
                         color = bgColor,
                         shape = MaterialTheme.shapes.medium,
-                        tonalElevation = 2.dp,
+                        tonalElevation = 1.dp,
                         border = if (isSelected)
                             BorderStroke(3.dp, Color(0xFFFF9800)) // 🟠 selection
                         else null,
@@ -79,36 +81,68 @@ fun TableSelectorGrid(
                             )
 
                             // 🔹 STATUS INFO
+                            // 🔹 STATUS INFO (CART + KITCHEN + BILL)
                             Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(2.dp)
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
 
-                                if (ui.cartCount > 0) {
-                                    Text(
-                                        text = "🛒 ${ui.cartCount}",
-                                        style = MaterialTheme.typography.labelSmall
-                                    )
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+
+                                    // 🛒 CART
+                                    if (ui.cartCount > 0) {
+                                        StatusBadge(
+                                            icon = "🛒",
+                                            text = ui.cartCount.toString(),
+                                            bgColor = Color(0xFF1976D2),
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
+
+                                    // 🍳 KITCHEN
+                                    if (ui.kitchenPendingCount > 0) {
+                                        StatusBadge(
+                                            icon = "🍳",
+                                            text = ui.kitchenPendingCount.toString(),
+                                            bgColor = Color(0xFFF9A825),
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
                                 }
 
-                                if (ui.kitchenPendingCount > 0) {
-                                    Text(
-                                        text = "🍳 ${ui.kitchenPendingCount}",
-                                        style = MaterialTheme.typography.labelSmall
-                                    )
-                                }
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
 
-                                if (ui.billAmount > 0) {
-                                    Text(
-                                        text = "₹${ui.billAmount.toInt()}",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = if (ui.isBilled)
-                                            Color(0xFF2E7D32) // green
-                                        else
-                                            Color(0xFFD32F2F) // red
-                                    )
+                                    // 💰 BILL COUNT
+                                    if (ui.billDoneCount > 0) {
+                                        StatusBadge(
+                                            icon = "🧾", // bill icon
+                                            text = ui.billDoneCount.toString(),
+                                            bgColor = Color(0xFF2E7D32),
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
+
+                                    // 💵 BILL AMOUNT
+                                    if (ui.billAmount > 0) {
+                                        StatusBadge(
+                                            icon = "",
+                                            text = ui.billAmount.toInt().toString(),
+                                            bgColor = if (ui.isBilled)
+                                                Color(0xFF2E7D32)
+                                            else
+                                                Color(0xFFD32F2F),
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
                                 }
                             }
+
+
                         }
                     }
 
@@ -121,3 +155,40 @@ fun TableSelectorGrid(
         }
     )
 }
+
+
+@Composable
+fun StatusBadge(
+    icon: String,
+    text: String,
+    bgColor: Color,
+    modifier: Modifier = Modifier,
+    textStyle: TextStyle = MaterialTheme.typography.bodyMedium
+) {
+    Surface(
+        color = bgColor,
+        shape = MaterialTheme.shapes.small,
+        modifier = modifier
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 1.dp, vertical = 1.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            if (icon.isNotEmpty()) {
+                Text(icon)
+                Spacer(Modifier.width(1.dp))
+            }
+
+            Text(
+                text = text,
+                color = Color.White,
+                fontWeight = FontWeight.SemiBold,
+                style = textStyle
+            )
+        }
+    }
+}
+
+

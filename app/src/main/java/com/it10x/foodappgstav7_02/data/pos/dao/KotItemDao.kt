@@ -195,4 +195,64 @@ AND status = 'PENDING'
 
 
 
+    // -------------------------
+// TABLE GRID – COUNTS
+// -------------------------
+
+    @Query("""
+    SELECT COUNT(*) 
+    FROM pos_kot_items
+    WHERE tableNo = :tableNo
+      AND status = 'PENDING'
+""")
+    suspend fun countKitchenPending(tableNo: String): Int
+
+
+    @Query("""
+    SELECT COUNT(*) 
+    FROM pos_kot_items
+    WHERE tableNo = :tableNo
+      AND status = 'DONE'
+""")
+    suspend fun countBillDone(tableNo: String): Int
+
+
+    // -------------------------
+// TABLE GRID – BILL AMOUNT
+// -------------------------
+    @Query("""
+    SELECT 
+        IFNULL(SUM(
+            (basePrice * quantity) +
+            CASE 
+                WHEN taxType = 'exclusive'
+                THEN (basePrice * quantity * taxRate / 100)
+                ELSE 0
+            END
+        ), 0)
+    FROM pos_kot_items
+    WHERE tableNo = :tableNo
+      AND status = 'DONE'
+""")
+    suspend fun billAmountForTable(tableNo: String): Double
+
+
+    @Query("""
+    SELECT IFNULL(SUM(
+        (basePrice * quantity) +
+        CASE 
+            WHEN taxType = 'exclusive' 
+            THEN (basePrice * quantity * taxRate / 100)
+            ELSE 0
+        END
+    ), 0)
+    FROM pos_kot_items
+    WHERE tableNo = :tableNo
+      AND status IN ('PENDING', 'DONE')
+""")
+    suspend fun billAmountForTableIncludingKitchen(tableNo: String): Double
+
+
+
+
 }
