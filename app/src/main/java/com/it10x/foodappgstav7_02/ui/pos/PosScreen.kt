@@ -69,7 +69,8 @@ fun PosScreen(
     var orderType by remember { mutableStateOf("DINE_IN") }
 
     val sessionId by cartViewModel.sessionKey.collectAsState()
-    val tableId by posSessionViewModel.tableId.collectAsState()
+    val tableId1 by posSessionViewModel.tableId.collectAsState()
+    val tableId =  tableId1 ?:""
     var searchQuery by rememberSaveable { mutableStateOf("") }
 
     val repository = POSOrdersRepository(

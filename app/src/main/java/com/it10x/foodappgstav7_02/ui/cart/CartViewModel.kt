@@ -83,17 +83,15 @@ class CartViewModel(
 
         return when (currentOrderType.value) {
             "DINE_IN" -> !currentTableId.value.isNullOrBlank()
-            else -> true // TAKEAWAY / DELIVERY always allowed
+            "TAKEAWAY" -> !currentTableId.value.isNullOrBlank()
+            "DELIVERY" -> !currentTableId.value.isNullOrBlank()
+            else -> true //NOT :-- TAKEAWAY / DELIVERY always allowed
         }
     }
 
     // ---------- MUTATIONS ----------
     fun addToCart(product: PosCartEntity) {
 
-//        Log.d(
-//            "POS_DEBUG",
-//            "ADD_CLICK orderType=${posSessionViewModel.orderType} tableId=${posSessionViewModel.tableId.value}"
-//        )
         viewModelScope.launch {
 
             if (sessionId.value.isNullOrBlank()) {
@@ -118,35 +116,6 @@ class CartViewModel(
     }
 
 
-
-    fun increase(item: PosCartEntity) {
-        if (!canMutateCart()) return
-
-        val sid = sessionId.value ?: return
-
-        viewModelScope.launch {
-            repository.addToCart(
-                item.copy(
-                    sessionId = sid,
-                    tableId = currentTableId.value
-                ),
-                tableNo = currentTableId.value!!,
-            )
-        }
-    }
-
-//    fun decrease(productId: String, tableNo: String) {
-//
-//        if (!canMutateCart()) return
-//
-//        viewModelScope.launch {
-//            repository.decrease(productId, tableNo)
-//
-//            // ✅ auto-release table if cart becomes empty
-//            releaseTableIfCartEmpty(tableNo)
-//        }
-//    }
-
     fun decrease(productId: String, tableNo: String) {
         if (!canMutateCart()) return
 
@@ -169,42 +138,13 @@ class CartViewModel(
         }
     }
 
-    fun clearCart(tableNo: String) {
-        viewModelScope.launch {
-            repository.clear(tableNo)
-            tableReleaseUseCase.releaseIfOrderingAndCartEmpty(tableNo)
-        }
-    }
-
-
-    //    fun removeFromCart(productId: String,tableNo : String) {
-//        if (!canMutateCart()) return
-//
-//        val sid = sessionId.value ?: return
-//
-//        viewModelScope.launch {
-//            repository.remove(productId, tableNo)  // <-- repository should have a remove function
-//        }
-//    }
-
-//    fun clear() {
-//        val sid = sessionId.value ?: return
-//
-//        viewModelScope.launch {
-//            // 🧹 clear cart items
-//            repository.clear(sid)
-//
-//            // 🔑 reset session
-//            savedStateHandle["sessionId"] = null
-//        }
-//    }
 
     fun initSession(orderType: String, tableId: String? = null) {
 
         val resolvedTableId = when (orderType) {
             "DINE_IN" -> tableId
-            "TAKEAWAY" -> "TAKEAWAY"
-            "DELIVERY" -> "DELIVERY"
+            "TAKEAWAY" -> tableId
+            "DELIVERY" -> tableId
             else -> null
         }
 
@@ -233,8 +173,8 @@ class CartViewModel(
     private fun cartScopeKey(): String? {
         return when (currentOrderType.value) {
             "DINE_IN" -> currentTableId.value
-            "TAKEAWAY" -> "TAKEAWAY"
-            "DELIVERY" -> "DELIVERY"
+            "TAKEAWAY" -> currentTableId.value
+            "DELIVERY" -> currentTableId.value
             else -> null
         }
     }

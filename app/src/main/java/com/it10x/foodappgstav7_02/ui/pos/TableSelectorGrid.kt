@@ -2,6 +2,7 @@ package com.it10x.foodappgstav7_02.ui.pos
 
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -9,11 +10,13 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -39,7 +42,6 @@ fun TableSelectorGrid(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Select Table") },
         text = {
             // ✅ use ScrollColumn for stable height
             Column(
@@ -65,7 +67,7 @@ fun TableSelectorGrid(
 
                     // 🔹 Grid for each area — userScroll disabled (static height)
                     val rows = (areaTables.size + 4) / 5
-                    val gridHeight = (rows * 105).dp
+                    val gridHeight = (rows * 115).dp
 
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(5),
@@ -97,77 +99,79 @@ fun TableSelectorGrid(
                                 shape = MaterialTheme.shapes.medium,
                                 tonalElevation = 1.dp,
                                 border = if (isSelected)
-                                    BorderStroke(3.dp, Color(0xFFFF9800))
+                                    BorderStroke(2.dp, Color(0xFFFF9800))
                                 else null,
                                 modifier = Modifier
-                                    .aspectRatio(1f)
+                                    .aspectRatio(0.89f)
                                     .clickable { onTableSelected(table.id) }
                             ) {
                                 Column(
                                     modifier = Modifier
                                         .fillMaxSize()
-                                        .padding(8.dp),
+                                        .padding(3.dp),
                                     verticalArrangement = Arrangement.SpaceBetween,
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     // 🔹 TABLE NAME
-                                    Text(
-                                        text = table.tableName,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
 
-                                    // 🔹 STATUS INFO
-                                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                        Row(
-                                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            if (ui.cartCount > 0) {
-                                                StatusBadge(
-                                                    icon = "🛒",
-                                                    text = ui.cartCount.toString(),
-                                                    bgColor = Color(0xFF1976D2),
-                                                    modifier = Modifier.weight(1f)
-                                                )
-                                            }
+                                        Text(
+                                            text = table.tableName,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
 
-                                            if (ui.kitchenPendingCount > 0) {
-                                                StatusBadge(
-                                                    icon = "🍳",
-                                                    text = ui.kitchenPendingCount.toString(),
-                                                    bgColor = Color(0xFFF9A825),
-                                                    modifier = Modifier.weight(1f)
-                                                )
-                                            }
-                                        }
-
-                                        Row(
-                                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            if (ui.billDoneCount > 0) {
-                                                StatusBadge(
-                                                    icon = "🧾",
-                                                    text = ui.billDoneCount.toString(),
-                                                    bgColor = Color(0xFF2E7D32),
-                                                    modifier = Modifier.weight(1f)
-                                                )
-                                            }
-
-                                            if (ui.billAmount > 0) {
-                                                StatusBadge(
-                                                    icon = "",
-                                                    text = ui.billAmount.toInt().toString(),
-                                                    bgColor = if (ui.isBilled)
-                                                        Color(0xFF2E7D32)
-                                                    else
-                                                        Color(0xFFD32F2F),
-                                                    modifier = Modifier.weight(1f)
-                                                )
-                                            }
+                                        if (ui.billAmount > 0) {
+                                            Text(
+                                                text = ui.billAmount.toInt().toString(),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color.White.copy(alpha = 0.85f)
+                                            )
                                         }
                                     }
+
+
+                                    // 🔹 STATUS INFO
+                                    Column(
+                                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+
+                                        StatusBadge(
+                                            icon = "🛒",
+                                            text = ui.cartCount.toString(),
+                                            bgColor = Color(0xFF1976D2).copy(alpha = 0.25f),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .alpha(if (ui.cartCount > 0) 1f else 0f)
+                                        )
+
+                                        StatusBadge(
+                                            icon = "🍳",
+                                            text = ui.kitchenPendingCount.toString(),
+                                            bgColor = Color(0xFFF9A825).copy(alpha = 0.25f),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .alpha(if (ui.kitchenPendingCount > 0) 1f else 0f)
+                                        )
+
+                                        StatusBadge(
+                                            icon = "🧾",
+                                            text = ui.billDoneCount.toString(),
+                                            bgColor = Color(0xFF2E7D32).copy(alpha = 0.25f),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .alpha(if (ui.billDoneCount > 0) 1f else 0f)
+                                        )
+                                    }
+
+
+
                                 }
                             }
                         }
@@ -190,33 +194,28 @@ fun StatusBadge(
     icon: String,
     text: String,
     bgColor: Color,
-    modifier: Modifier = Modifier,
-    textStyle: TextStyle = MaterialTheme.typography.bodyMedium
+    modifier: Modifier = Modifier
 ) {
-    Surface(
-        color = bgColor,
-        shape = MaterialTheme.shapes.small,
+    Row(
         modifier = modifier
+            .background(bgColor, shape = RoundedCornerShape(6.dp))
+            .padding(horizontal = 6.dp, vertical = 2.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .padding(horizontal = 1.dp, vertical = 1.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            if (icon.isNotEmpty()) {
-                Text(icon)
-                Spacer(Modifier.width(1.dp))
-            }
 
-            Text(
-                text = text,
-                color = Color.White,
-                fontWeight = FontWeight.SemiBold,
-                style = textStyle
-            )
-        }
+        Text(
+            text = icon,
+            style = MaterialTheme.typography.bodySmall
+        )
+
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
+
 
 

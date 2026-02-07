@@ -36,7 +36,7 @@ fun ProductList(
     variants: List<ProductEntity>,
     cartViewModel: CartViewModel,
     tableViewModel: PosTableViewModel,
-    tableNo: String?,  // add this
+    tableNo: String,  // add this
     posSessionViewModel: PosSessionViewModel  // 🔑 add this
     ) {
     val sessionId by posSessionViewModel.sessionId.collectAsState()
@@ -93,7 +93,7 @@ fun ProductList(
                     variants = variants,
                     cartViewModel = cartViewModel,
                     tableViewModel = tableViewModel,
-                    tableNo = tableNo ?: "T0",  // fallback if null
+                    tableNo = tableNo ,  // fallback if null
                     sessionId = sessionId  // 🔑 pass here
                 )
             }
