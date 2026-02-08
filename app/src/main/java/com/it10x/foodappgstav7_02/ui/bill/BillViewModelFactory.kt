@@ -12,6 +12,7 @@ import com.it10x.foodappgstav7_02.printer.PrinterManager
 class BillViewModelFactory(
     private val application: Application,
     private val tableId: String,
+    private val tableName: String,
     private val orderType: String
 ) : ViewModelProvider.Factory {
 
@@ -44,6 +45,7 @@ class BillViewModelFactory(
                 orderSequenceRepository = orderSequenceRepository,
                 outletDao = db.outletDao(),
                 tableId = tableId,
+                tableName = tableName,
                 orderType = orderType,
                 repository = repository,              // ✅ Proper repository instance
                 printerManager = printerManager,       // ✅ Printer manager instance

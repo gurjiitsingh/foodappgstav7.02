@@ -37,6 +37,7 @@ import androidx.compose.material.icons.filled.AddCircle
 fun KitchenScreen(
     sessionId: String,
     tableNo: String,
+    tableName: String,
     orderType: String, // ✅ ADD THIS
     viewModel: KitchenViewModel,
     onKitchenEmpty: () -> Unit
@@ -88,7 +89,7 @@ fun KitchenScreen(
                 .fillMaxWidth()
                 .padding(12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-            onClick = { viewModel.markDoneAll(orderType,tableNo) }
+            onClick = { viewModel.markDoneAll_TrasferToBill_KotPrint(orderType,tableNo) }
         ) {
             Text("Send All", color = Color.White)
             Spacer(Modifier.width(4.dp))

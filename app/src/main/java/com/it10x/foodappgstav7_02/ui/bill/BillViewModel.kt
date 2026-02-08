@@ -40,6 +40,7 @@ class BillViewModel(
     private val orderSequenceRepository: OrderSequenceRepository,
     private val outletDao: OutletDao,
     private val tableId: String,
+    private val tableName: String,
     private val orderType: String,
     private val repository: POSOrdersRepository,
     private val printerManager: PrinterManager,
@@ -161,7 +162,7 @@ class BillViewModel(
                 id = orderId,
                 srno = srno,
                 orderType = orderType,
-                tableNo = if (orderType == "DINE_IN") tableId else null,
+                tableNo = tableName,
                 customerName = deliveryAddress?.name ?: "Walk-in",
                 customerPhone = deliveryAddress?.phone ?: "",
                 dAddressLine1 = deliveryAddress?.line1,
@@ -222,7 +223,7 @@ class BillViewModel(
             withContext(Dispatchers.IO) {
                 orderMasterDao.insert(orderMaster)
                 orderProductDao.insertAll(orderItems)
-                kotItemDao.clearForTable(tableId)
+                repository.finalizeTableAfterPayment(tableId)
             }
 
             // Print and finish

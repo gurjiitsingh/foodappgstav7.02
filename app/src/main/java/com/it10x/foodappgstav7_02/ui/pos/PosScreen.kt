@@ -53,7 +53,8 @@ fun PosScreen(
     cartViewModel: CartViewModel,
     onOpenSettings: () -> Unit,
     ordersViewModel: POSOrdersViewModel,
-    posSessionViewModel: PosSessionViewModel
+    posSessionViewModel: PosSessionViewModel,
+    posTableViewModel: PosTableViewModel,
 ) {
     var showTableSelector by rememberSaveable() {
         mutableStateOf(false)
@@ -71,6 +72,17 @@ fun PosScreen(
     val sessionId by cartViewModel.sessionKey.collectAsState()
     val tableId1 by posSessionViewModel.tableId.collectAsState()
     val tableId =  tableId1 ?:""
+    // val tables by tableVm.tables.collectAsState()
+    val tables by posTableViewModel.tables.collectAsState()
+
+    val tableVm: PosTableViewModel = viewModel()
+
+    val selectedTableName1 = tables
+        .firstOrNull { it.table.id == tableId }
+        ?.table
+        ?.tableName
+ var selectedTableName = selectedTableName1 ?: ""
+
     var searchQuery by rememberSaveable { mutableStateOf("") }
 
     val repository = POSOrdersRepository(
@@ -123,9 +135,9 @@ fun PosScreen(
     }
 
 
-    val tableVm: PosTableViewModel = viewModel()
-    val tables by tableVm.tables.collectAsState()
+
     LaunchedEffect(Unit) { tableVm.loadTables() }
+
 
 
 
@@ -393,8 +405,6 @@ fun PosScreen(
                     TableSelectorGrid(
                         tables = tables, // ✅ use dynamic list
                         selectedTable = tableId,
-
-
                         onTableSelected = { tableId ->
                             val table = tables.first { it.table.id == tableId }.table
                             posSessionViewModel.setTable(
@@ -430,6 +440,7 @@ fun PosScreen(
                         tableViewModel = tableVm,
                         orderType = orderType,
                         tableNo = tableId ?: orderType,
+                        tableName = selectedTableName,
                         paymentType = paymentType,
                         onPaymentChange = { paymentType = it },
                         onOrderPlaced = {
@@ -516,6 +527,7 @@ fun PosScreen(
                 tableViewModel = tableVm,
                 orderType = orderType,
                 tableNo = tableId ?: orderType,
+                tableName = selectedTableName,
                 paymentType = paymentType,
                 onPaymentChange = { paymentType = it },
                 onOrderPlaced = { },
@@ -543,6 +555,7 @@ fun PosScreen(
             factory = KitchenViewModelFactory(
                 app = LocalContext.current.applicationContext as android.app.Application,
                 tableId = tableId ?: orderType,
+                tableName = selectedTableName!!,
                 sessionId = sessionId!!,
                 orderType = orderType,
                 repository = repository,
@@ -557,12 +570,13 @@ fun PosScreen(
                 TextButton(onClick = { showKitchen = false }) { Text("Close") }
             },
             title = {
-                Text("Kitchen – $kitchenTitle")
+                Text("Kitchen – $tableName")
             },
             text = {
                 KitchenScreen(
                     sessionId = sessionId!!,   // for DB / logic
                     tableNo = tableId ?: orderType, // for UI / print
+                    tableName = selectedTableName!!,
                     viewModel = kitchenViewModel,
                     onKitchenEmpty = {
                         // ✅ Close popup automatically when no items
@@ -596,6 +610,7 @@ fun PosScreen(
                 BillScreenDialog(
                     sessionId = sessionId!!,   // for DB / logic
                     tableId = tableId ?: orderType, // for UI / print // 🔑 KEY FIX
+                    tableName = selectedTableName!!,
                     tableViewModel = tableVm,
                     onClose = { showBill = false },
                     orderType = orderType,

@@ -36,6 +36,7 @@ import androidx.compose.material.icons.filled.Print
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.SoupKitchen
 import com.it10x.foodappgstav7_02.ui.cart.CartRow
 import com.it10x.foodappgstav7_02.ui.theme.PosError
 import com.it10x.foodappgstav7_02.ui.theme.PosSuccess
@@ -49,6 +50,7 @@ fun RightPanel(
     tableViewModel: PosTableViewModel,
     orderType: String,
     tableNo: String,
+    tableName: String,
     paymentType: String,
     onPaymentChange: (String) -> Unit,
      onOrderPlaced: () -> Unit,
@@ -76,6 +78,7 @@ fun RightPanel(
         factory = KitchenViewModelFactory(
             application,
             tableId = tableNo ?: orderType,
+            tableName = tableName,
             sessionId = sessionId,
             orderType = orderType,
             repository = repository,
@@ -88,6 +91,7 @@ fun RightPanel(
         factory = BillViewModelFactory(
             application = application,
             tableId = tableNo ?: orderType,
+            tableName = tableName,
             orderType = orderType,
 
             )
@@ -200,9 +204,9 @@ fun RightPanel(
                     item = item,
                     cartViewModel = cartViewModel,
                     tableNo = tableNo,
-                    onBillAction = { cartItem, print ->
+                    onCartActionDirectMoveToBill = { cartItem, print ->
 
-                        kitchenViewModel.sendSingleItemDirectlyToBill(
+                        kitchenViewModel.sendSingleItemDirectlyToBill_Print_noPrint(
                             cart = cartItem,
                             orderType = orderType,
                             tableNo = tableNo,
@@ -225,279 +229,143 @@ fun RightPanel(
 // =================== POS ACTION BUTTONS ==================
 // =========================================================
 
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(top = 6.dp), // ⬅️ reduced top padding
+            verticalArrangement = Arrangement.spacedBy(6.dp) // ⬅️ tighter spacing between rows
         ) {
 
-            // SEND TO KITCHEN
-            Button(
-                modifier = Modifier.weight(1f),
-                enabled = canSendToKitchen,
-                onClick = {
-                    if (!canSendToKitchen) return@Button
-
-                    val deviceId = Settings.Secure.getString(
-                        context.contentResolver,
-                        Settings.Secure.ANDROID_ID
-                    )
-
-                   // kitchenViewModel.logAllKotItems()
-
-                    kitchenViewModel.sendToKitchen(
-                        orderType = orderType,
-                        tableNo = tableNo,
-                        sessionId = sessionId,
-                        paymentType = "UNPAID",
-                        deviceId = deviceId,
-                        deviceName = Build.MODEL ?: "Unknown Device",
-                        appVersion = BuildConfig.VERSION_NAME
-                    )
-
-                    if (orderType == "DINE_IN" && tableNo != null) {
-                        tableViewModel.occupyTable(tableNo)
-                    }
-
-                    onOrderPlaced()
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = PosSuccess
-                )
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Restaurant,
-                        contentDescription = "Send to Kitchen",
-                        tint = Color.White
-                    )
-                    Spacer(Modifier.width(6.dp))
-
-                    Icon(
-                        imageVector = Icons.Default.Send,
-                        contentDescription = "Send",
-                        modifier = Modifier.size(14.dp),
-                        tint = Color.White
-                    )
-                }
-            }
-
-
-
-            // OPEN KITCHEN VIEW
-            Button(
-                modifier = Modifier.weight(1f),
-                enabled = canOpenKitchen,
-                onClick = {
-                    if (!canOpenKitchen) return@Button
-                    onOpenKitchen(tableNo ?: orderType)
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = PosSuccess
-                )
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Restaurant,
-                    contentDescription = "Open Kitchen",
-                    tint = Color.White
-                )
-            }
-
-            // OPEN BILL
-            Button(
-                modifier = Modifier.weight(1f),
-                enabled = canOpenBill,
-                onClick = {
-                    if (!canOpenBill) return@Button
-                    tableNo?.let { onOpenBill(it) }
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = PosWarning,
-                    contentColor = Color(0xFF1A1A1A)
-                )
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Receipt,
-                    contentDescription = "Bill",
-                    tint = Color.White
-                )
-            }
-
-
-
-        }
-
-
-
-    }
-}
-
-
-
-
-
-
-
-
-@Composable
-fun CartRow1(
-    item: PosCartEntity,
-    tableNo: String,
-    cartViewModel: CartViewModel,
-    onBillAction: (item: PosCartEntity, print: Boolean) -> Unit
-) {
-    val DarkGray = Color(0xFF111827)  // near-black POS background
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(2.dp)
-    ){
-
-        Column(modifier = Modifier.padding(10.dp)) {
-
-            // ================= TOP ROW (UNCHANGED) =================
+            // 🔹 Row 1 — SEND TO KITCHEN (half width, left aligned)
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.Start
             ) {
+                Button(
+                    modifier = Modifier
+                        .weight(0.5f) // ⬅️ half width
+                        .padding(start = 4.dp, end = 4.dp), // ⬅️ compact outer padding
+                    enabled = canSendToKitchen,
+                    onClick = {
+                        if (!canSendToKitchen) return@Button
 
-                // ---------- ITEM INFO ----------
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        text = item.name,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "₹${item.basePrice}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-
-                // ---------- QUANTITY CONTROLS ----------
-                Row(verticalAlignment = Alignment.CenterVertically) {
-
-                    IconButton(
-                        onClick = { cartViewModel.decrease(item.productId, tableNo) },
-                        modifier = Modifier
-                            .size(36.dp)
-                            .background(
-                                color = Color(0xFFDC2626),
-                                shape = MaterialTheme.shapes.small
-                            )
-                    ) {
-                        Text(
-                            text = "−",
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
+                        val deviceId = Settings.Secure.getString(
+                            context.contentResolver,
+                            Settings.Secure.ANDROID_ID
                         )
-                    }
 
-                    Text(
-                        text = item.quantity.toString(),
-                        modifier = Modifier.padding(horizontal = 12.dp),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                        kitchenViewModel.sendToKitchenMainButton(
+                            orderType = orderType,
+                            tableNo = tableNo,
+                            sessionId = sessionId,
+                            paymentType = "UNPAID",
+                            deviceId = deviceId,
+                            deviceName = Build.MODEL ?: "Unknown Device",
+                            appVersion = BuildConfig.VERSION_NAME
+                        )
 
-                    IconButton(
-                        onClick = { cartViewModel.addToCart(item) },
-                        modifier = Modifier
-                            .size(36.dp)
-                            .background(
-                                color = Color(0xFF16A34A),
-                                shape = MaterialTheme.shapes.small
-                            )
+                        if (orderType == "DINE_IN" && tableNo != null) {
+                            tableViewModel.occupyTable(tableNo)
+                        }
+
+                        onOrderPlaced()
+                    },
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp), // ⬅️ reduced inner padding
+                    colors = ButtonDefaults.buttonColors(containerColor = PosSuccess)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
                     ) {
+                        // 🍳 Pan Icon (use LocalDining or SoupKitchen based on available icons)
                         Text(
-                            text = "+",
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
+                            text = "Send to Kichen",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Icon(
+                            imageVector = Icons.Default.SoupKitchen, // ⬅️ change to LocalDining if you prefer
+                            contentDescription = "Send to Kitchen",
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Icon(
+                            imageVector = Icons.Default.Send,
+                            contentDescription = "Send",
+                            modifier = Modifier.size(14.dp),
+                            tint = Color.White
                         )
                     }
                 }
             }
 
-// ================= BILL ACTION ROW =================
+            // 🔹 Row 2 — OPEN KITCHEN + BILL
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    .padding(horizontal = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-
-                // 🔶 Bill + KOT (PRIMARY)
+                // OPEN KITCHEN VIEW
                 Button(
                     modifier = Modifier.weight(1f),
+                    enabled = canOpenKitchen,
                     onClick = {
-                        onBillAction(item, true)
+                        if (!canOpenKitchen) return@Button
+                        onOpenKitchen(tableNo ?: orderType)
                     },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = PosError,
-                        contentColor = MaterialTheme.colorScheme.onSurface
-                    )
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PosSuccess)
                 ) {
-                    Text(
-                        "Bill +",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
                     Icon(
-                        imageVector = Icons.Default.Restaurant,
-                        contentDescription = "Kitchen",
-                        modifier = Modifier.size(16.dp)
+                        imageVector = Icons.Default.SoupKitchen,
+                        contentDescription = "Open Kitchen",
+                        tint = Color.White,
+                        modifier = Modifier.size(18.dp)
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Icon(
-                        imageVector = Icons.Default.Print,
-                        contentDescription = "Print",
-                        modifier = Modifier.size(16.dp)
-                    )
-
-
                 }
 
-                // 🔶 Bill Only (SECONDARY / OUTLINED)
-                OutlinedButton(
+                // OPEN BILL
+                Button(
                     modifier = Modifier.weight(1f),
+                    enabled = canOpenBill,
                     onClick = {
-                        onBillAction(item, false)
+                        if (!canOpenBill) return@Button
+                        tableNo?.let { onOpenBill(it) }
                     },
-                    border = BorderStroke(1.5.dp, PosError),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = PosError
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = PosWarning,
+                        contentColor = Color(0xFF1A1A1A)
                     )
                 ) {
-//                    Icon(
-//                        imageVector = Icons.Default.Restaurant,
-//                        contentDescription = "Kitchen",
-//                        modifier = Modifier.size(16.dp)
-//                    )
-//                    Spacer(modifier = Modifier.width(6.dp))
-                   Text(
-                        "Bill",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold
+                    Icon(
+                        imageVector = Icons.Default.Receipt,
+                        contentDescription = "Bill",
+                        tint = Color.White,
+                        modifier = Modifier.size(18.dp)
                     )
                 }
-
             }
-
         }
+
+
+
+
+
     }
 }
+
+
+
+
+
+
+
+
+
 
 
 

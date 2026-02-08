@@ -111,13 +111,6 @@ fun BillScreen(
                         pendingPaymentType = PaymentType.CASH
                         showAddressDialog = true
                     },
-
-
-
-
-
-
-
                     onProceed = onPayClick
                 )
             }

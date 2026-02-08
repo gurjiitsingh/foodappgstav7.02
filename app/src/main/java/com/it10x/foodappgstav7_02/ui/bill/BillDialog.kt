@@ -17,6 +17,7 @@ import com.it10x.foodappgstav7_02.viewmodel.PosTableViewModel
 fun BillScreenDialog(
     sessionId: String,
     tableId: String,
+    tableName: String,
     orderType: String,
     tableViewModel: PosTableViewModel,
     onClose: () -> Unit,
@@ -43,6 +44,7 @@ fun BillScreenDialog(
         factory = BillViewModelFactory(
             application = application,
             tableId = tableId,
+            tableName = tableName,
             orderType = orderType,
 
            )
@@ -56,7 +58,7 @@ fun BillScreenDialog(
                 Text("Close")
             }
         },
-        title = { Text(text = "Final Bill: $billingTitle") },
+        title = { Text(text = "Final Bill: $tableName") },
         text = {
             BillScreen(
                 viewModel = viewModel,
@@ -64,9 +66,9 @@ fun BillScreenDialog(
                     viewModel.payBill(paymentType.name)
 
                     // ✅ Release table after billing (Dine-in only)
-                    if (!tableId.startsWith("TAKEAWAY") && !tableId.startsWith("DELIVERY")) {
-                        tableViewModel.releaseTable(tableId)
-                    }
+//                    if (!tableId.startsWith("TAKEAWAY") && !tableId.startsWith("DELIVERY")) {
+//                        tableViewModel.releaseTable(tableId)
+//                    }
 
                     onClose()
                 },

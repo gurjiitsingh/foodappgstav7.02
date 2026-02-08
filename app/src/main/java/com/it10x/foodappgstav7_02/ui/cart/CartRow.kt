@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Print
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.SoupKitchen
 import androidx.compose.ui.Alignment
 import com.it10x.foodappgstav7_02.data.pos.entities.PosCartEntity
 import com.it10x.foodappgstav7_02.ui.theme.PosError
@@ -24,7 +25,7 @@ fun CartRow(
     item: PosCartEntity,
     tableNo: String,
     cartViewModel: CartViewModel,
-    onBillAction: (item: PosCartEntity, print: Boolean) -> Unit
+    onCartActionDirectMoveToBill: (item: PosCartEntity, print: Boolean) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -64,22 +65,23 @@ fun CartRow(
                 // Bill + KOT
                 Button(
                     modifier = Modifier.weight(1.7f),
-                    onClick = { onBillAction(item, true) },
+                    onClick = { onCartActionDirectMoveToBill(item, true) },
                     colors = ButtonDefaults.buttonColors(containerColor = PosError)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Receipt,
-                        contentDescription = "Bill",
+                        contentDescription = "Bill and kitchen print",
                         tint = Color.White
                     )
 
                     Spacer(Modifier.width(6.dp))
 
+
                     Icon(
-                        imageVector = Icons.Default.Restaurant,
-                        contentDescription = "Kitchen",
-                        modifier = Modifier.size(16.dp),
-                        tint = Color.White
+                        imageVector = Icons.Default.SoupKitchen, // ⬅️ change to LocalDining if you prefer
+                        contentDescription = "Send to Kitchen",
+                        tint = Color.White,
+                        modifier = Modifier.size(18.dp)
                     )
 
                     Spacer(Modifier.width(4.dp))
@@ -102,7 +104,7 @@ fun CartRow(
                 // Bill only
                 OutlinedButton(
                     modifier = Modifier.weight(1f),
-                    onClick = { onBillAction(item, false) },
+                    onClick = { onCartActionDirectMoveToBill(item, false) },
                     border = BorderStroke(1.5.dp, PosError),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = Color.White
@@ -110,7 +112,7 @@ fun CartRow(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Receipt,
-                        contentDescription = "Bill",
+                        contentDescription = "only Bill",
                         tint = Color.White
                     )
                     Icon(

@@ -11,6 +11,7 @@ import com.it10x.foodappgstav7_02.ui.cart.CartViewModel
 class KitchenViewModelFactory(
     private val app: Application,
     private val tableId: String,
+    private val tableName: String,
     private val sessionId: String,
     private val orderType: String,
     private val repository: POSOrdersRepository,
@@ -20,7 +21,7 @@ class KitchenViewModelFactory(
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(KitchenViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return KitchenViewModel(app, tableId, sessionId, orderType, repository, cartViewModel ) as T
+            return KitchenViewModel(app, tableId, tableName, sessionId, orderType, repository, cartViewModel ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

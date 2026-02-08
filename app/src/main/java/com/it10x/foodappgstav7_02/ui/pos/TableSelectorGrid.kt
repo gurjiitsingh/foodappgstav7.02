@@ -5,7 +5,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
+
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -21,8 +21,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.it10x.foodappgstav7_02.viewmodel.PosTableViewModel
+import androidx.compose.animation.animateContentSize
 
-import androidx.compose.ui.text.TextStyle
 
 @Composable
 fun TableSelectorGrid(
@@ -61,22 +61,22 @@ fun TableSelectorGrid(
                             color = MaterialTheme.colorScheme.primary
                         ),
                         modifier = Modifier
-                            .padding(vertical = 6.dp)
+                            .padding(vertical = 5.dp)
                             .fillMaxWidth()
                     )
 
                     // 🔹 Grid for each area — userScroll disabled (static height)
                     val rows = (areaTables.size + 4) / 5
-                    val gridHeight = (rows * 115).dp
+                    val gridHeight = (rows * 118).dp
 
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(5),
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(gridHeight)
-                            .padding(bottom = 12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                            .padding(bottom = 10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
+                        verticalArrangement = Arrangement.spacedBy(5.dp),
                         userScrollEnabled = false
                     ) {
                         items(areaTables) { ui ->
@@ -84,15 +84,26 @@ fun TableSelectorGrid(
                             val isSelected = selectedTable == table.id
 
                             val bgColor = when (ui.color) {
+//                                PosTableViewModel.TableColor.GREEN ->
+//                                    Color(0xFF4CAF50).copy(alpha = 0.20f)
+//                                PosTableViewModel.TableColor.BLUE ->
+//                                    Color(0xFF2196F3).copy(alpha = 0.20f)
+//                                PosTableViewModel.TableColor.RED ->
+//                                    Color(0xFFF44336).copy(alpha = 0.20f)
+//                                PosTableViewModel.TableColor.GRAY ->
+//                                    Color(0xFFBDBDBD).copy(alpha = 0.20f)
+
                                 PosTableViewModel.TableColor.GREEN ->
-                                    Color(0xFF4CAF50).copy(alpha = 0.20f)
+                                    Color(0xFFBDBDBD).copy(alpha = 0.30f)
                                 PosTableViewModel.TableColor.BLUE ->
-                                    Color(0xFF2196F3).copy(alpha = 0.20f)
+                                    Color(0xFFBDBDBD).copy(alpha = 0.30f)
                                 PosTableViewModel.TableColor.RED ->
-                                    Color(0xFFF44336).copy(alpha = 0.20f)
+                                    Color(0xFFBDBDBD).copy(alpha = 0.30f)
                                 PosTableViewModel.TableColor.GRAY ->
-                                    Color(0xFFBDBDBD).copy(alpha = 0.20f)
+                                    Color(0xFFBDBDBD).copy(alpha = 0.30f)
                             }
+
+
 
                             Surface(
                                 color = bgColor,
@@ -103,12 +114,13 @@ fun TableSelectorGrid(
                                 else null,
                                 modifier = Modifier
                                     .aspectRatio(0.89f)
+                                    .animateContentSize()
                                     .clickable { onTableSelected(table.id) }
                             ) {
                                 Column(
                                     modifier = Modifier
                                         .fillMaxSize()
-                                        .padding(3.dp),
+                                        .padding(6.dp),
                                     verticalArrangement = Arrangement.SpaceBetween,
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
@@ -121,7 +133,7 @@ fun TableSelectorGrid(
 
                                         Text(
                                             text = table.tableName,
-                                            style = MaterialTheme.typography.titleMedium,
+                                            style = MaterialTheme.typography.titleLarge,
                                             color = MaterialTheme.colorScheme.onSurface
                                         )
 

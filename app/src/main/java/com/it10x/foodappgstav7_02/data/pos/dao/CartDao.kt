@@ -110,18 +110,10 @@ interface CartDao {
     @Delete
     suspend fun delete(product: PosCartEntity)
 
-//    @Query("DELETE FROM cart WHERE tableId = :tableId")
-//    suspend fun clearCart(tableId: String)
-//
-//
-//
-//
-//    @Query("""
-//    UPDATE cart
-//    SET sentToKitchen = 1
-//    WHERE tableId = :tableId
-//""")
-//    suspend fun markAllSent(tableId: String)
+
+
+    @Query("SELECT SUM(quantity) FROM cart WHERE tableId = :tableId")
+    suspend fun getCartCountForTable(tableId: String): Int?
 
 
 }

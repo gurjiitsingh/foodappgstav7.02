@@ -7,37 +7,41 @@ import androidx.room.PrimaryKey
 data class TableEntity(
     @PrimaryKey val id: String,
 
-    /** Human-readable table name or number, e.g. "Table 1" */
+    /** Human-readable table name or number */
     val tableName: String,
 
     /** Current table status */
-    val status: String,  // AVAILABLE / OCCUPIED / BILL_REQUESTED / CLEANING / RESERVED
+    val status: String, // AVAILABLE / OCCUPIED / BILL_REQUESTED / CLEANING / RESERVED
 
-    /** Optional assigned waiter or staff member */
+    /** Assigned waiter */
     val waiterName: String? = null,
     val waiterId: String? = null,
 
-    /** Firestore ID of the active order linked to this table (if any) */
+    /** Firestore active order */
     val activeOrderId: String? = null,
 
-    /** Number of guests currently seated */
+    /** Guest count */
     val guestsCount: Int? = null,
 
-    /** Area where table is located (e.g., "Ground Floor", "Restaurant", etc.) */
-    val area: String? = null, // ✅ new field
+    /** Area grouping */
+    val area: String? = null,
 
-    /** Sort order within the area */
-    val sortOrder: Int? = null, // ✅ new field
+    /** Sort order */
+    val sortOrder: Int? = null,
 
-    /** When table was last updated (Unix time ms) */
+    /** 🔥 LIVE COUNTERS (UI cache layer) */
+    val cartCount: Int = 0,
+    val kitchenCount: Int = 0,
+    val billCount: Int = 0,
+    val billAmount: Double = 0.0,
+
+    /** timestamps */
     val updatedAt: Long? = null,
-
-    /** When table was created (Unix time ms) */
     val createdAt: Long? = null,
 
-    /** Optional notes (special requests, reservation name, etc.) */
+    /** notes */
     val notes: String? = null,
 
-    /** Whether the table is synced with POS device (for offline sync) */
+    /** sync flag */
     val synced: Boolean? = null
 )

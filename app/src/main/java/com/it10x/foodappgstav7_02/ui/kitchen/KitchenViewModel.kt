@@ -9,6 +9,7 @@ import com.it10x.foodappgstav7_02.data.pos.AppDatabaseProvider
 import com.it10x.foodappgstav7_02.data.pos.entities.PosCartEntity
 import com.it10x.foodappgstav7_02.data.pos.entities.PosKotBatchEntity
 import com.it10x.foodappgstav7_02.data.pos.entities.PosKotItemEntity
+import com.it10x.foodappgstav7_02.data.pos.repository.CartRepository
 import com.it10x.foodappgstav7_02.data.pos.repository.POSOrdersRepository
 import com.it10x.foodappgstav7_02.data.pos.usecase.KotToBillUseCase
 import com.it10x.foodappgstav7_02.printer.PrintItem
@@ -29,10 +30,12 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.UUID
+import com.it10x.foodappgstav7_02.data.pos.repository.KotRepository
 
 class KitchenViewModel(
     app: Application,
     private val tableId: String,
+    private val tableName: String,
     private val sessionId: String,
     private val orderType: String,
     private val repository: POSOrdersRepository,
@@ -59,21 +62,22 @@ class KitchenViewModel(
                 initialValue = emptyList()
             )
 
+
+
+    private val kotRepository = KotRepository(
+        AppDatabaseProvider.get(app).kotBatchDao(),
+        AppDatabaseProvider.get(app).kotItemDao(),
+        AppDatabaseProvider.get(app).tableDao()
+    )
+
+    private val cartRepository = CartRepository(
+        AppDatabaseProvider.get(app).cartDao(),
+        AppDatabaseProvider.get(app).tableDao()
+    )
+
     private val printerManager =
         PrinterManager(app.applicationContext)
-//USE SESSION ID TO FETCH DATA
-    fun getKotItemsForTable(tableNo: String): StateFlow<List<PosKotItemEntity>> {
-        val state = MutableStateFlow<List<PosKotItemEntity>>(emptyList())
 
-        viewModelScope.launch {
-            kotItemDao
-                .getItemsForTable(tableNo)
-                .collect { items ->
-                    state.value = items
-                }
-        }
-        return state
-    }
 
 
     fun markDone(itemId: String,orderType: String,  print: Boolean = true) {
@@ -82,6 +86,9 @@ class KitchenViewModel(
             kotToBillUseCase.markDoneAndMerge(itemId)
 
             val item = kotItemDao.getItemByIdSync(itemId) ?: return@launch
+
+            kotRepository.syncKinchenCount(itemId)
+            kotRepository.syncBillCount(itemId)
 
             // ❌ If already printed → DO NOT PRINT AGAIN
             if (item.isPrinted || !print) return@launch
@@ -95,10 +102,9 @@ class KitchenViewModel(
 
             kotItemDao.markPrinted(item.id)
 
-            Log.d("KITCHEN_PRINT", "Printed single item ${item.name}")
+         //   Log.d("TABLE_DEBUG", "Printed single item ${item.name}")
         }
     }
-
     fun markDoneNoKotPrint(itemId: String,orderType: String,  print: Boolean = true) {
         viewModelScope.launch {
 
@@ -116,9 +122,7 @@ class KitchenViewModel(
 
         }
     }
-
-
-    fun markDoneAll(orderType: String, tableNo: String) {
+    fun markDoneAll_TrasferToBill_KotPrint(orderType: String, tableNo: String) {
         viewModelScope.launch {
 
             val unprintedItems = kotItemDao.getUnprintedItems(tableNo)
@@ -133,23 +137,21 @@ class KitchenViewModel(
                 items = unprintedItems)
 
             // ✅ MARK ALL
-            kotItemDao.markAllDone(tableNo)
+            kotRepository.markDoneAll(tableNo)
+            kotRepository.syncKinchenCount(tableNo)
+            kotRepository.syncBillCount(tableNo)
+
+            Log.d("KITCHEN_PRINT", "Done All printed for table=$tableNo")
             kotItemDao.markAllPrinted(tableNo)
 
             Log.d("KITCHEN_PRINT", "Done All printed for table=$tableNo")
         }
     }
-
-
-
-
     fun markCancelled(itemId: String) {
         viewModelScope.launch {
             kotItemDao.updateStatus(itemId, "CANCELLED")
         }
     }
-
-
     fun getPendingItems(orderRef: String, orderType: String): Flow<List<PosKotItemEntity>> {
 
 
@@ -160,34 +162,7 @@ class KitchenViewModel(
           //  kotItemDao.getPendingItemsForSession(orderRef)
         }
     }
-
-
-
-    fun logAllKotItems() {
-        viewModelScope.launch {
-            kotItemDao.getTotalKotItems()
-                .collect { items ->
-                    Log.d("KITCHEN_DEBUG2", "Total items = ${items.size}")
-
-                    items.forEach { item ->
-                        Log.d(
-                            "KITCHEN_DEBUG1",
-                            "Status=${item.status},Table=${item.tableNo}, session=${item.sessionId}, BatchId=${item.kotBatchId},Name=${item.name},ID=${item.id}"
-                        )
-                    }
-                }
-        }
-    }
-
-    fun deleteAllKotItems() {
-        viewModelScope.launch {
-            kotItemDao.deleteAllKotItems()
-            Log.d("KITCHEN_DEBUG", "All KOT items deleted")
-        }
-    }
-
-
-    // ✅ POS signal: kitchen completed for table
+     // ✅ POS signal: kitchen completed for table
     fun isKitchenEmptyForTable(tableNo: String): StateFlow<Boolean> {
         return kotItemDao.getItemsForTable(tableNo)
             .stateIn(
@@ -205,10 +180,7 @@ class KitchenViewModel(
                 }
             }
     }
-
-
-
-    fun sendToKitchen(
+    fun sendToKitchenMainButton(
         orderType: String,
         tableNo: String?,
         sessionId: String,
@@ -218,7 +190,7 @@ class KitchenViewModel(
         appVersion: String?
     ) {
         Log.d("KITCHEN_DEBUG4", "sendToKitchen tableNo=$tableNo orderType=$orderType sessionId=$sessionId ")
-        logAllKotItems()
+     //   logAllKotItems()
         viewModelScope.launch {
             _loading.value = true
 
@@ -242,9 +214,9 @@ class KitchenViewModel(
                 val now = System.currentTimeMillis()
                 val orderId = UUID.randomUUID().toString()
 
-                Log.d("KITCHEN_DEBUG4", "Creating new KOT batchId=$orderId for $orderType")
+              //  Log.d("KITCHEN_DEBUG4", "Creating new KOT batchId=$orderId for $orderType")
 
-                val kotSaved = saveKotOnly(
+                val kotSaved = saveKotOnlyToKotItem(
                     orderType = orderType,
                     sessionId = sessionId,
                     tableNo = tableNo,
@@ -259,11 +231,11 @@ class KitchenViewModel(
                     return@launch
                 }
 
-                Log.d("KITCHEN_DEBUG4", " KOT saved successfully (${cartList.size} items)")
+              //  Log.d("KITCHEN_DEBUG4", " KOT saved successfully (${cartList.size} items)")
 
 
                 repository.clearCart(orderType, tableId)
-
+                cartRepository.syncCartCount(tableId)
             } catch (e: Exception) {
               //  Log.e("KITCHEN_DEBUG", " Exception during placeOrder()", e)
             } finally {
@@ -273,7 +245,7 @@ class KitchenViewModel(
     }
 
 
-    private suspend fun saveKotOnly(
+    private suspend fun saveKotOnlyToKotItem(
         orderType: String,
         sessionId: String,
         tableNo: String?,
@@ -307,6 +279,7 @@ class KitchenViewModel(
 
             withContext(Dispatchers.IO) {
                 kotBatchDao.insert(batch)
+
             //    Log.d("KOT_DEBUG", "Saved ${cartItems.size} KOT items for tableNo=${tableNo ?: orderType}")
                 val items = cartItems.map { cart ->
                     PosKotItemEntity(
@@ -328,8 +301,8 @@ class KitchenViewModel(
                         createdAt = now
                     )
                 }
-
-                kotItemDao.insertAll(items)
+                kotRepository.insertItemsAndSync(tableNo ?: orderType, items)
+                //kotItemDao.insertAll(items)
             }
 
             Log.d("KOT", "✅ KOT SAVED: batch=$batchId items=${cartItems.size}")
@@ -343,17 +316,13 @@ class KitchenViewModel(
 
 
 
-    fun sendSingleItemDirectlyToBill(
+    fun sendSingleItemDirectlyToBill_Print_noPrint(
         cart: PosCartEntity,
         orderType: String,
         tableNo: String,
         sessionId: String,
         print: Boolean
     ) {
-
-//        val deviceId = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
-//        val deviceName = Build.MODEL ?: "Unknown Device"
-//        val appVersion = BuildConfig.VERSION_NAME
 
         viewModelScope.launch(Dispatchers.IO) {
 
@@ -402,7 +371,17 @@ class KitchenViewModel(
             )
 
             kotItemDao.insert(kotItem)
+            Log.d("TABLE_DEBUG", "Cart to direct bill with print")
 
+            kotItemDao.getPendingItems(tableNo)
+
+            // 🔹 Remove from cart after sending to bill
+//            cartViewModel.removeFromCart(cart.productId, tableNo)
+            cartRepository.remove(cart.productId, tableNo)
+            cartRepository.syncCartCount(tableNo)
+            kotRepository.syncBillCount(tableNo)
+
+            debugPendingItems(tableNo)
             // 🔹 Print if required
             if (print) {
                 addItemToDebouncedKitchenPrint(kotItem, orderType)
@@ -410,13 +389,26 @@ class KitchenViewModel(
             }
 
 
-            // 🔹 Remove from cart after sending to bill
-            cartViewModel.removeFromCart(cart.productId, tableNo)
 
 
         }
     }
 
+    fun debugPendingItems(tableNo: String) {
+        viewModelScope.launch {
+            kotItemDao.getPendingItems(tableNo).collect { items ->
+
+                Log.d("KITCHEN_DEBUG", "Pending items count = ${items.size}")
+
+                items.forEach { item ->
+                    Log.d(
+                        "KITCHEN_DEBUG",
+                        "Item -> name=${item.name}, qty=${item.quantity}, status=${item.status}, table=${item.tableNo}"
+                    )
+                }
+            }
+        }
+    }
 
     private fun addItemToDebouncedKitchenPrint(
         item: PosKotItemEntity,
@@ -462,6 +454,28 @@ class KitchenViewModel(
     }
 
 
+    fun logAllKotItems() {
+        viewModelScope.launch {
+            kotItemDao.getTotalKotItems()
+                .collect { items ->
+                    Log.d("KITCHEN_DEBUG2", "Total items = ${items.size}")
+
+                    items.forEach { item ->
+                        Log.d(
+                            "KITCHEN_DEBUG1",
+                            "Status=${item.status},Table=${item.tableNo}, session=${item.sessionId}, BatchId=${item.kotBatchId},Name=${item.name},ID=${item.id}"
+                        )
+                    }
+                }
+        }
+    }
+
+    fun deleteAllKotItems() {
+        viewModelScope.launch {
+            kotItemDao.deleteAllKotItems()
+            Log.d("KITCHEN_DEBUG", "All KOT items deleted")
+        }
+    }
 
 }
 

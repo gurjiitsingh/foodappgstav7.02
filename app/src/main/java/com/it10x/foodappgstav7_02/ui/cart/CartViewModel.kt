@@ -123,7 +123,7 @@ class CartViewModel(
             repository.decrease(productId, tableNo)
 
             // ✅ single source of truth
-            tableReleaseUseCase.releaseIfOrderingAndCartEmpty(tableNo)
+           // tableReleaseUseCase.releaseIfOrderingAndCartEmpty(tableNo)
         }
     }
 
@@ -134,7 +134,7 @@ class CartViewModel(
 
         viewModelScope.launch {
             repository.remove(productId, tableNo)
-            tableReleaseUseCase.releaseIfOrderingAndCartEmpty(tableNo)
+           // tableReleaseUseCase.releaseIfOrderingAndCartEmpty(tableNo)
         }
     }
 

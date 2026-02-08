@@ -31,38 +31,20 @@ class POSOrdersRepository(
         return orderMasterDao.getOrderById(orderId)
     }
 
-    // 🔹 NEW: API-24 safe business date
-    private fun businessDate(): String {
-        return SimpleDateFormat("yyyyMMdd", Locale.getDefault())
-            .format(Date())
-    }
 
     // -------------------------
     // CART (per table/session)
     // -------------------------
 
-    fun getCartItems(sessionId: String): Flow<List<PosCartEntity>> {
-        return cartDao.getCartBySessionId(sessionId)
-    }
+
     fun getCartItemsByTableId(tableId: String): Flow<List<PosCartEntity>> {
         return cartDao.getCartItemsByTableId(tableId)
     }
-//    fun getCartItems(sessionId: String?, orderType: String): Flow<List<PosCartEntity>> {
-//        return if (orderType == "DINE_IN" && sessionId != null) {
-//            cartDao.getCartForTable(sessionId)
-//        } else {
-//            // Takeaway or Delivery uses sessionId prefix
-//            val prefix = "${orderType}-"
-//            cartDao.getCartForSessionPrefix(prefix)
-//        }
-//    }
-
-    fun getUnsentItems(tableId: String): Flow<List<PosCartEntity>> =
-        cartDao.getUnsentItems(tableId)
-
     suspend fun markAllSent(tableId: String) {
         cartDao.markAllSent(tableId)
     }
+
+
 
     // ✅ Clears cart safely depending on order type
     suspend fun clearCart(orderType: String, tableId: String) {
@@ -70,29 +52,14 @@ class POSOrdersRepository(
         if (!tableId.isNullOrBlank()) {
             cartDao.clearCartByTableId(tableId)      // Table-based session
         }
-//        when (orderType) {
-//            "DINE_IN" -> {
-//                if (!tableId.isNullOrBlank()) {
-//                    cartDao.clearCartByTableId(tableId)      // Table-based session
-//                }
-//            }
-//            "TAKEAWAY", "DELIVERY" -> {
-//                cartDao.clearCartByPrefix("$orderType-")
-//            }
-//            else -> {
-//                // fallback just in case
-//                cartDao.clearCartByPrefix("$orderType-")
-//           }
-//        }
     }
+
+
 
     // -------------------------
     // TABLE STATE MANAGEMENT
     // -------------------------
-    suspend fun markTableRunning(tableId: String, orderId: String) {
-        tableDao.updateStatus(tableId, "OCCUPIED")
-        tableDao.setActiveOrder(tableId, orderId)
-    }
+
 
     suspend fun markTableBillRequested(tableId: String) {
         tableDao.updateStatus(tableId, "BILL_REQUESTED")
@@ -110,17 +77,11 @@ class POSOrdersRepository(
         return orderMasterDao.getPagedOrders(limit, offset)
     }
 
-    suspend fun getOpenOrdersForTable(tableNo: String): List<PosOrderMasterEntity> {
-        return orderMasterDao.getOpenOrdersForTable(tableNo)
-    }
 
     suspend fun getOrderItems(orderId: String): List<PosOrderItemEntity> {
         return orderProductDao.getByOrderIdSync(orderId)
     }
 
-    suspend fun getAllItemsForTable(tableNo: String): List<PosOrderItemEntity> {
-        return orderProductDao.getAllItemsForTable(tableNo)
-    }
 
     // -------------------------
     // BILLING / PAYMENT
@@ -137,4 +98,24 @@ class POSOrdersRepository(
 
     // (Optional) Future: Add KOT management helper functions here if needed
     // e.g. fetch pending KOT items, clear printed KOTs, etc.
+
+
+
+
+    suspend fun finalizeTableAfterPayment(tableNo: String) {
+
+        // clear KOT
+        db.kotItemDao().clearForTable(tableNo)
+
+        // reset live counters
+        tableDao.updateBill(tableNo, 0, 0.0)
+        tableDao.setKitchenCount(tableNo, 0)
+        tableDao.setCartCount(tableNo, 0)
+
+        // release table
+        tableDao.updateStatus(tableNo, "AVAILABLE")
+        tableDao.setActiveOrder(tableNo, "")
+    }
+
+
 }

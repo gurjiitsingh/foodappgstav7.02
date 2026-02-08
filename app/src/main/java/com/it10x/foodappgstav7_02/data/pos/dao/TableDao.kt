@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.it10x.foodappgstav7_02.data.pos.entities.TableEntity
+import kotlinx.coroutines.flow.Flow
 
 
 @Dao
@@ -65,9 +66,37 @@ interface TableDao {
     suspend fun clearActiveOrder(tableId: String)
 
 
-
-
     @Query("UPDATE tables SET status = 'AVAILABLE' WHERE tableName = :tableName")
     suspend fun closeTable(tableName: String)
+
+
+    @Query("UPDATE tables SET cartCount = :count WHERE id = :tableId")
+    suspend fun setCartCount(tableId: String, count: Int)
+
+    @Query("""
+UPDATE tables 
+SET kitchenCount = :count 
+WHERE id = :tableId
+""")
+    suspend fun setKitchenCount(tableId: String, count: Int)
+
+
+    @Query("SELECT * FROM tables ORDER BY sortOrder")
+    fun observeAllTables(): Flow<List<TableEntity>>
+
+
+
+    @Query("""
+UPDATE tables
+SET billCount = :count,
+    billAmount = :amount
+WHERE id = :tableNo
+""")
+    suspend fun updateBill(tableNo: String, count: Int, amount: Double)
+
+
+
+
+
 }
 

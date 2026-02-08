@@ -117,13 +117,6 @@ AND status = 'PENDING'
 //""")
 //    suspend fun markPrinted(itemId: String)
 
-    @Query("""
-    UPDATE pos_kot_items
-    SET isPrinted = 1
-    WHERE tableNo = :tableNo
-      AND isPrinted = 0
-""")
-    suspend fun markAllPrintedForTable(tableNo: String)
 
 
     // -------------------------
@@ -138,6 +131,21 @@ AND status = 'PENDING'
 """)
     suspend fun getUnprintedPendingItems(tableNo: String): List<PosKotItemEntity>
 
+    @Query("""
+    SELECT * FROM pos_kot_items
+    WHERE tableNo = :tableNo
+      AND status = 'PENDING'
+      ORDER BY createdAt ASC
+""")
+    suspend fun getPendingItems(tableNo: String): List<PosKotItemEntity>
+
+    @Query("""
+    UPDATE pos_kot_items
+    SET isPrinted = 1
+    WHERE tableNo = :tableNo
+      AND isPrinted = 0
+""")
+    suspend fun markAllPrintedForTable(tableNo: String)
 
     @Query("""
     UPDATE pos_kot_items
@@ -215,6 +223,21 @@ AND status = 'PENDING'
       AND status = 'DONE'
 """)
     suspend fun countBillDone(tableNo: String): Int
+
+
+
+
+
+
+    @Query("SELECT COUNT(*) FROM pos_kot_items WHERE tableNo = :tableNo AND status = 'DONE'")
+    suspend fun countDoneItems(tableNo: String): Int?
+
+    @Query("""
+SELECT SUM(basePrice * quantity)
+FROM pos_kot_items
+WHERE tableNo = :tableNo AND status = 'DONE'
+""")
+    suspend fun sumDoneAmount(tableNo: String): Double?
 
 
     // -------------------------

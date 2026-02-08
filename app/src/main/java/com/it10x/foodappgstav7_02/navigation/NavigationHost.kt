@@ -87,10 +87,13 @@ fun NavigationHost(
         )
     )
     val posSessionViewModel: PosSessionViewModel = viewModel()
-
+    val posTableViewModel: PosTableViewModel = viewModel()
 
     val cartRepository = remember {
-        CartRepository(db.cartDao())
+        CartRepository(
+            db.cartDao(),
+            db.tableDao()
+        )
     }
 
     val tableReleaseUseCase = remember {
@@ -210,7 +213,10 @@ fun NavigationHost(
 
             val cartViewModel: CartViewModel = viewModel(
                 factory = CartViewModelFactory(
-                    repository = CartRepository(db.cartDao()),
+                    repository = CartRepository(
+                        db.cartDao(),
+                        db.tableDao()
+                    ),
                     tableReleaseUseCase = tableReleaseUseCase
                 )
             )
@@ -222,7 +228,8 @@ fun NavigationHost(
                 },
                 ordersViewModel = posOrdersViewModel,
                 posSessionViewModel = posSessionViewModel,
-                cartViewModel = cartViewModel
+                cartViewModel = cartViewModel,
+                posTableViewModel = posTableViewModel
             )
         }
 
