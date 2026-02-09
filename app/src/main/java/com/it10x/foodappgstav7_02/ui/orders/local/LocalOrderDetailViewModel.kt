@@ -30,8 +30,14 @@ class LocalOrderDetailViewModel(
     val taxTotal = products.map { it.sumOf { p -> p.taxTotal } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0.0)
 
-    val grandTotal = products.map { it.sumOf { p -> p.finalTotal } }
+    val discount = orderInfo
+        .map { it?.discountTotal ?: 0.0 }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0.0)
+
+    val grandTotal = combine(products, discount) { items, discount ->
+        val total = items.sumOf { it.finalTotal }
+        (total - discount).coerceAtLeast(0.0)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0.0)
 
     init {
         viewModelScope.launch {

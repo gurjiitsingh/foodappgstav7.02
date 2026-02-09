@@ -97,12 +97,13 @@ fun BillScreen(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
 
+            // FLAT DISCOUNT
             OutlinedTextField(
                 value = discountFlat,
                 onValueChange = {
                     discountFlat = it
-                    discountPercent = "" // only one active
-                    viewModel.setPercentDiscount(
+                    discountPercent = "" // clear other field
+                    viewModel.setFlatDiscount(
                         it.toDoubleOrNull() ?: 0.0
                     )
                 },
@@ -111,12 +112,13 @@ fun BillScreen(
                 singleLine = true
             )
 
+            // PERCENT DISCOUNT
             OutlinedTextField(
-                value = discountFlat,
+                value = discountPercent,
                 onValueChange = {
-                    discountFlat = it
-                    discountPercent = ""
-                    viewModel.setFlatDiscount(
+                    discountPercent = it
+                    discountFlat = "" // clear other field
+                    viewModel.setPercentDiscount(
                         it.toDoubleOrNull() ?: 0.0
                     )
                 },
@@ -125,6 +127,7 @@ fun BillScreen(
                 singleLine = true
             )
         }
+
 
         Divider()
 

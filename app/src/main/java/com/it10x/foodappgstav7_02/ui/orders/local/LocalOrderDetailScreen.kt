@@ -28,6 +28,8 @@ fun LocalOrderDetailScreen(
     val tax by viewModel.taxTotal.collectAsState()
     val grandTotal by viewModel.grandTotal.collectAsState()
 
+    val discount by viewModel.discount.collectAsState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -55,8 +57,9 @@ fun LocalOrderDetailScreen(
         order?.let { o ->
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFF7F7F7))
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF616161))
             ) {
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -77,7 +80,7 @@ fun LocalOrderDetailScreen(
                         Text(
                             rememberDateFormatter().format(Date(o.createdAt)),
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray
+                            color = Color.White
                         )
 
                         Spacer(Modifier.height(6.dp))
@@ -181,6 +184,7 @@ fun LocalOrderDetailScreen(
         OrderTotals(
             subtotal = subtotal,
             tax = tax,
+            discount = discount,
             grandTotal = grandTotal
         )
     }
@@ -265,15 +269,22 @@ fun OrderProductRow(item: PosOrderItemEntity) {
 fun OrderTotals(
     subtotal: Double,
     tax: Double,
+    discount: Double,
     grandTotal: Double
 ) {
     Column {
         TotalRow("Subtotal", subtotal)
         TotalRow("GST", tax)
+
+        if (discount > 0) {
+            TotalRow("Discount", -discount)
+        }
+
         Divider(Modifier.padding(vertical = 4.dp))
         TotalRow("Grand Total", grandTotal, bold = true)
     }
 }
+
 
 @Composable
 fun TotalRow(
