@@ -151,6 +151,12 @@ private fun ParentProductCard(
     sessionId: String   // 🔑 add this
 ) {
 
+    val cartItems by cartViewModel.cart.collectAsState()
+    val currentQty = remember(cartItems) {
+        cartItems
+            .filter { it.tableId == tableNo && it.productId == product.id }
+            .sumOf { it.quantity }
+    }
     Card(
         modifier = Modifier
             .width(160.dp)
@@ -189,11 +195,27 @@ private fun ParentProductCard(
             )
 
             // ⭐ PRODUCT PRICE
-            Text(
-                "₹${price}",
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.bodySmall
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "₹${price}",
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.bodySmall
+                )
+
+                if (!product.searchCode.isNullOrBlank()) {
+                    Text(
+                        text = product.searchCode,
+                        color = Color.Gray,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+
 
             Row(
                 modifier = Modifier
@@ -219,6 +241,12 @@ private fun ParentProductCard(
                     )
                 }
 
+                Text(
+                    text = currentQty.toString(),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
                 // ➕ add to cart
                 IconButton(
                     onClick = {
@@ -268,6 +296,12 @@ private fun VariantCard(
     sessionId: String,   // 🔑 add this
 
 ) {
+    val cartItems by cartViewModel.cart.collectAsState()
+    val currentQty = remember(cartItems) {
+        cartItems
+            .filter { it.tableId == tableNo && it.productId == product.id }
+            .sumOf { it.quantity }
+    }
 
     Card(
         modifier = Modifier
@@ -292,10 +326,26 @@ private fun VariantCard(
 
             var price: Double = 0.0
 
-            price = when {
-                product.discountPrice == null || product.discountPrice == 0.0 -> product.price
-                else -> product.discountPrice
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp) // ⬅️ increased spacing
+            ) {
+                Text(
+                    "₹${price}",
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.bodySmall
+                )
+
+                if (!product.searchCode.isNullOrBlank()) {
+                    Text(
+                        text = product.searchCode,
+                        color = Color.Gray,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
+
 
             Text(
                 text = toTitleCase(product.name),
@@ -329,6 +379,12 @@ private fun VariantCard(
                     Text("-", color = MaterialTheme.colorScheme.onError)
                 }
 
+                Text(
+                    text = currentQty.toString(),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
                 // ➕
                 IconButton(
                     onClick = {

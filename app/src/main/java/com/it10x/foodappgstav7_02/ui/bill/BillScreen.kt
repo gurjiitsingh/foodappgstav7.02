@@ -42,8 +42,6 @@ fun BillScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val currency by viewModel.currencySymbol.collectAsState()
-    var discountFlat by remember { mutableStateOf("") }
-    var discountPercent by remember { mutableStateOf("") }
     val deliveryAddressState = remember {
         mutableStateOf(DeliveryAddressUiState())
     }
@@ -65,72 +63,49 @@ fun BillScreen(
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
+            .heightIn(min = 400.dp, max = 400.dp) // ensures visible height for tablets
             .padding(16.dp)
     ) {
+        // 🔹 Fixed Header
 
 
 
-        // ---------------- ITEMS ----------------
-        LazyColumn(modifier = Modifier.weight(1f)) {
-            items(state.items) { item ->
-           //     val totalItem = item.quantity * item.
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text("${item.quantity} x ${item.name}")
 
-                    Text("$currency%.2f ".format(item.itemtotal))// ONLY qty × price
-                    //Text("₹%.2f".format(item.finalTotal))
+        // 🔹 Scrollable Item List (takes all remaining space)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(state.items) { item ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 2.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "${item.quantity} x ${item.name}",
+                            modifier = Modifier.weight(1f),
+                            maxLines = 1
+                        )
+                        Text(
+                            "$currency%.2f".format(item.itemtotal),
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
                 }
             }
         }
 
-
+        // 🔹 Fixed Footer (Totals)
         Spacer(Modifier.height(8.dp))
-
-        Text("Discount")
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-
-            // FLAT DISCOUNT
-            OutlinedTextField(
-                value = discountFlat,
-                onValueChange = {
-                    discountFlat = it
-                    discountPercent = "" // clear other field
-                    viewModel.setFlatDiscount(
-                        it.toDoubleOrNull() ?: 0.0
-                    )
-                },
-                label = { Text("Flat") },
-                modifier = Modifier.weight(1f),
-                singleLine = true
-            )
-
-            // PERCENT DISCOUNT
-            OutlinedTextField(
-                value = discountPercent,
-                onValueChange = {
-                    discountPercent = it
-                    discountFlat = "" // clear other field
-                    viewModel.setPercentDiscount(
-                        it.toDoubleOrNull() ?: 0.0
-                    )
-                },
-                label = { Text("%") },
-                modifier = Modifier.weight(1f),
-                singleLine = true
-            )
-        }
-
-
         Divider()
-
+        Spacer(Modifier.height(6.dp))
 
         BillRow("Sub Total", state.subtotal, currency)
         BillRow("Tax", state.tax, currency)
@@ -140,56 +115,9 @@ fun BillScreen(
         }
 
         BillRow("Grand Total", state.total, currency, bold = true)
-        Spacer(Modifier.height(12.dp))
-
-        // ---------------- PAYMENTS ----------------
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            PaymentButton("Cash") {
-                onPaymentClick(
-                    viewModel,
-                    context,
-                    PaymentType.CASH,
-                    deliveryAddressState.value,
-                    onRequireAddress = {
-                        pendingPaymentType = PaymentType.CASH
-                        showAddressDialog = true
-                    },
-                    onProceed = onPayClick
-                )
-            }
-
-            PaymentButton("Card") {
-                onPaymentClick(
-                    viewModel,
-                    context,
-                    PaymentType.CARD,
-                    deliveryAddressState.value,
-                    onRequireAddress = {
-                        pendingPaymentType = PaymentType.CARD
-                        showAddressDialog = true
-                    },
-                    onProceed = onPayClick
-                )
-            }
-
-            PaymentButton("UPI") {
-                onPaymentClick(
-                    viewModel,
-                    context,
-                    PaymentType.UPI,
-                    deliveryAddressState.value,
-                    onRequireAddress = {
-                        pendingPaymentType = PaymentType.UPI
-                        showAddressDialog = true
-                    },
-                    onProceed = onPayClick
-                )
-            }
-        }
     }
+
+
 
     // 🔐 Keep ViewModel updated
     viewModel.setDeliveryAddress(deliveryAddressState.value)

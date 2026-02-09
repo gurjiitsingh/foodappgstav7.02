@@ -34,17 +34,25 @@ import com.it10x.foodappgstav7_02.data.pos.entities.TableEntity
 import com.it10x.foodappgstav7_02.ui.cart.CartViewModelFactory
 import com.it10x.foodappgstav7_02.viewmodel.PosTableViewModel
 import com.it10x.foodappgstav7_02.ui.kitchen.KitchenScreen
-import com.it10x.foodappgstav7_02.ui.bill.BillScreenDialog
+
 
 import com.it10x.foodappgstav7_02.ui.kitchen.KitchenViewModel
 import android.widget.Toast
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import com.it10x.foodappgstav7_02.data.pos.repository.POSOrdersRepository
+import com.it10x.foodappgstav7_02.ui.bill.BillDialog
+import com.it10x.foodappgstav7_02.ui.bill.BillScreen
+import com.it10x.foodappgstav7_02.ui.bill.BillViewModel
+import com.it10x.foodappgstav7_02.ui.bill.BillViewModelFactory
 import com.it10x.foodappgstav7_02.ui.cart.CartUiEvent
 import com.it10x.foodappgstav7_02.ui.kitchen.KitchenViewModelFactory
 
@@ -827,33 +835,15 @@ fun PosScreen(
 
 // ================= BILL POPUP =================
   //  val billingKey by cartViewModel.sessionKey.collectAsState()
-    if (showBill && sessionId != null) {
 
-
-        AlertDialog(
-            onDismissRequest = { showBill = false },
-            confirmButton = {},
-            dismissButton = {
-                TextButton(onClick = { showBill = false }) {
-                    Text("Cancel")
-                }
-            },
-            title = {
-                Text("Billing")
-            },
-            text = {
-                BillScreenDialog(
-                    sessionId = sessionId!!,   // for DB / logic
-                    tableId = tableId ?: orderType, // for UI / print // 🔑 KEY FIX
-                    tableName = selectedTableName!!,
-                    tableViewModel = tableVm,
-                    onClose = { showBill = false },
-                    orderType = orderType,
-
-                    )
-            }
-        )
-    }
+    BillDialog(
+        showBill = showBill,
+        onDismiss = { showBill = false },
+        sessionId = sessionId,
+        tableId = tableId,
+        orderType = orderType,
+        selectedTableName = selectedTableName!!
+    )
 
 
 
