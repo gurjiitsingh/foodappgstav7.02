@@ -46,6 +46,10 @@ import com.it10x.foodappgstav7_02.data.pos.repository.POSOrdersRepository
 import com.it10x.foodappgstav7_02.ui.cart.CartUiEvent
 import com.it10x.foodappgstav7_02.ui.kitchen.KitchenViewModelFactory
 
+enum class SearchTarget {
+    NAME,
+    CODE
+}
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PosScreen(
@@ -59,6 +63,7 @@ fun PosScreen(
     var showTableSelector by rememberSaveable() {
         mutableStateOf(false)
     }
+
 
     var showSearchKeyboard by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
@@ -83,7 +88,9 @@ fun PosScreen(
         ?.tableName
  var selectedTableName = selectedTableName1 ?: ""
 
+    var activeTarget by rememberSaveable { mutableStateOf(SearchTarget.NAME) }
     var searchQuery by rememberSaveable { mutableStateOf("") }
+    var codeQuery by rememberSaveable { mutableStateOf("") }
 
     val repository = POSOrdersRepository(
         db = db,
@@ -365,25 +372,66 @@ fun PosScreen(
 
 
                 // ---------- SEARCH BOX ----------
-                Box(
+
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 8.dp)
-                        .clickable {
-                            showSearchKeyboard = true   // ✅ THIS WILL FIRE
-                        }
+                        .padding(bottom = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = {}, // keyboard controls input
-                        modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("Search by name or code") },
-                        singleLine = true,
-                        shape = MaterialTheme.shapes.small,
-                        readOnly = true,
-                        enabled = false // 🔑 important: prevents TextField from consuming clicks
-                    )
+
+                    // ---------- EXISTING SEARCH (UNCHANGED LOGIC) ----------
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable {
+                                activeTarget = SearchTarget.NAME
+                                showSearchKeyboard = true
+                            }
+                    ) {
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = {},
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = { Text("Search by name or code") },
+                            singleLine = true,
+                            readOnly = true,
+                            enabled = false
+                        )
+                    }
+
+                    // ---------- NEW CODE SEARCH ----------
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable {
+                                activeTarget = SearchTarget.CODE
+                                showSearchKeyboard = true
+                            }
+                    ) {
+                        OutlinedTextField(
+                            value = codeQuery,
+                            onValueChange = {},
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = { Text("Search by code") },
+                            singleLine = true,
+                            readOnly = true,
+                            enabled = false
+                        )
+                    }
+
+                    // ---------- CLEAR BUTTON ----------
+                    Button(
+                        onClick = {
+                            searchQuery = ""
+                            codeQuery = ""
+                        }
+                    ) {
+                        Text("Clear")
+                    }
                 }
+
 
 
 
@@ -477,15 +525,47 @@ fun PosScreen(
                                 .background(MaterialTheme.colorScheme.surface)
                                 .zIndex(11f)
                         ) {
+//                            PosSearchKeyboardRight(
+//                                onKeyPress = { searchQuery += it },
+//                                onBackspace = {
+//                                    if (searchQuery.isNotEmpty())
+//                                        searchQuery = searchQuery.dropLast(1)
+//                                },
+//                                onClear = { searchQuery = "" },
+//                                onClose = { showSearchKeyboard = false }
+//                            )
+
                             PosSearchKeyboardRight(
-                                onKeyPress = { searchQuery += it },
-                                onBackspace = {
-                                    if (searchQuery.isNotEmpty())
-                                        searchQuery = searchQuery.dropLast(1)
+
+                                onKeyPress = { char ->
+                                    when (activeTarget) {
+                                        SearchTarget.NAME -> searchQuery += char
+                                        SearchTarget.CODE -> codeQuery += char
+                                    }
                                 },
-                                onClear = { searchQuery = "" },
+
+                                onBackspace = {
+                                    when (activeTarget) {
+                                        SearchTarget.NAME ->
+                                            if (searchQuery.isNotEmpty())
+                                                searchQuery = searchQuery.dropLast(1)
+
+                                        SearchTarget.CODE ->
+                                            if (codeQuery.isNotEmpty())
+                                                codeQuery = codeQuery.dropLast(1)
+                                    }
+                                },
+
+                                onClear = {
+                                    when (activeTarget) {
+                                        SearchTarget.NAME -> searchQuery = ""
+                                        SearchTarget.CODE -> codeQuery = ""
+                                    }
+                                },
+
                                 onClose = { showSearchKeyboard = false }
                             )
+
                         }
 
                     }

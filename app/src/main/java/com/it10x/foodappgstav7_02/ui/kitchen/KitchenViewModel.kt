@@ -141,10 +141,7 @@ class KitchenViewModel(
             kotRepository.syncKinchenCount(tableNo)
             kotRepository.syncBillCount(tableNo)
 
-            Log.d("KITCHEN_PRINT", "Done All printed for table=$tableNo")
-            kotItemDao.markAllPrinted(tableNo)
-
-            Log.d("KITCHEN_PRINT", "Done All printed for table=$tableNo")
+          Log.d("KITCHEN_PRINT", "Done All printed for table=$tableNo")
         }
     }
     fun markCancelled(itemId: String) {
@@ -373,42 +370,57 @@ class KitchenViewModel(
             kotItemDao.insert(kotItem)
             Log.d("TABLE_DEBUG", "Cart to direct bill with print")
 
-            kotItemDao.getPendingItems(tableNo)
+            //kotItemDao.getPendingItems(tableNo)
 
             // 🔹 Remove from cart after sending to bill
-//            cartViewModel.removeFromCart(cart.productId, tableNo)
+            //    cartViewModel.removeFromCart(cart.productId, tableNo)
             cartRepository.remove(cart.productId, tableNo)
             cartRepository.syncCartCount(tableNo)
             kotRepository.syncBillCount(tableNo)
 
-            debugPendingItems(tableNo)
+            logAllKotItems()
             // 🔹 Print if required
             if (print) {
                 addItemToDebouncedKitchenPrint(kotItem, orderType)
-                kotItemDao.markPrinted(kotItem.id)
-            }
-
-
-
-
-        }
-    }
-
-    fun debugPendingItems(tableNo: String) {
-        viewModelScope.launch {
-            kotItemDao.getPendingItems(tableNo).collect { items ->
-
-                Log.d("KITCHEN_DEBUG", "Pending items count = ${items.size}")
-
-                items.forEach { item ->
-                    Log.d(
-                        "KITCHEN_DEBUG",
-                        "Item -> name=${item.name}, qty=${item.quantity}, status=${item.status}, table=${item.tableNo}"
-                    )
                 }
-            }
+            kotItemDao.markPrinted(kotItem.id)
+
+
+
         }
     }
+
+    fun logAllKotItems() {
+        viewModelScope.launch {
+            kotItemDao.getTotalKotItems()
+                .collect { items ->
+                    Log.d("KITCHEN_DEBUG1", "Total items = ${items.size}")
+
+                    items.forEach { item ->
+                        Log.d(
+                            "KITCHEN_DEBUG1",
+                            "Status=${item.status},isPrinted=${item.isPrinted}, Table=${item.tableNo},Name=${item.name},  BatchId=${item.kotBatchId},ID=${item.id}"
+                        )
+                    }
+                }
+        }
+    }
+
+//    fun debugPendingItems(tableNo: String) {
+//        viewModelScope.launch {
+//            kotItemDao.getPendingItems(tableNo).collect { items ->
+//
+//                Log.d("KITCHEN_DEBUG", "Pending items count = ${items.size}")
+//
+//                items.forEach { item ->
+//                    Log.d(
+//                        "KITCHEN_DEBUG",
+//                        "Item -> name=${item.name}, qty=${item.quantity}, status=${item.status}, table=${item.tableNo}"
+//                    )
+//                }
+//            }
+//        }
+//    }
 
     private fun addItemToDebouncedKitchenPrint(
         item: PosKotItemEntity,
@@ -426,7 +438,7 @@ class KitchenViewModel(
 
         // Start / restart 10s timer
         kotPrintJob = viewModelScope.launch {
-            delay(10_000) // ⏱️ 10 seconds
+            delay(5_000) // ⏱️ 10 seconds
 
             val itemsToPrint: List<PosKotItemEntity>
             val batchId: String?
@@ -454,21 +466,7 @@ class KitchenViewModel(
     }
 
 
-    fun logAllKotItems() {
-        viewModelScope.launch {
-            kotItemDao.getTotalKotItems()
-                .collect { items ->
-                    Log.d("KITCHEN_DEBUG2", "Total items = ${items.size}")
 
-                    items.forEach { item ->
-                        Log.d(
-                            "KITCHEN_DEBUG1",
-                            "Status=${item.status},Table=${item.tableNo}, session=${item.sessionId}, BatchId=${item.kotBatchId},Name=${item.name},ID=${item.id}"
-                        )
-                    }
-                }
-        }
-    }
 
     fun deleteAllKotItems() {
         viewModelScope.launch {

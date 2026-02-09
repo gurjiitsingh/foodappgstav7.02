@@ -10,14 +10,14 @@ import kotlinx.coroutines.flow.combine
 
 class KotRepository(
     private val batchDao: KotBatchDao,
-    private val itemDao: KotItemDao,
+    private val kotItemDao: KotItemDao,
     private val tableDao: TableDao
 ) {
 
     fun getRunningKotsForTable(tableNo: String): Flow<Pair<List<Any>, List<Any>>> {
         return combine(
             batchDao.getBatchesForTable(tableNo),
-            itemDao.getItemsForTable(tableNo)
+            kotItemDao.getItemsForTable(tableNo)
         ) { batches, items ->
             batches to items
         }
@@ -28,29 +28,21 @@ class KotRepository(
         tableNo: String,
         items: List<PosKotItemEntity>
     ) {
-        itemDao.insertAll(items)
+        kotItemDao.insertAll(items)
         syncKitchenCount(tableNo)
     }
 
 
 
-
-
-
-
-
-
-
-
     suspend fun markDoneAll(tableNo: String) {
-        itemDao.markAllDone(tableNo)
-        itemDao.markAllPrinted(tableNo)
+        kotItemDao.markAllDone(tableNo)
+        kotItemDao.markAllPrinted(tableNo)
 
        }
 
     private suspend fun syncBillCounters(tableNo: String) {
-        val billCount = itemDao.countDoneItems(tableNo) ?: 0
-        val billAmount = itemDao.sumDoneAmount(tableNo) ?: 0.0
+        val billCount = kotItemDao.countDoneItems(tableNo) ?: 0
+        val billAmount = kotItemDao.sumDoneAmount(tableNo) ?: 0.0
 
         tableDao.updateBill(tableNo, billCount, billAmount)
     }
@@ -58,7 +50,7 @@ class KotRepository(
     private suspend fun syncKitchenCount(tableNo: String) {
       //  Log.d("TABLE_DEBUG", "syncKitchenCount() called for table = $tableNo")
 
-        val count = itemDao.countKitchenPending(tableNo) ?: 0
+        val count = kotItemDao.countKitchenPending(tableNo) ?: 0
 
       //  Log.d("TABLE_DEBUG", "Kitchen pending count from DB = $count")
 
