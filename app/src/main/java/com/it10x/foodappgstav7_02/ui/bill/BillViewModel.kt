@@ -32,7 +32,7 @@ import java.util.*
 import com.it10x.foodappgstav7_02.data.print.OutletInfo
 import com.it10x.foodappgstav7_02.data.print.OutletMapper
 import kotlinx.coroutines.flow.Flow
-
+import kotlinx.coroutines.flow.combine
 class BillViewModel(
     private val kotItemDao: KotItemDao,
     private val orderMasterDao: OrderMasterDao,
@@ -61,6 +61,23 @@ class BillViewModel(
     private val _currencySymbol = MutableStateFlow("₹") // fallback
     val currencySymbol: StateFlow<String> = _currencySymbol
 
+    private val _discountFlat = MutableStateFlow(0.0)
+    private val _discountPercent = MutableStateFlow(0.0)
+
+
+
+
+
+    fun setFlatDiscount(value: Double) {
+        _discountFlat.value = value.coerceAtLeast(0.0)
+        _discountPercent.value = 0.0 // reset percent
+    }
+
+    fun setPercentDiscount(value: Double) {
+        _discountPercent.value = value.coerceAtLeast(0.0)
+        _discountFlat.value = 0.0 // reset flat
+    }
+
   //  val outletInfo: StateFlow<OutletInfo> = outletRepository.outletInfo
     // ✅ Expose orderType safely for Compose UI
     val orderTypePublic: String
@@ -78,16 +95,21 @@ class BillViewModel(
 
     private fun observeBill() {
         viewModelScope.launch {
-            kotItemDao.getItemsForTable(tableId).collectLatest { kotItems ->
+            combine(
+                kotItemDao.getItemsForTable(tableId),
+                _discountFlat,
+                _discountPercent
+            ) { kotItems, flat, percent ->
+                Triple(kotItems, flat, percent)
+            }.collectLatest { (kotItems, flat, percent) ->
+
                 val doneItems = kotItems.filter { it.status == "DONE" }
 
                 val billingItems = doneItems
                     .groupBy { it.productId }
                     .map { (_, group) ->
                         val first = group.first()
-
                         val quantity = group.sumOf { it.quantity }
-
                         val itemTotal = first.basePrice * quantity
 
                         val taxTotal = group.sumOf {
@@ -99,10 +121,10 @@ class BillViewModel(
                         BillingItemUi(
                             id = first.productId,
                             name = first.name,
-                            basePrice = first.basePrice,   // ✅ ONE item price
+                            basePrice = first.basePrice,
                             quantity = quantity,
-                            itemtotal = itemTotal,         // ✅ qty × price
-                            taxTotal = taxTotal,           // ✅ per-item tax
+                            itemtotal = itemTotal,
+                            taxTotal = taxTotal,
                             finalTotal = itemTotal + taxTotal
                         )
                     }
@@ -110,12 +132,21 @@ class BillViewModel(
                 val subtotal = billingItems.sumOf { it.itemtotal }
                 val tax = billingItems.sumOf { it.taxTotal }
 
+                val percentValue = subtotal * (percent / 100.0)
+                val appliedDiscount = if (flat > 0) flat else percentValue
+
+                val finalTotal = (subtotal + tax - appliedDiscount)
+                    .coerceAtLeast(0.0)
+
                 _uiState.value = BillUiState(
                     loading = false,
                     items = billingItems,
                     subtotal = subtotal,
                     tax = tax,
-                    total = subtotal + tax
+                    discountFlat = flat,
+                    discountPercent = percent,
+                    discountApplied = appliedDiscount,
+                    total = finalTotal
                 )
             }
         }
@@ -158,6 +189,14 @@ class BillViewModel(
                 businessDate = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date())
             )
 
+            val flat = _discountFlat.value
+            val percent = _discountPercent.value
+            val percentValue = itemSubtotal * (percent / 100.0)
+
+            val discount = if (flat > 0) flat else percentValue
+
+
+
             val orderMaster = PosOrderMasterEntity(
                 id = orderId,
                 srno = srno,
@@ -173,8 +212,8 @@ class BillViewModel(
                 dLandmark = deliveryAddress?.landmark,
                 itemTotal = itemSubtotal,
                 taxTotal = taxTotal,
-                discountTotal = 0.0,
-                grandTotal = itemSubtotal + taxTotal,
+                discountTotal = discount,
+                grandTotal = (itemSubtotal + taxTotal - discount).coerceAtLeast(0.0),
                 paymentType = paymentType,
                 paymentStatus = "PAID",
                 orderStatus = "COMPLETED",
@@ -258,6 +297,9 @@ class BillViewModel(
     fun getDoneItems(orderRef: String, orderType: String): Flow<List<PosKotItemEntity>> {
         return kotItemDao.getDoneItemsForTable(orderRef)
     }
+
+
+
 
 
 }

@@ -42,6 +42,8 @@ fun BillScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val currency by viewModel.currencySymbol.collectAsState()
+    var discountFlat by remember { mutableStateOf("") }
+    var discountPercent by remember { mutableStateOf("") }
     val deliveryAddressState = remember {
         mutableStateOf(DeliveryAddressUiState())
     }
@@ -85,15 +87,56 @@ fun BillScreen(
             }
         }
 
+
+        Spacer(Modifier.height(8.dp))
+
+        Text("Discount")
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+
+            OutlinedTextField(
+                value = discountFlat,
+                onValueChange = {
+                    discountFlat = it
+                    discountPercent = "" // only one active
+                    viewModel.setPercentDiscount(
+                        it.toDoubleOrNull() ?: 0.0
+                    )
+                },
+                label = { Text("Flat") },
+                modifier = Modifier.weight(1f),
+                singleLine = true
+            )
+
+            OutlinedTextField(
+                value = discountFlat,
+                onValueChange = {
+                    discountFlat = it
+                    discountPercent = ""
+                    viewModel.setFlatDiscount(
+                        it.toDoubleOrNull() ?: 0.0
+                    )
+                },
+                label = { Text("%") },
+                modifier = Modifier.weight(1f),
+                singleLine = true
+            )
+        }
+
         Divider()
 
-//        BillRow("Sub Total", state.subtotal)
-//        BillRow("Tax", state.tax)
-//        BillRow("Grand Total", state.total, bold = true)
+
         BillRow("Sub Total", state.subtotal, currency)
         BillRow("Tax", state.tax, currency)
-        BillRow("Grand Total", state.total, currency, bold = true)
 
+        if (state.discountApplied > 0) {
+            BillRow("Discount", -state.discountApplied, currency)
+        }
+
+        BillRow("Grand Total", state.total, currency, bold = true)
         Spacer(Modifier.height(12.dp))
 
         // ---------------- PAYMENTS ----------------
