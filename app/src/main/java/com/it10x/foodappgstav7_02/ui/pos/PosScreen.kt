@@ -39,6 +39,8 @@ import com.it10x.foodappgstav7_02.ui.bill.BillScreenDialog
 import com.it10x.foodappgstav7_02.ui.kitchen.KitchenViewModel
 import android.widget.Toast
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -146,29 +148,80 @@ fun PosScreen(
     LaunchedEffect(Unit) { tableVm.loadTables() }
 
 
-
-
-
     val filteredProducts = remember(
         parentProducts,
         selectedCatId,
-        searchQuery
+        searchQuery,
+        codeQuery,
+        activeTarget
     ) {
-        val query = searchQuery.trim().lowercase()
+        val query = when (activeTarget) {
+            SearchTarget.NAME -> searchQuery.trim().lowercase()
+            SearchTarget.CODE -> codeQuery.trim().lowercase()
+        }
 
         if (query.isNotEmpty()) {
             parentProducts.filter { product ->
-                product.name.lowercase().contains(query) ||
-                        product.searchCode?.lowercase()?.contains(query) == true
+                when (activeTarget) {
+                    SearchTarget.NAME -> product.name.lowercase().contains(query)  // partial match for name
+                    SearchTarget.CODE -> product.searchCode?.lowercase() == query   // exact match for code
+                }
             }
         } else {
-            if (selectedCatId == null) {
-                emptyList()
-            } else {
-                parentProducts.filter { it.categoryId == selectedCatId }
-            }
+            if (selectedCatId == null) emptyList()
+            else parentProducts.filter { it.categoryId == selectedCatId }
         }
     }
+
+
+
+//    val filteredProducts = remember(
+//        parentProducts,
+//        selectedCatId,
+//        searchQuery,
+//        codeQuery,
+//        activeTarget
+//    ) {
+//        val query = when (activeTarget) {
+//            SearchTarget.NAME -> searchQuery.trim().lowercase()
+//            SearchTarget.CODE -> codeQuery.trim().lowercase()
+//        }
+//
+//        if (query.isNotEmpty()) {
+//            parentProducts.filter { product ->
+//                when (activeTarget) {
+//                    SearchTarget.NAME -> product.name.lowercase().contains(query)
+//                    SearchTarget.CODE -> product.searchCode?.lowercase()?.contains(query) == true
+//                }
+//            }
+//        } else {
+//            if (selectedCatId == null) emptyList()
+//            else parentProducts.filter { it.categoryId == selectedCatId }
+//        }
+//    }
+
+
+
+//    val filteredProducts = remember(
+//        parentProducts,
+//        selectedCatId,
+//        searchQuery
+//    ) {
+//        val query = searchQuery.trim().lowercase()
+//
+//        if (query.isNotEmpty()) {
+//            parentProducts.filter { product ->
+//                product.name.lowercase().contains(query) ||
+//                        product.searchCode?.lowercase()?.contains(query) == true
+//            }
+//        } else {
+//            if (selectedCatId == null) {
+//                emptyList()
+//            } else {
+//                parentProducts.filter { it.categoryId == selectedCatId }
+//            }
+//        }
+//    }
 
 
 
@@ -373,64 +426,166 @@ fun PosScreen(
 
                 // ---------- SEARCH BOX ----------
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
 
-                    // ---------- EXISTING SEARCH (UNCHANGED LOGIC) ----------
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clickable {
-                                activeTarget = SearchTarget.NAME
-                                showSearchKeyboard = true
+
+// ---------- SEARCH ROW(S) ----------
+                        if (isPhone) {
+                            // PHONE: TWO ROWS
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                // ROW 1: NAME SEARCH
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            activeTarget = SearchTarget.NAME
+                                            codeQuery = ""
+                                            showSearchKeyboard = true
+                                        }
+                                ) {
+                                    OutlinedTextField(
+                                        value = searchQuery,
+                                        onValueChange = {
+                                            searchQuery = it
+                                            codeQuery = "" // clear other box
+                                        },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(53.dp),
+                                        placeholder = { Text("Search by name") },
+                                        singleLine = true
+                                    )
+
+                                }
+
+                                // ROW 2: CODE SEARCH + CLEAR
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clickable {
+                                                activeTarget = SearchTarget.CODE
+                                                searchQuery = ""
+                                                showSearchKeyboard = true
+                                            }
+                                    ) {
+                                        OutlinedTextField(
+                                            value = codeQuery,
+                                            onValueChange = {
+                                                codeQuery = it
+                                                searchQuery = ""
+                                            },
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(53.dp),
+                                            placeholder = { Text("Search by code") },
+                                            singleLine = true
+                                        )
+
+                                    }
+
+                                    // SMALL LIGHT GRAY CLEAR BUTTON WITH X ICON
+                                    IconButton(
+                                        onClick = {
+                                            searchQuery = ""
+                                            codeQuery = ""
+                                        },
+                                        modifier = Modifier
+                                            .size(36.dp) // smaller
+                                            .background(Color.LightGray.copy(alpha = 0.3f), shape = RoundedCornerShape(8.dp))
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = "Clear",
+                                            tint = Color.DarkGray
+                                        )
+                                    }
+                                }
                             }
-                    ) {
-                        OutlinedTextField(
-                            value = searchQuery,
-                            onValueChange = {},
-                            modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text("Search by name or code") },
-                            singleLine = true,
-                            readOnly = true,
-                            enabled = false
-                        )
-                    }
+                        } else {
+                            // TABLET/DESKTOP: SINGLE ROW
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                // NAME SEARCH
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clickable {
+                                            activeTarget = SearchTarget.NAME
+                                            codeQuery = ""
+                                            showSearchKeyboard = true
+                                        }
+                                ) {
+                                    OutlinedTextField(
+                                        value = searchQuery,
+                                        onValueChange = {},
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(53.dp),
+                                        placeholder = { Text("Search by name") },
+                                        singleLine = true,
+                                        readOnly = true,
+                                        enabled = false
+                                    )
+                                }
 
-                    // ---------- NEW CODE SEARCH ----------
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clickable {
-                                activeTarget = SearchTarget.CODE
-                                showSearchKeyboard = true
+                                // CODE SEARCH
+
+                                Box(
+                                    modifier = Modifier
+                                        .weight(0.9f) // 👈 was 1f — slightly shorter
+                                        .clickable {
+                                            activeTarget = SearchTarget.CODE
+                                            searchQuery = ""
+                                            showSearchKeyboard = true
+                                        }
+                                ) {
+                                    OutlinedTextField(
+                                        value = codeQuery,
+                                        onValueChange = {},
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(53.dp),
+
+                                        placeholder = { Text("Search by code") },
+                                        singleLine = true,
+                                        readOnly = true,
+                                        enabled = false
+                                    )
+                                }
+
+                                // CLEAR BUTTON
+                                IconButton(
+                                    onClick = {
+                                        searchQuery = ""
+                                        codeQuery = ""
+                                    },
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .background(
+                                            Color.LightGray.copy(alpha = 0.4f),
+                                            shape = RoundedCornerShape(8.dp)
+                                        )
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = "Clear",
+                                        tint = Color.White // 👈 white X
+                                    )
+                                }
                             }
-                    ) {
-                        OutlinedTextField(
-                            value = codeQuery,
-                            onValueChange = {},
-                            modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text("Search by code") },
-                            singleLine = true,
-                            readOnly = true,
-                            enabled = false
-                        )
-                    }
-
-                    // ---------- CLEAR BUTTON ----------
-                    Button(
-                        onClick = {
-                            searchQuery = ""
-                            codeQuery = ""
                         }
-                    ) {
-                        Text("Clear")
-                    }
-                }
 
 
 
