@@ -22,6 +22,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.it10x.foodappgstav7_02.viewmodel.PosTableViewModel
 import androidx.compose.animation.animateContentSize
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 
 
 @Composable
@@ -40,10 +43,17 @@ fun TableSelectorGrid(
             areaTables.sortedBy { it.table.sortOrder ?: Int.MAX_VALUE }
         }
 
-    AlertDialog(
+    Dialog (
         onDismissRequest = onDismiss,
-        text = {
-            // ✅ use ScrollColumn for stable height
+        properties = DialogProperties(usePlatformDefaultWidth = false) // ✅ allows custom width
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth(0.96f) // ✅ wider dialog — adjust 0.96f → 1f for full screen width
+                .padding(8.dp),
+            shape = MaterialTheme.shapes.medium,
+            tonalElevation = 6.dp
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -65,16 +75,22 @@ fun TableSelectorGrid(
                             .fillMaxWidth()
                     )
 
-                    // 🔹 Grid for each area — userScroll disabled (static height)
-                    val rows = (areaTables.size + 4) / 5
-                    val gridHeight = (rows * 118).dp
+                    // 🔹 Grid for each area — unchanged
+//                    val rows = (areaTables.size + 4) / 7
+//                    val gridHeight = (rows * 125).dp
 
+                    // Estimate how many columns fit based on screen width and min cell size
+                    val screenWidth = LocalConfiguration.current.screenWidthDp
+                    val columns = (screenWidth / 110).coerceAtLeast(1) // ~100dp per cell + spacing
+                    val rows = (areaTables.size + columns - 1) / columns
+                    val gridHeight = (rows * 125).dp
                     LazyVerticalGrid(
-                        columns = GridCells.Fixed(5),
+                        //columns = GridCells.Fixed(9), // ✅ keep logic
+                        columns = GridCells.Adaptive(minSize = 100.dp),
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(gridHeight)
-                            .padding(bottom = 10.dp),
+                            .padding(bottom = 5.dp),
                         horizontalArrangement = Arrangement.spacedBy(5.dp),
                         verticalArrangement = Arrangement.spacedBy(5.dp),
                         userScrollEnabled = false
@@ -84,15 +100,6 @@ fun TableSelectorGrid(
                             val isSelected = selectedTable == table.id
 
                             val bgColor = when (ui.color) {
-//                                PosTableViewModel.TableColor.GREEN ->
-//                                    Color(0xFF4CAF50).copy(alpha = 0.20f)
-//                                PosTableViewModel.TableColor.BLUE ->
-//                                    Color(0xFF2196F3).copy(alpha = 0.20f)
-//                                PosTableViewModel.TableColor.RED ->
-//                                    Color(0xFFF44336).copy(alpha = 0.20f)
-//                                PosTableViewModel.TableColor.GRAY ->
-//                                    Color(0xFFBDBDBD).copy(alpha = 0.20f)
-
                                 PosTableViewModel.TableColor.GREEN ->
                                     Color(0xFFBDBDBD).copy(alpha = 0.30f)
                                 PosTableViewModel.TableColor.BLUE ->
@@ -102,8 +109,6 @@ fun TableSelectorGrid(
                                 PosTableViewModel.TableColor.GRAY ->
                                     Color(0xFFBDBDBD).copy(alpha = 0.30f)
                             }
-
-
 
                             Surface(
                                 color = bgColor,
@@ -130,7 +135,6 @@ fun TableSelectorGrid(
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-
                                         Text(
                                             text = table.tableName,
                                             style = MaterialTheme.typography.titleLarge,
@@ -147,13 +151,11 @@ fun TableSelectorGrid(
                                         }
                                     }
 
-
                                     // 🔹 STATUS INFO
                                     Column(
                                         verticalArrangement = Arrangement.spacedBy(4.dp),
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
-
                                         StatusBadge(
                                             icon = "🛒",
                                             text = ui.cartCount.toString(),
@@ -162,7 +164,6 @@ fun TableSelectorGrid(
                                                 .fillMaxWidth()
                                                 .alpha(if (ui.cartCount > 0) 1f else 0f)
                                         )
-
                                         StatusBadge(
                                             icon = "🍳",
                                             text = ui.kitchenPendingCount.toString(),
@@ -171,7 +172,6 @@ fun TableSelectorGrid(
                                                 .fillMaxWidth()
                                                 .alpha(if (ui.kitchenPendingCount > 0) 1f else 0f)
                                         )
-
                                         StatusBadge(
                                             icon = "🧾",
                                             text = ui.billDoneCount.toString(),
@@ -181,21 +181,25 @@ fun TableSelectorGrid(
                                                 .alpha(if (ui.billDoneCount > 0) 1f else 0f)
                                         )
                                     }
-
-
-
                                 }
                             }
                         }
                     }
                 }
+
+                // 🔹 Footer buttons (like cancel)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) { Text("Cancel") }
+                }
             }
-        },
-        confirmButton = {},
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
         }
-    )
+    }
+
 }
 
 
