@@ -10,17 +10,20 @@ import androidx.room.PrimaryKey
         Index(value = ["kotBatchId"]),
         Index(value = ["sessionId"]),   // ✅ MOST IMPORTANT
         Index(value = ["tableNo"]),
-        Index(value = ["productId"])
+        Index(value = ["productId"]),
+        Index(value = ["syncedToCloud"]), // ✅ fast sync lookup
+        Index(value = ["source"])         // ✅ filter customer/waiter
     ]
 )
 data class PosKotItemEntity(
+
     @PrimaryKey
     val id: String,
 
-    val sessionId: String?,             // ✅ ADD THIS
+    val sessionId: String?,             // groups table visit
     val kotBatchId: String,
 
-    val tableNo: String?,              // UI / print only
+    val tableNo: String?,               // UI / print only
 
     val productId: String,
     val name: String,
@@ -35,8 +38,15 @@ data class PosKotItemEntity(
     val taxRate: Double,
     val taxType: String,
 
-    val status: String,                // PENDING / DONE
+    val status: String,                 // PENDING / DONE
     val isPrinted: Boolean,
 
-    val createdAt: Long
+    val createdAt: Long,
+
+    // ================= NEW FIELDS =================
+
+    val source: String = "POS",         // POS / CUSTOMER / WAITER
+
+    val syncedToCloud: Boolean = false, // POS → Firestore mirror
+    val syncedFromCloud: Boolean = false // Firestore → POS imported
 )

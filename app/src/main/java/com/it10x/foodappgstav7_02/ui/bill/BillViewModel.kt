@@ -270,6 +270,22 @@ class BillViewModel(
         }
     }
 
+
+    fun deleteItem(itemId: String) {
+        viewModelScope.launch {
+            try {
+                kotItemDao.deleteItemById(itemId)
+                Log.d("DELETE", "Item deleted: $itemId")
+
+                // Optional: refresh list to update UI
+//                val newList = kotItemDao.getItemsForTableSync(currentTableId)
+//                _uiState.update { it.copy(items = newList) }
+
+            } catch (e: Exception) {
+                Log.e("DELETE", "Failed to delete item", e)
+            }
+        }
+    }
     // --------------------------------------------------------
     // Set Delivery Address
     // --------------------------------------------------------
@@ -299,7 +315,23 @@ class BillViewModel(
     }
 
 
+    // file: BillViewModel.kt (inside the class)
+    fun updateItemQuantity(itemId: String, newQty: Int) {
+        viewModelScope.launch {
+            val qty = newQty.coerceAtLeast(0)
+            Log.d("EDIT", "Edit qty in bill itemId=$itemId qty=$qty")
 
+            kotItemDao.updateQuantity(itemId, qty)
+
+//            val updated = kotItemDao.getItemQtyById(itemId)
+//            Log.d("EDIT", "After update DB has qty=${updated}")
+
+            // optionally reload UI here
+            // refreshCart()
+        }
+
+
+    }
 
 
 }

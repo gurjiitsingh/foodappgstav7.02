@@ -83,7 +83,7 @@ fun TableSelectorGrid(
                     val screenWidth = LocalConfiguration.current.screenWidthDp
                     val columns = (screenWidth / 110).coerceAtLeast(1) // ~100dp per cell + spacing
                     val rows = (areaTables.size + columns - 1) / columns
-                    val gridHeight = (rows * 125).dp
+                    val gridHeight = (rows * 130).dp
                     LazyVerticalGrid(
                         //columns = GridCells.Fixed(9), // ✅ keep logic
                         columns = GridCells.Adaptive(minSize = 100.dp),

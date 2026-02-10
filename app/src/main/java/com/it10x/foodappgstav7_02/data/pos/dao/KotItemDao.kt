@@ -100,12 +100,15 @@ AND status = 'PENDING'
     @Query("SELECT * FROM pos_kot_items ORDER BY createdAt ASC")
     fun getAllKotItems(): Flow<List<PosKotItemEntity>>
 
-    @Query("""
-    UPDATE pos_kot_items
-    SET quantity = :quantity
-    WHERE id = :itemId
-""")
-    suspend fun updateQuantity(itemId: String, quantity: Int)
+
+    @Query("SELECT quantity FROM pos_kot_items WHERE productId = :itemId LIMIT 1")
+    suspend fun getItemQtyById(itemId: String): Int?
+
+    @Query("UPDATE pos_kot_items SET quantity = :qty WHERE productId = :id")
+    suspend fun updateQuantity(id: String, qty: Int)
+
+    @Query("DELETE FROM pos_kot_items WHERE productId = :itemId")
+    suspend fun deleteItemById(itemId: String)
 
     // -------------------------
 // PRINT FLAG

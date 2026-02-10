@@ -15,9 +15,17 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.it10x.foodappgstav7_02.ui.payment.PaymentType
 import android.widget.Toast
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+
+
 // =====================================================
 // DELIVERY ADDRESS UI STATE (UI ONLY)
 // =====================================================
@@ -49,6 +57,10 @@ fun BillScreen(
     var showAddressDialog by remember { mutableStateOf(false) }
     var pendingPaymentType by remember { mutableStateOf<PaymentType?>(null) }
 
+    var showQtyDialog by remember { mutableStateOf(false) }
+    var selectedItemId by remember { mutableStateOf<String?>(null) }
+    var selectedItemQty by remember { mutableStateOf(0) }
+
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     if (state.loading) {
@@ -78,24 +90,64 @@ fun BillScreen(
                 .fillMaxWidth()
                 .weight(1f)
         ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize()
-            ) {
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(state.items) { item ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 2.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
+                        // LEFT: trash icon + name (name column takes remaining space)
+                        Row(
+                            modifier = Modifier
+                                .weight(1f),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            IconButton(
+                                onClick = { viewModel.deleteItem(item.id) },
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Delete Item",
+                                    tint = Color(0xFFD32F2F)
+                                )
+                            }
+
+                            Text(
+                                text = item.name,
+                                maxLines = 1,
+                                modifier = Modifier.padding(start = 4.dp)
+                            )
+                        }
+
+                        // MIDDLE: qty + edit button
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        ) {
+                            Text(text = "x ${item.quantity}", fontSize = 13.sp)
+                            Spacer(Modifier.width(8.dp))
+                            OutlinedButton(
+                                onClick = {
+                                    selectedItemId = item.id
+                                    selectedItemQty = item.quantity
+                                    showQtyDialog = true
+                                },
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                            ) {
+                                Text("Edit", fontSize = 12.sp)
+                            }
+                        }
+
+                        // RIGHT: fixed-width aligned total (keeps alignment for different digits)
                         Text(
-                            "${item.quantity} x ${item.name}",
-                            modifier = Modifier.weight(1f),
-                            maxLines = 1
-                        )
-                        Text(
-                            "$currency%.2f".format(item.itemtotal),
-                            modifier = Modifier.padding(start = 8.dp)
+                            text = "$currency${"%,.2f".format(item.itemtotal)}",
+                            modifier = Modifier
+                                .width(90.dp), // fixed width so numbers align
+                            textAlign = TextAlign.End
                         )
                     }
                 }
@@ -118,7 +170,17 @@ fun BillScreen(
     }
 
 
-
+    // ---------- Quantity Edit Dialog ----------
+    if (showQtyDialog && selectedItemId != null) {
+        EditQuantityDialog(
+            currentQty = selectedItemQty,
+            onDismiss = { showQtyDialog = false },
+            onConfirm = { newQty ->
+                showQtyDialog = false
+                viewModel.updateItemQuantity(selectedItemId!!, newQty)
+            }
+        )
+    }
     // 🔐 Keep ViewModel updated
     viewModel.setDeliveryAddress(deliveryAddressState.value)
 
@@ -332,3 +394,96 @@ private fun AddressField(
         singleLine = true
     )
 }
+
+
+@Composable
+fun EditQuantityDialog(
+    currentQty: Int,
+    onDismiss: () -> Unit,
+    onConfirm: (Int) -> Unit
+) {
+    var qty by remember { mutableStateOf(currentQty.coerceAtLeast(1)) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = MaterialTheme.shapes.medium,
+            tonalElevation = 8.dp,
+            modifier = Modifier
+                .fillMaxWidth(0.8f)
+                .padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    "Edit Quantity",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+
+                // 🔹 Qty control with + and − buttons
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Button(
+                        onClick = { if (qty > 1) qty-- },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFD32F2F), // red
+                            contentColor = Color.White           // ✅ white symbol
+                        ),
+                        modifier = Modifier.size(50.dp)
+                    ) {
+                        Text(
+                            "−",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White                   // ✅ explicitly white
+                        )
+                    }
+
+                    Text(
+                        text = qty.toString(),
+                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                        modifier = Modifier.padding(horizontal = 28.dp)
+                    )
+
+                    Button(
+                        onClick = { qty++ },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF388E3C), // green
+                            contentColor = Color.White           // ✅ white symbol
+                        ),
+                        modifier = Modifier.size(50.dp)
+                    ) {
+                        Text(
+                            "+",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White                   // ✅ explicitly white
+                        )
+                    }
+                }
+
+                // 🔹 Action buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) { Text("Cancel") }
+                    Spacer(Modifier.width(8.dp))
+                    Button(onClick = { onConfirm(qty) }) {
+                        Text("Update")
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+

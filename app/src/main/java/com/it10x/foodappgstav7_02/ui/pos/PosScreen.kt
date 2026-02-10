@@ -50,6 +50,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import com.it10x.foodappgstav7_02.data.pos.repository.POSOrdersRepository
 import com.it10x.foodappgstav7_02.ui.bill.BillDialog
+import com.it10x.foodappgstav7_02.ui.bill.BillDialogPhone
 import com.it10x.foodappgstav7_02.ui.bill.BillScreen
 import com.it10x.foodappgstav7_02.ui.bill.BillViewModel
 import com.it10x.foodappgstav7_02.ui.bill.BillViewModelFactory
@@ -806,37 +807,85 @@ fun PosScreen(
             )
         )
 
-        AlertDialog(
-            onDismissRequest = { showKitchen = false },
-            confirmButton = {},
-            dismissButton = {
-                TextButton(onClick = { showKitchen = false }) { Text("Close") }
-            },
-            title = {
-                Text("Kitchen – $tableName")
-            },
-            text = {
-                KitchenScreen(
-                    sessionId = sessionId!!,   // for DB / logic
-                    tableNo = tableId ?: orderType, // for UI / print
-                    tableName = selectedTableName!!,
-                    viewModel = kitchenViewModel,
-                    onKitchenEmpty = {
-                        // ✅ Close popup automatically when no items
-                        showKitchen = false
+        val isPhone = LocalConfiguration.current.screenWidthDp < 600
 
-                    },
-                    orderType = orderType
-                )
+        Dialog(
+            onDismissRequest = { showKitchen = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Surface(
+                modifier = Modifier
+                    .then(
+                        if (isPhone)
+                            Modifier.fillMaxWidth(1f) // 📱 full width on phone
+                        else
+                            Modifier.fillMaxWidth(0.96f) // 💻 slightly narrower on tablet
+                    )
+                    .padding(8.dp),
+                shape = MaterialTheme.shapes.medium,
+                tonalElevation = 8.dp
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    // ---------- Header ----------
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Kitchen – $tableName",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Button(
+                            onClick = { showKitchen = false },
+                            modifier = Modifier.height(28.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFB71C1C),
+                                contentColor = Color.White
+                            ),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
+                        ) {
+                            Text("Close", fontSize = 12.sp)
+                        }
+                    }
+
+                    // ---------- Kitchen list ----------
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 300.dp, max = 600.dp)
+                            .padding(top = 4.dp)
+                    ) {
+                        KitchenScreen(
+                            sessionId = sessionId!!,
+                            tableNo = tableId ?: orderType,
+                            tableName = selectedTableName!!,
+                            viewModel = kitchenViewModel,
+                            onKitchenEmpty = { showKitchen = false },
+                            orderType = orderType
+                        )
+                    }
+                }
             }
-        )
+        }
+
+
+
     }
 
 
 // ================= BILL POPUP =================
   //  val billingKey by cartViewModel.sessionKey.collectAsState()
 
-    BillDialog(
+    if (LocalConfiguration.current.screenWidthDp > 600)
+        BillDialog(
         showBill = showBill,
         onDismiss = { showBill = false },
         sessionId = sessionId,
@@ -844,7 +893,16 @@ fun PosScreen(
         orderType = orderType,
         selectedTableName = selectedTableName!!
     )
-
+else{
+        BillDialogPhone(
+            showBill = showBill,
+            onDismiss = { showBill = false },
+            sessionId = sessionId,
+            tableId = tableId,
+            orderType = orderType,
+            selectedTableName = selectedTableName!!
+        )
+    }
 
 
 }
