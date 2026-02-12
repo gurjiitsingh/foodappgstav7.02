@@ -44,4 +44,14 @@ class LocalOrderDetailViewModel(
             _orderInfo.value = repository.getOrderById(orderId)
         }
     }
+
+    fun updateGrandTotal(newTotal: Double) {
+        val current = _orderInfo.value ?: return
+        viewModelScope.launch {
+            repository.updateGrandTotal(current.id, newTotal)
+
+            // ✅ update local state immediately for UI refresh
+            _orderInfo.value = current.copy(grandTotal = newTotal, updatedAt = System.currentTimeMillis())
+        }
+    }
 }

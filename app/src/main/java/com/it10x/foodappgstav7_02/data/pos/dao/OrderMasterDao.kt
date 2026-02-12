@@ -103,6 +103,10 @@ WHERE id IN (:ids)
 """)
     suspend fun markOrdersSynced(ids: List<String>, time: Long)
 
+
+    @Query("UPDATE pos_order_master SET grandTotal = :newTotal, updatedAt = :updatedAt WHERE id = :orderId")
+    suspend fun updateGrandTotal(orderId: String, newTotal: Double, updatedAt: Long = System.currentTimeMillis())
+
 }
 
 

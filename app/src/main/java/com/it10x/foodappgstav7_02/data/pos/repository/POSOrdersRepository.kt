@@ -118,6 +118,9 @@ class POSOrdersRepository(
     }
 
 
+    suspend fun updateGrandTotal(orderId: String, newTotal: Double) {
+        orderMasterDao.updateGrandTotal(orderId, newTotal)
+    }
 
 
 }
